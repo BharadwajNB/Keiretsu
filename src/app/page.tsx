@@ -112,8 +112,7 @@ export default function Home() {
               </motion.div>
 
               <motion.h1 variants={fadeIn} className={styles.title}>
-                Find the right builders,<br />
-                <span className={styles.highlight}>right where you are.</span>
+                Find the <span style={{ whiteSpace: 'nowrap' }}>right builders,</span> <span className={styles.highlight}>right where you are.</span>
               </motion.h1>
 
               <motion.div variants={fadeIn} className={styles.accentLine} />

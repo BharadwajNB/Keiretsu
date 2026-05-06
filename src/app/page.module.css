@@ -85,10 +85,11 @@
 
 /* ---- Title ---- */
 .title {
+  font-family: var(--font-playmegames), sans-serif;
   font-size: clamp(36px, 4.5vw, 64px);
-  font-weight: 800;
+  font-weight: 700; /* Play font works beautifully at 700 bold */
   line-height: 1.08;
-  letter-spacing: -0.04em;
+  letter-spacing: 0.04em; /* Positive letter-spacing for retro pixel font legibility */
   margin-bottom: 20px;
   color: var(--text-primary);
 }
@@ -109,10 +110,12 @@
 }
 
 .subtitle {
+  font-family: var(--font-playmegames), sans-serif;
   font-size: clamp(15px, 1.5vw, 18px);
   color: var(--text-secondary);
   max-width: 460px;
   line-height: 1.7;
+  letter-spacing: 0.03em; /* Clean, spaced layout for pixel readability */
   margin-bottom: 36px;
 }
 

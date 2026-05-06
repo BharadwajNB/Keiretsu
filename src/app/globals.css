@@ -1,6 +1,14 @@
 /* globals.css */
 @import "leaflet/dist/leaflet.css";
 
+@font-face {
+  font-family: 'PlayMeGames';
+  src: url('/fonts/PlayMeGames-Demo.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* Linear-inspired Dark Mode Palette */
   --bg-primary: #0a0a0a;
@@ -8,6 +16,8 @@
   --bg-card: #161616;
   --bg-card-hover: #1c1c1c;
   --bg-input: #1a1a1a;
+  
+  --font-playmegames: 'PlayMeGames', sans-serif;
   
   --border-color: #282828;
   --border-hover: #3a3a3a;

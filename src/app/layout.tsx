@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
+import { Geist, Play } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
 const geistSans = Geist({
   variable: '--font-sans',
   subsets: ['latin'],
+});
+
+const playFont = Play({
+  variable: '--font-play',
+  subsets: ['latin'],
+  weight: ['400', '700'],
 });
 
 export const metadata: Metadata = {
@@ -22,7 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={geistSans.variable}>
+      <body className={`${geistSans.variable} ${playFont.variable}`}>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -126,7 +126,6 @@ export default function GlobeView({ onNodeClick }: GlobeViewProps) {
           // Vector Polygons instead of image
           polygonsData={countries.features.filter((d: any) => d.properties.ISO_A2 !== 'AQ')}
           polygonAltitude={0.005}
-          polygonResolution={2} // Improve geometry performance
           polygonCapColor={() => '#111111'}
           polygonSideColor={() => '#000000'}
           polygonStrokeColor={() => '#333333'}
