@@ -350,16 +350,20 @@
 }
 
 .featureCard h3 {
+  font-family: var(--font-playmegames), sans-serif;
   font-size: 18px;
   font-weight: 600;
+  letter-spacing: 0.06em;
   margin-bottom: 12px;
   color: var(--text-primary);
 }
 
 .featureCard p {
-  font-size: 15px;
+  font-family: var(--font-playmegames), sans-serif;
+  font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.6;
+  letter-spacing: 0.04em;
 }
 
 /* ---- Responsive ---- */

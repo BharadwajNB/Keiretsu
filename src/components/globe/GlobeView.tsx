@@ -50,8 +50,12 @@ export default function GlobeView({ onNodeClick }: GlobeViewProps) {
     if (!el) return;
 
     const observer = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect;
-      setDimensions({ width, height });
+      if (!entries || entries.length === 0) return;
+      const entry = entries[0];
+      if (entry && entry.contentRect) {
+        const { width, height } = entry.contentRect;
+        setDimensions({ width, height });
+      }
     });
     observer.observe(el);
 
@@ -66,12 +70,17 @@ export default function GlobeView({ onNodeClick }: GlobeViewProps) {
       .catch(console.error);
   }, []);
 
-  // Initialize camera
+  // Initialize camera — carefully check that globeRef.current and controls exist
   useEffect(() => {
     if (globeRef.current && dimensions.width > 0) {
       globeRef.current.pointOfView({ lat: 20, lng: 80, altitude: 1.2 });
-      globeRef.current.controls().autoRotate = false;
-      globeRef.current.controls().enableZoom = true;
+      if (typeof globeRef.current.controls === 'function') {
+        const controls = globeRef.current.controls();
+        if (controls) {
+          controls.autoRotate = false;
+          controls.enableZoom = true;
+        }
+      }
     }
   }, [dimensions.width]);
 
@@ -124,7 +133,7 @@ export default function GlobeView({ onNodeClick }: GlobeViewProps) {
           atmosphereAltitude={0.1}
           
           // Vector Polygons instead of image
-          polygonsData={countries.features.filter((d: any) => d.properties.ISO_A2 !== 'AQ')}
+          polygonsData={(countries?.features || []).filter((d: any) => d?.properties?.ISO_A2 !== 'AQ')}
           polygonAltitude={0.005}
           polygonCapColor={() => '#111111'}
           polygonSideColor={() => '#000000'}

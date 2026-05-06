@@ -51,11 +51,11 @@ function MapRecenter({ lat, lng }: { lat: number; lng: number }) {
 export default function DetailedMapView({ university, onClose, onMarkerClick }: DetailedMapViewProps) {
   return (
     <div style={{
-      position: 'absolute',
+      position: 'fixed',
       top: 0,
       left: 0,
-      right: 0,
-      bottom: 0,
+      width: '100vw',
+      height: '100vh',
       zIndex: 999, // Ensure it sits completely on top of globe HTML markers
       background: '#0a0a0a',
       animation: 'fadeIn 1.5s ease-in-out forwards',
@@ -80,13 +80,13 @@ export default function DetailedMapView({ university, onClose, onMarkerClick }: 
         `
       }} />
 
-      {/* Close button overlay */}
+      {/* Close button overlay — positioned below the 72px Navbar */}
       <button 
         onClick={onClose}
         style={{
           position: 'absolute',
-          top: '20px',
-          right: '20px',
+          top: '92px',
+          right: '24px',
           zIndex: 1000,
           background: 'rgba(22, 22, 22, 0.9)',
           border: '1px solid #282828',

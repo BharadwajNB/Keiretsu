@@ -11,7 +11,8 @@ export function useProfile() {
 
   const fetchProfile = useCallback(async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const user = authData?.user;
     if (!user) {
       setLoading(false);
       return;
@@ -45,7 +46,8 @@ export function useProfile() {
 
   const updateProfile = useCallback(
     async (updates: Partial<Profile>) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error: authError } = await supabase.auth.getUser();
+      const user = data?.user;
       if (!user) return { error: 'Not authenticated' };
 
       const { error } = await supabase
@@ -67,7 +69,8 @@ export function useProfile() {
 
   const updateLocation = useCallback(
     async (lat: number, lng: number) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error: authError } = await supabase.auth.getUser();
+      const user = data?.user;
       if (!user) return;
 
       await supabase.rpc('update_user_location', {
