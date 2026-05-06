@@ -1,0 +1,258 @@
+export interface UniversityNode {
+  id: string;
+  name: string;
+  shortName: string;
+  city: string;
+  lat: number;
+  lng: number;
+  builderCount: number;
+  topSkills: string[];
+  color: string;
+}
+
+export interface NetworkArc {
+  startLat: number;
+  startLng: number;
+  endLat: number;
+  endLng: number;
+  color: string;
+}
+
+export const UNIVERSITIES: UniversityNode[] = [
+  {
+    id: 'iitb',
+    name: 'IIT Bombay',
+    shortName: 'IIT-B',
+    city: 'Mumbai',
+    lat: 19.0760,
+    lng: 72.8777,
+    builderCount: 74,
+    topSkills: ['React', 'Python', 'Machine Learning'],
+    color: '#818cf8',
+  },
+  {
+    id: 'iitd',
+    name: 'IIT Delhi',
+    shortName: 'IIT-D',
+    city: 'New Delhi',
+    lat: 28.5460,
+    lng: 77.1855,
+    builderCount: 68,
+    topSkills: ['TypeScript', 'Deep Learning', 'Docker'],
+    color: '#818cf8',
+  },
+  {
+    id: 'iitm',
+    name: 'IIT Madras',
+    shortName: 'IIT-M',
+    city: 'Chennai',
+    lat: 12.9916,
+    lng: 80.2336,
+    builderCount: 61,
+    topSkills: ['Python', 'Machine Learning', 'Java'],
+    color: '#818cf8',
+  },
+  {
+    id: 'iitk',
+    name: 'IIT Kanpur',
+    shortName: 'IIT-K',
+    city: 'Kanpur',
+    lat: 26.5123,
+    lng: 80.2329,
+    builderCount: 42,
+    topSkills: ['C++', 'Python', 'Algorithms'],
+    color: '#818cf8',
+  },
+  {
+    id: 'iitkgp',
+    name: 'IIT Kharagpur',
+    shortName: 'IIT-KGP',
+    city: 'Kharagpur',
+    lat: 22.3149,
+    lng: 87.3105,
+    builderCount: 55,
+    topSkills: ['Node.js', 'React', 'Flutter'],
+    color: '#818cf8',
+  },
+  {
+    id: 'bits',
+    name: 'BITS Pilani',
+    shortName: 'BITS',
+    city: 'Pilani',
+    lat: 28.3625,
+    lng: 75.5870,
+    builderCount: 48,
+    topSkills: ['React', 'Next.js', 'AWS'],
+    color: '#a78bfa',
+  },
+  {
+    id: 'iiith',
+    name: 'IIIT Hyderabad',
+    shortName: 'IIIT-H',
+    city: 'Hyderabad',
+    lat: 17.4455,
+    lng: 78.3489,
+    builderCount: 53,
+    topSkills: ['Machine Learning', 'NLP', 'Python'],
+    color: '#a78bfa',
+  },
+  {
+    id: 'nitt',
+    name: 'NIT Trichy',
+    shortName: 'NIT-T',
+    city: 'Tiruchirappalli',
+    lat: 10.7590,
+    lng: 78.8129,
+    builderCount: 29,
+    topSkills: ['Java', 'Spring Boot', 'React'],
+    color: '#6366f1',
+  },
+  {
+    id: 'vit',
+    name: 'VIT Vellore',
+    shortName: 'VIT',
+    city: 'Vellore',
+    lat: 12.9692,
+    lng: 79.1559,
+    builderCount: 38,
+    topSkills: ['Python', 'Flutter', 'Firebase'],
+    color: '#6366f1',
+  },
+  {
+    id: 'srm',
+    name: 'SRM University',
+    shortName: 'SRM',
+    city: 'Chennai',
+    lat: 12.8231,
+    lng: 80.0441,
+    builderCount: 33,
+    topSkills: ['Java', 'React', 'MongoDB'],
+    color: '#6366f1',
+  },
+  {
+    id: 'lpu',
+    name: 'LPU',
+    shortName: 'LPU',
+    city: 'Phagwara',
+    lat: 31.2532,
+    lng: 75.7024,
+    builderCount: 45,
+    topSkills: ['React', 'Node.js', 'Python'],
+    color: '#a78bfa',
+  },
+  {
+    id: 'dtu',
+    name: 'DTU Delhi',
+    shortName: 'DTU',
+    city: 'New Delhi',
+    lat: 28.7499,
+    lng: 77.1170,
+    builderCount: 36,
+    topSkills: ['React', 'TypeScript', 'Figma'],
+    color: '#6366f1',
+  },
+  {
+    id: 'nsut',
+    name: 'NSUT Delhi',
+    shortName: 'NSUT',
+    city: 'New Delhi',
+    lat: 28.6090,
+    lng: 77.0380,
+    builderCount: 31,
+    topSkills: ['Python', 'Django', 'Docker'],
+    color: '#6366f1',
+  },
+  {
+    id: 'pec',
+    name: 'PEC Chandigarh',
+    shortName: 'PEC',
+    city: 'Chandigarh',
+    lat: 30.7600,
+    lng: 76.7644,
+    builderCount: 22,
+    topSkills: ['C++', 'React', 'Node.js'],
+    color: '#6366f1',
+  },
+  {
+    id: 'iisc',
+    name: 'IISc Bangalore',
+    shortName: 'IISc',
+    city: 'Bangalore',
+    lat: 13.0219,
+    lng: 77.5671,
+    builderCount: 58,
+    topSkills: ['Deep Learning', 'Python', 'Research'],
+    color: '#818cf8',
+  },
+  {
+    id: 'iiitb',
+    name: 'IIIT Bangalore',
+    shortName: 'IIIT-B',
+    city: 'Bangalore',
+    lat: 12.8449,
+    lng: 77.6632,
+    builderCount: 34,
+    topSkills: ['React', 'Machine Learning', 'Go'],
+    color: '#a78bfa',
+  },
+  {
+    id: 'coep',
+    name: 'COEP Pune',
+    shortName: 'COEP',
+    city: 'Pune',
+    lat: 18.5293,
+    lng: 73.8568,
+    builderCount: 27,
+    topSkills: ['Java', 'Flutter', 'Python'],
+    color: '#6366f1',
+  },
+  {
+    id: 'nitw',
+    name: 'NIT Warangal',
+    shortName: 'NIT-W',
+    city: 'Warangal',
+    lat: 17.9784,
+    lng: 79.5301,
+    builderCount: 24,
+    topSkills: ['Python', 'Node.js', 'React'],
+    color: '#6366f1',
+  },
+  {
+    id: 'nitk',
+    name: 'NIT Surathkal',
+    shortName: 'NIT-K',
+    city: 'Mangalore',
+    lat: 13.0109,
+    lng: 74.7942,
+    builderCount: 26,
+    topSkills: ['React', 'TypeScript', 'AWS'],
+    color: '#6366f1',
+  },
+  {
+    id: 'iiita',
+    name: 'IIIT Allahabad',
+    shortName: 'IIIT-A',
+    city: 'Prayagraj',
+    lat: 25.4358,
+    lng: 81.8463,
+    builderCount: 21,
+    topSkills: ['Python', 'Machine Learning', 'React'],
+    color: '#a78bfa',
+  },
+];
+
+// Network arcs connecting universities — visual flair showing collaboration
+export const NETWORK_ARCS: NetworkArc[] = [
+  { startLat: 19.0760, startLng: 72.8777, endLat: 28.5460, endLng: 77.1855, color: 'rgba(129,140,248,0.25)' },
+  { startLat: 12.9916, startLng: 80.2336, endLat: 13.0219, endLng: 77.5671, color: 'rgba(129,140,248,0.25)' },
+  { startLat: 28.3625, startLng: 75.5870, endLat: 26.5123, endLng: 80.2329, color: 'rgba(129,140,248,0.20)' },
+  { startLat: 17.4455, startLng: 78.3489, endLat: 12.8449, endLng: 77.6632, color: 'rgba(129,140,248,0.20)' },
+  { startLat: 22.3149, startLng: 87.3105, endLat: 25.4358, endLng: 81.8463, color: 'rgba(129,140,248,0.15)' },
+  { startLat: 31.2532, startLng: 75.7024, endLat: 30.7600, endLng: 76.7644, color: 'rgba(129,140,248,0.20)' },
+  { startLat: 10.7590, startLng: 78.8129, endLat: 12.9692, endLng: 79.1559, color: 'rgba(129,140,248,0.15)' },
+  { startLat: 18.5293, startLng: 73.8568, endLat: 19.0760, endLng: 72.8777, color: 'rgba(129,140,248,0.20)' },
+];
+
+// Total builder count for stats display
+export const TOTAL_BUILDERS = UNIVERSITIES.reduce((sum, u) => sum + u.builderCount, 0);
+export const TOTAL_UNIVERSITIES = UNIVERSITIES.length;

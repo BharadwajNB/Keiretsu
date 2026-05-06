@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Search as SearchIcon, MapPin, Building2, Link, ChevronDown, User as UserIcon } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Building2, Link, User as UserIcon } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyUsers } from '@/hooks/useNearbyUsers';

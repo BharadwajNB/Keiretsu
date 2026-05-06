@@ -54,6 +54,7 @@ export function useNearbyUsers(params: NearbyUserParams | null) {
   }, [params, supabase]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNearbyUsers();
   }, [fetchNearbyUsers]);
 

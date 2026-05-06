@@ -1,4 +1,5 @@
 /* globals.css */
+@import "leaflet/dist/leaflet.css";
 
 :root {
   /* Linear-inspired Dark Mode Palette */
