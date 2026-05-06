@@ -1,4 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Keiretsu
+
+Platform connecting nearby skilled individuals via live location, profiles, and collaboration for building projects efficiently.
 
 ## Getting Started
 
