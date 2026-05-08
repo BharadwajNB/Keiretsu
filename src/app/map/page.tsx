@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, Users, MapPin, Search } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useNearbyUsers } from '@/hooks/useNearbyUsers';
+import { useProfile } from '@/hooks/useProfile';
 import { useSkills } from '@/hooks/useSkills';
 import { SKILL_CATEGORIES } from '@/lib/types';
 import styles from './page.module.css';
@@ -15,22 +17,54 @@ const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false }
 
 export default function MapPage() {
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, permissionState } = useGeolocation();
+  const { profile, updateLocation } = useProfile();
   const { skills: allSkills } = useSkills();
   const [radiusKm, setRadiusKm] = useState(2);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [collegeFilter, setCollegeFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Sync user location to Supabase to appear on other users' maps
+  useEffect(() => {
+    if (latitude && longitude && profile) {
+      updateLocation(latitude, longitude);
+    }
+  }, [latitude, longitude, profile?.id]); // Only re-sync if coords or profile ID changes
+
+  const searchParamsUrl = useSearchParams();
+  const globalQuery = searchParamsUrl.get('q');
+
   const params = useMemo(() => {
     if (!latitude || !longitude) return null;
+    
+    // Parse global search query
+    let nameSearchFilter: string | undefined = undefined;
+    let computedSkills = [...selectedSkills];
+
+    if (globalQuery) {
+      const qLower = globalQuery.toLowerCase();
+      // Check if query matches any known skill exactly or partially
+      const matchedSkill = allSkills.find(s => s.name.toLowerCase() === qLower || s.name.toLowerCase().includes(qLower));
+      
+      if (matchedSkill) {
+        if (!computedSkills.includes(matchedSkill.name)) {
+          computedSkills.push(matchedSkill.name);
+        }
+      } else {
+        // If not a skill, assume it's a name search
+        nameSearchFilter = globalQuery;
+      }
+    }
+
     return {
       lat: latitude,
       lng: longitude,
       radiusKm,
-      skillFilter: selectedSkills.length > 0 ? selectedSkills : undefined,
+      skillFilter: computedSkills.length > 0 ? computedSkills : undefined,
       collegeFilter: collegeFilter || undefined,
+      nameSearch: nameSearchFilter,
     };
-  }, [latitude, longitude, radiusKm, selectedSkills, collegeFilter]);
+  }, [latitude, longitude, radiusKm, selectedSkills, collegeFilter, globalQuery, allSkills]);
 
   const { users, loading: usersLoading } = useNearbyUsers(params);
 

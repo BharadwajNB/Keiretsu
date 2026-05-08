@@ -221,96 +221,116 @@
   color: var(--text-muted);
 }
 
-/* ---- University Ticker ---- */
-.universityTicker {
-  position: relative;
-  padding: 40px 0;
-  overflow: hidden;
+/* ---- How It Works Section ---- */
+.howItWorks {
+  padding: 100px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
   border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
 }
 
-.tickerLabel {
+.sectionHeader {
   text-align: center;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 24px;
-}
-
-.tickerTrack {
-  display: flex;
-  gap: 48px;
-  animation: tickerScroll 40s linear infinite;
-  width: max-content;
-}
-
-.tickerItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  opacity: 0.6;
-  transition: opacity 0.3s ease;
-}
-
-.tickerItem:hover {
-  opacity: 1;
-}
-
-.tickerDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent-primary);
-  flex-shrink: 0;
-}
-
-@keyframes tickerScroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-/* ---- Stats Row ---- */
-.statsRow {
-  display: flex;
-  gap: 32px;
-  margin-bottom: 36px;
-}
-
-.stat {
+  margin-bottom: 64px;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
-.statValue {
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
-  line-height: 1;
-}
-
-.statLabel {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
-  margin-top: 4px;
+.sectionBadge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+  background: rgba(129, 140, 248, 0.1);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(129, 140, 248, 0.2);
+}
+
+.sectionTitle {
+  font-family: var(--font-playmegames), sans-serif;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  letter-spacing: 0.03em;
+}
+
+.sectionSubtitle {
+  font-family: var(--font-playmegames), sans-serif;
+  font-size: 16px;
+  color: var(--text-secondary);
+  max-width: 500px;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+}
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+.stepCard {
+  position: relative;
+  padding: 40px 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  overflow: hidden;
+}
+
+.stepCard:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.stepNumber {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  font-size: 48px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.03);
+  line-height: 1;
+  transition: color var(--transition-base);
+}
+
+.stepCard:hover .stepNumber {
+  color: rgba(129, 140, 248, 0.08);
+}
+
+.stepCard h3 {
+  font-family: var(--font-playmegames), sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.stepCard p {
+  font-family: var(--font-playmegames), sans-serif;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  letter-spacing: 0.04em;
 }
 
 /* ---- Feature Cards ---- */
 .features {
-  padding: 80px 24px;
+  padding: 100px 24px;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  border-top: 1px solid var(--border-color);
 }
 
 .featureGrid {
@@ -397,8 +417,9 @@
     margin-right: auto;
   }
 
-  .statsRow {
-    justify-content: center;
+  .stepsGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
 }
 
@@ -422,16 +443,63 @@
     justify-content: center;
   }
 
-  .statsRow {
-    gap: 24px;
-  }
-
-  .statValue {
-    font-size: 22px;
-  }
-
   .globeControls {
     bottom: 16px;
     gap: 8px;
   }
+}
+
+/* ---- Loading Skeletons ---- */
+.skeleton {
+  background: var(--text-primary);
+  opacity: 0.1;
+  border-radius: var(--radius-md);
+  animation: skeletonPulse 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.12; }
+  50% { opacity: 0.05; }
+}
+
+.skeletonBadge {
+  width: 150px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  margin-bottom: 28px;
+}
+
+.skeletonTitle {
+  width: 90%;
+  height: clamp(36px, 4.5vw, 64px);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+}
+
+.skeletonText {
+  width: 100%;
+  height: 16px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.skeletonBtn {
+  width: 150px;
+  height: 48px;
+  border-radius: var(--radius-full);
+}
+
+.skeletonGlobe {
+  width: min(450px, 75vw);
+  height: min(450px, 75vw);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--text-primary) 0%, transparent 80%);
+  opacity: 0.1;
+  animation: skeletonPulse 1.8s ease-in-out infinite, skeletonGlow 3.6s ease-in-out infinite;
+}
+
+@keyframes skeletonGlow {
+  0%, 100% { transform: scale(1); filter: blur(4px); }
+  50% { transform: scale(1.02); filter: blur(8px); }
 }
