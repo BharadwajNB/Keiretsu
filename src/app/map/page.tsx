@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,7 +15,7 @@ import styles from './page.module.css';
 
 const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false });
 
-export default function MapPage() {
+function MapPageContent() {
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, permissionState, isWatching, isSyncing, lastSyncedAt } = useLocationSync();
   const { skills: allSkills } = useSkills();
   const [radiusKm, setRadiusKm] = useState(2);
@@ -261,5 +261,13 @@ export default function MapPage() {
         </motion.aside>
       </div>
     </div>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="page"><Navbar /><div className="page-center"><div className="spinner" /></div></div>}>
+      <MapPageContent />
+    </Suspense>
   );
 }

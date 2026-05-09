@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 
 import { Search, LogOut, Loader2, User } from 'lucide-react';
 import styles from './Navbar.module.css';
@@ -14,7 +14,7 @@ interface NavbarProps {
   onSignInClick?: () => void;
 }
 
-export default function Navbar({ onSignInClick }: NavbarProps) {
+function NavbarContent({ onSignInClick }: NavbarProps) {
   const { user, loading, signOut } = useAuth();
   const { profile } = useProfile();
   const pathname = usePathname();
@@ -125,5 +125,13 @@ export default function Navbar({ onSignInClick }: NavbarProps) {
         </div>
       </div>
     </nav>
+  );
+}
+
+export default function Navbar(props: NavbarProps) {
+  return (
+    <Suspense fallback={<nav className={`${styles.navbar}`}><div className={styles.glassBackground} /></nav>}>
+      <NavbarContent {...props} />
+    </Suspense>
   );
 }
