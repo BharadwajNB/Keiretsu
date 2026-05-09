@@ -8,6 +8,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSkills } from '@/hooks/useSkills';
 import { AVAILABILITY_LABELS } from '@/lib/types';
 import type { AvailabilityStatus } from '@/lib/types';
+import { ArrowLeft } from 'lucide-react';
 import styles from './page.module.css';
 
 function ProfileEditContent() {
@@ -107,7 +108,17 @@ function ProfileEditContent() {
           )}
 
           <div className={styles.header}>
-            <h1>Edit Profile</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <button 
+                onClick={() => router.back()} 
+                className="btn btn-secondary" 
+                style={{ padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                title="Go Back"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <h1 style={{ margin: 0 }}>Edit Profile</h1>
+            </div>
             <button
               onClick={() => profile && router.push(`/profile/${profile.id}`)}
               className="btn btn-secondary btn-sm"
@@ -271,6 +282,12 @@ function ProfileEditContent() {
           </div>
 
           <div className={styles.saveBar}>
+            <button 
+              onClick={() => router.back()} 
+              className="btn btn-secondary btn-lg"
+            >
+              Cancel
+            </button>
             <button
               onClick={handleSave}
               disabled={saving || !name || !college || !githubUrl}

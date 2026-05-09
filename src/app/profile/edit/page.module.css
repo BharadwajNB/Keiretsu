@@ -119,17 +119,12 @@
 }
 
 .saveBar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px 24px;
-  background: rgba(10, 10, 15, 0.9);
-  backdrop-filter: blur(20px);
+  margin-top: 32px;
+  padding-top: 24px;
   border-top: 1px solid var(--border-color);
   display: flex;
-  justify-content: center;
-  z-index: 100;
+  justify-content: flex-end;
+  gap: 16px;
 }
 
 @media (max-width: 768px) {
