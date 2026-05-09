@@ -6,7 +6,8 @@ import { createClient } from '@/lib/supabase/client';
 import Navbar from '@/components/layout/Navbar';
 import { AVAILABILITY_LABELS } from '@/lib/types';
 import type { Profile } from '@/lib/types';
-import { MapPin, ExternalLink, Building2, Calendar, MessageCircle, Map } from 'lucide-react';
+import { MapPin, ExternalLink, Building2, Calendar, MessageCircle, Map, Edit3 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import styles from './page.module.css';
 
 // ---- Skeleton ----------------------------------------------------------------
@@ -30,6 +31,7 @@ function ProfileSkeleton() {
 // ---- Main Page ---------------------------------------------------------------
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -94,6 +96,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       : styles.amber;
 
   const isPulsing = profile.availability_status === 'open_to_collab';
+  const isOwner = currentUser?.id === profile.id;
 
   return (
     <div className="page">
@@ -195,10 +198,17 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
           {/* Footer Actions */}
           <div className={styles.footerActions}>
-            <button className={styles.connectBtn}>
-              <MessageCircle size={16} />
-              Connect
-            </button>
+            {isOwner ? (
+              <a href="/profile/edit" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+                <Edit3 size={16} />
+                Edit Profile
+              </a>
+            ) : (
+              <button className={styles.connectBtn}>
+                <MessageCircle size={16} />
+                Connect
+              </button>
+            )}
 
             {profile.latitude && profile.longitude && (
               <a
