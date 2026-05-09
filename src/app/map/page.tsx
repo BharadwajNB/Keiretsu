@@ -251,7 +251,9 @@ function MapPageContent() {
                         <h4>{user.name}</h4>
                         <p className={styles.userMeta}>Year {user.year} · {user.college}</p>
                       </div>
-                      <span className={styles.userDistance}>{user.distance_km}km</span>
+                      <span className={styles.userDistance}>
+                        {user.distance_km != null ? `${user.distance_km}km` : 'Global'}
+                      </span>
                     </div>
                   </motion.a>
                 ))
