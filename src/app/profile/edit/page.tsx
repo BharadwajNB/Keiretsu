@@ -229,16 +229,42 @@ function ProfileEditContent() {
                   className="input"
                   value={skillSearch}
                   onChange={(e) => setSkillSearch(e.target.value)}
-                  placeholder="Search skills to add..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const query = skillSearch.trim();
+                      if (query && !selectedSkills.some(s => s.toLowerCase() === query.toLowerCase())) {
+                        toggleSkill(query);
+                        setSkillSearch('');
+                      }
+                    }
+                  }}
+                  placeholder="Search or type a custom skill and press Enter..."
                 />
               </div>
 
               <div className={styles.skillGrid}>
+                {skillSearch.trim() && !allSkills.some(s => s.name.toLowerCase() === skillSearch.trim().toLowerCase()) && !selectedSkills.some(s => s.toLowerCase() === skillSearch.trim().toLowerCase()) && (
+                  <button
+                    className={styles.skillChip}
+                    style={{ background: 'rgba(129, 140, 248, 0.15)', borderColor: '#818cf8', color: '#818cf8' }}
+                    onClick={() => {
+                      toggleSkill(skillSearch.trim());
+                      setSkillSearch('');
+                    }}
+                  >
+                    + Add "{skillSearch.trim()}" (Custom)
+                  </button>
+                )}
+
                 {filteredSkills.slice(0, 20).map((skill) => (
                   <button
                     key={skill.id}
                     className={styles.skillChip}
-                    onClick={() => toggleSkill(skill.name)}
+                    onClick={() => {
+                      toggleSkill(skill.name);
+                      setSkillSearch('');
+                    }}
                   >
                     + {skill.name}
                   </button>

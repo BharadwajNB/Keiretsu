@@ -205,7 +205,7 @@ function MapPageContent() {
                 >
                   <div className={styles.skillFilters}>
                     {/* Simplified for brevity, similar to old one but nicer tags */}
-                    {Object.entries(groupedSkills).slice(0, 3).map(([category, skills]) => (
+                    {Object.entries(groupedSkills).map(([category, skills]) => (
                       <div key={category} style={{ marginBottom: 12 }}>
                         <span style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
                           {SKILL_CATEGORIES[category] || category}
