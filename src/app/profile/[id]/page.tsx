@@ -96,7 +96,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
       : styles.amber;
 
   const isPulsing = profile.availability_status === 'open_to_collab';
-  const isOwner = currentUser?.id === profile.id;
+  const isOwner = currentUser?.id === profile.user_id;
 
   return (
     <div className="page">
