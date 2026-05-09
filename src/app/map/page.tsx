@@ -2,7 +2,7 @@
 
 import { useState, useMemo, Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, Users, MapPin, Search } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
@@ -22,6 +22,8 @@ function MapPageContent() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [collegeFilter, setCollegeFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const router = useRouter();
 
   const searchParamsUrl = useSearchParams();
   const globalQuery = searchParamsUrl.get('q');
@@ -125,6 +127,7 @@ function MapPageContent() {
               center={[latitude, longitude]}
               radiusKm={radiusKm}
               users={users}
+              selectedUserId={selectedUserId}
             />
           )}
         </div>
@@ -235,28 +238,38 @@ function MapPageContent() {
                   <p>No builders found in this area.</p>
                 </div>
               ) : (
-                users.map((user, i) => (
-                  <motion.a
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    key={user.id}
-                    href={`/profile/${user.id}`}
-                    className={styles.userCard}
-                  >
-                    <div className={styles.userCardHeader}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={user.avatar_url || '/default-avatar.svg'} alt={user.name} className={styles.userAvatar} />
-                      <div>
-                        <h4>{user.name}</h4>
-                        <p className={styles.userMeta}>Year {user.year} · {user.college}</p>
+                users.map((user, i) => {
+                  const hasLocation = user.latitude && user.longitude;
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      key={user.id}
+                      onClick={() => {
+                        if (hasLocation) {
+                          setSelectedUserId(user.id);
+                        } else {
+                          router.push(`/profile/${user.id}`);
+                        }
+                      }}
+                      className={styles.userCard}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className={styles.userCardHeader}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={user.avatar_url || '/default-avatar.svg'} alt={user.name} className={styles.userAvatar} />
+                        <div>
+                          <h4>{user.name}</h4>
+                          <p className={styles.userMeta}>Year {user.year} · {user.college}</p>
+                        </div>
+                        <span className={styles.userDistance}>
+                          {user.distance_km != null ? `${user.distance_km}km` : 'Global'}
+                        </span>
                       </div>
-                      <span className={styles.userDistance}>
-                        {user.distance_km != null ? `${user.distance_km}km` : 'Global'}
-                      </span>
-                    </div>
-                  </motion.a>
-                ))
+                    </motion.div>
+                  );
+                })
               )}
             </div>
           </div>

@@ -10,6 +10,7 @@ interface MapViewProps {
   center: [number, number];
   radiusKm: number;
   users: Profile[];
+  selectedUserId?: string | null;
 }
 
 // Returns initials (up to 2 chars) from a display name
@@ -77,9 +78,10 @@ function createAvatarMarkerIcon(user: Profile): L.DivIcon {
   });
 }
 
-export default function MapView({ center, radiusKm, users }: MapViewProps) {
+export default function MapView({ center, radiusKm, users, selectedUserId }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
+  const markerMapRef = useRef<Record<string, L.Marker>>({});
   const circleRef = useRef<L.Circle | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -157,6 +159,7 @@ export default function MapView({ center, radiusKm, users }: MapViewProps) {
   useEffect(() => {
     if (!markersRef.current) return;
     markersRef.current.clearLayers();
+    markerMapRef.current = {};
 
     users.forEach((user) => {
       if (!user.latitude || !user.longitude) return;
@@ -202,8 +205,27 @@ export default function MapView({ center, radiusKm, users }: MapViewProps) {
         className: 'keiretsu-popup',
       });
       markersRef.current!.addLayer(marker);
+      markerMapRef.current[user.id] = marker;
     });
   }, [users]);
+
+  // Handle selected user
+  useEffect(() => {
+    if (selectedUserId && mapRef.current && markerMapRef.current[selectedUserId]) {
+      const marker = markerMapRef.current[selectedUserId];
+      const latLng = marker.getLatLng();
+      
+      // Fly to location
+      mapRef.current.flyTo(latLng, 16, { duration: 1.5 });
+      
+      // Wait for fly animation to finish, then open popup
+      setTimeout(() => {
+        if (mapRef.current) {
+          marker.openPopup();
+        }
+      }, 1500);
+    }
+  }, [selectedUserId]);
 
   return (
     <>
