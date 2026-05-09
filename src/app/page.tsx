@@ -12,6 +12,8 @@ import { UNIVERSITIES } from '@/lib/universityData';
 import type { UniversityNode } from '@/lib/universityData';
 import { useAuth } from '@/hooks/useAuth';
 import AuthenticatedHub from '@/components/home/AuthenticatedHub';
+import { usePathname, useRouter } from 'next/navigation';
+import { LoginContent } from './login/page';
 import styles from './page.module.css';
 
 // Dynamic import of GlobeView — no SSR (WebGL)
@@ -38,7 +40,7 @@ const stagger: Variants = {
   visible: { transition: { staggerChildren: 0.1 } },
 };
 
-export default function Home() {
+export default function Home({ defaultShowLogin = false }: { defaultShowLogin?: boolean }) {
   const { user, loading } = useAuth();
   const [selectedUniversity, setSelectedUniversity] = useState<UniversityNode | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -46,6 +48,17 @@ export default function Home() {
   const [fullyHideGlobe, setFullyHideGlobe] = useState(false);
   const [isGlobeReady, setIsGlobeReady] = useState(false);
   const heroRightRef = useRef<HTMLDivElement>(null);
+
+  const [showLoginModal, setShowLoginModal] = useState(defaultShowLogin);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleCloseLoginModal = useCallback(() => {
+    setShowLoginModal(false);
+    if (pathname === '/login') {
+      router.push('/');
+    }
+  }, [pathname, router]);
 
   useEffect(() => {
     // Delay the heavy WebGL globe initialization so Framer Motion text animations
@@ -137,7 +150,7 @@ export default function Home() {
 
   return (
     <div className="page">
-      <Navbar />
+      <Navbar onSignInClick={() => setShowLoginModal(true)} />
 
       <main className={styles.main}>
         {/* Hero Section — Split Layout */}
@@ -168,10 +181,10 @@ export default function Home() {
               </motion.p>
 
               <motion.div variants={fadeIn} className={styles.ctaGroup}>
-                <Link href="/login" className={styles.primaryBtn}>
+                <button onClick={() => setShowLoginModal(true)} className={styles.primaryBtn}>
                   Get Started
                   <ArrowRight size={16} className={styles.btnIcon} />
-                </Link>
+                </button>
                 <Link href="/search" className={styles.secondaryBtn}>
                   Explore Skills
                 </Link>
@@ -304,6 +317,30 @@ export default function Home() {
           </motion.div>
         </section>
       </main>
+
+      <AnimatePresence>
+        {showLoginModal && (
+          <motion.div 
+            className="modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={handleCloseLoginModal}
+          >
+            <motion.div 
+              className="modal-content"
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <LoginContent isModal={true} onCancel={handleCloseLoginModal} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

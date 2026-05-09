@@ -277,6 +277,50 @@
   flex-wrap: wrap;
 }
 
+.connectBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 24px;
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 12px rgba(129, 140, 248, 0.25);
+}
+
+.connectBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(129, 140, 248, 0.35);
+  filter: brightness(1.1);
+}
+
+.mapBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 22px;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-green);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.mapBtn:hover {
+  background: rgba(52, 211, 153, 0.14);
+  border-color: rgba(52, 211, 153, 0.4);
+  transform: translateY(-1px);
+}
+
 .githubBtn {
   display: inline-flex;
   align-items: center;
@@ -319,6 +363,7 @@
 
   .heroBanner {
     border-radius: 0;
+    height: 160px;
   }
 
   .profileCard {
@@ -334,6 +379,17 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+    margin-top: -40px;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .metaRow {
+    flex-direction: column;
+    gap: 10px;
   }
 
   .footerActions {
@@ -341,8 +397,15 @@
     align-items: stretch;
   }
 
+  .connectBtn,
+  .mapBtn,
   .githubBtn,
   .distanceBadge {
     justify-content: center;
   }
+
+  .bioSection {
+    padding: 16px 18px;
+  }
 }
+

@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Search as SearchIcon, MapPin, Building2 } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Building2, Sparkles } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
-import { useGeolocation } from '@/hooks/useGeolocation';
+import LocationIndicator from '@/components/ui/LocationIndicator';
+import { useLocationSync } from '@/hooks/useLocationSync';
 import { useNearbyUsers } from '@/hooks/useNearbyUsers';
 import { useSkills } from '@/hooks/useSkills';
-import { AVAILABILITY_LABELS } from '@/lib/types';
+import { useSkillCounts } from '@/hooks/useSkillCounts';
+import { AVAILABILITY_LABELS, SKILL_CATEGORIES } from '@/lib/types';
 import styles from './page.module.css';
 
 const containerVariants: Variants = {
@@ -39,13 +41,27 @@ function SkeletonCards() {
 
 // ---- Main Page --------------------------------------------------------------
 export default function SearchPage() {
-  const { latitude, longitude } = useGeolocation();
+  const {
+    latitude, longitude, permissionState,
+    isWatching, isSyncing, lastSyncedAt,
+  } = useLocationSync();
   const { skills: allSkills } = useSkills();
   const [nameSearch, setNameSearch] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [collegeFilter, setCollegeFilter] = useState('');
   const [radiusKm, setRadiusKm] = useState(10);
   const [skillInput, setSkillInput] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Skill counts for nearby builder badges
+  const { skillCounts } = useSkillCounts({ lat: latitude, lng: longitude, radiusKm });
+  const countMap = useMemo(() => {
+    const map = new Map<string, number>();
+    skillCounts.forEach((sc) => map.set(sc.skill_name, sc.builder_count));
+    return map;
+  }, [skillCounts]);
 
   const params = useMemo(() => {
     if (!latitude || !longitude) return null;
@@ -61,16 +77,87 @@ export default function SearchPage() {
 
   const { users, loading } = useNearbyUsers(params);
 
-  const toggleSkill = (name: string) =>
+  const toggleSkill = useCallback((name: string) =>
     setSelectedSkills((prev) =>
       prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name]
-    );
+    ), []);
 
-  const filteredSkillOptions = allSkills.filter(
-    (s) =>
-      s.name.toLowerCase().includes(skillInput.toLowerCase()) &&
-      !selectedSkills.includes(s.name)
+  // Filtered skill options for the auto-suggestion dropdown
+  const filteredSkillOptions = useMemo(() =>
+    allSkills.filter(
+      (s) =>
+        s.name.toLowerCase().includes(skillInput.toLowerCase()) &&
+        !selectedSkills.includes(s.name)
+    ),
+    [allSkills, skillInput, selectedSkills]
   );
+
+  // Skills grouped by category for chip grid
+  const groupedSkills = useMemo(() => {
+    const groups: Record<string, typeof allSkills> = {};
+    allSkills.forEach((skill) => {
+      const cat = skill.category || 'general';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(skill);
+    });
+    return groups;
+  }, [allSkills]);
+
+  // Available category keys (only show categories that have skills)
+  const categoryKeys = useMemo(() =>
+    Object.keys(SKILL_CATEGORIES).filter((key) => groupedSkills[key]?.length),
+    [groupedSkills]
+  );
+
+  // Popular skills (top 12 by nearby builder count)
+  const popularSkills = useMemo(() => {
+    return [...allSkills]
+      .filter((s) => !selectedSkills.includes(s.name))
+      .sort((a, b) => (countMap.get(b.name) || 0) - (countMap.get(a.name) || 0))
+      .slice(0, 12);
+  }, [allSkills, countMap, selectedSkills]);
+
+  // Skills to show in the chip grid based on active category
+  const visibleSkills = useMemo(() => {
+    if (!activeCategory) return popularSkills;
+    return (groupedSkills[activeCategory] || []).filter(
+      (s) => !selectedSkills.includes(s.name)
+    );
+  }, [activeCategory, groupedSkills, popularSkills, selectedSkills]);
+
+  // Keyboard navigation for auto-suggest dropdown
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!skillInput || filteredSkillOptions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev < Math.min(filteredSkillOptions.length, 8) - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev > 0 ? prev - 1 : Math.min(filteredSkillOptions.length, 8) - 1
+      );
+    } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+      e.preventDefault();
+      const skill = filteredSkillOptions[highlightedIndex];
+      if (skill) {
+        toggleSkill(skill.name);
+        setSkillInput('');
+        setHighlightedIndex(-1);
+      }
+    } else if (e.key === 'Escape') {
+      setSkillInput('');
+      setHighlightedIndex(-1);
+    }
+  }, [skillInput, filteredSkillOptions, highlightedIndex, toggleSkill]);
+
+  // Reset highlighted index when input changes
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHighlightedIndex(-1);
+  }, [skillInput]);
 
   return (
     <div className="page">
@@ -85,10 +172,20 @@ export default function SearchPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
           >
-            <h1 className={styles.pageTitle}>Discover Builders</h1>
-            <p className={styles.pageSubtitle}>
-              Find developers by name, skill, or college within your radius.
-            </p>
+            <div className={styles.headerRow}>
+              <div>
+                <h1 className={styles.pageTitle}>Discover Builders</h1>
+                <p className={styles.pageSubtitle}>
+                  Find developers by name, skill, or college within your radius.
+                </p>
+              </div>
+              <LocationIndicator
+                isWatching={isWatching}
+                isSyncing={isSyncing}
+                permissionState={permissionState}
+                lastSyncedAt={lastSyncedAt}
+              />
+            </div>
           </motion.div>
 
           {/* Filter Panel */}
@@ -145,44 +242,101 @@ export default function SearchPage() {
               </div>
             </div>
 
-            {/* Skills filter */}
-            <div className={styles.skillsRow}>
-              <span className={styles.skillsLabel}>Skills:</span>
-              <AnimatePresence>
-                {selectedSkills.map((s) => (
-                  <motion.span
-                    key={s}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="tag tag-removable"
-                    onClick={() => toggleSkill(s)}
-                  >
-                    {s} ✕
-                  </motion.span>
-                ))}
-              </AnimatePresence>
+            {/* Selected skill tags */}
+            {selectedSkills.length > 0 && (
+              <div className={styles.selectedSkillsRow}>
+                <span className={styles.skillsLabel}>Active:</span>
+                <AnimatePresence>
+                  {selectedSkills.map((s) => (
+                    <motion.span
+                      key={s}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="tag tag-removable"
+                      onClick={() => toggleSkill(s)}
+                    >
+                      {s} ✕
+                    </motion.span>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
 
-              <div className={styles.skillDropdownWrap}>
+            {/* Category Tabs + Skill Chips */}
+            <div className={styles.categorySection}>
+              <div className={styles.categorySectionHeader}>
+                <Sparkles size={14} />
+                <span>{activeCategory ? SKILL_CATEGORIES[activeCategory] : 'Popular Near You'}</span>
+              </div>
+
+              {/* Category Tab Bar */}
+              <div className={styles.categoryTabs}>
+                <button
+                  className={`${styles.categoryTab} ${!activeCategory ? styles.categoryTabActive : ''}`}
+                  onClick={() => setActiveCategory(null)}
+                >
+                  Popular
+                </button>
+                {categoryKeys.map((key) => (
+                  <button
+                    key={key}
+                    className={`${styles.categoryTab} ${activeCategory === key ? styles.categoryTabActive : ''}`}
+                    onClick={() => setActiveCategory(key)}
+                  >
+                    {SKILL_CATEGORIES[key]}
+                  </button>
+                ))}
+              </div>
+
+              {/* Skill Chip Grid */}
+              <div className={styles.skillChipGrid}>
+                {visibleSkills.map((skill) => {
+                  const count = countMap.get(skill.name) || 0;
+                  return (
+                    <button
+                      key={skill.id || skill.name}
+                      className={`${styles.skillChip} ${selectedSkills.includes(skill.name) ? styles.skillChipActive : ''}`}
+                      onClick={() => toggleSkill(skill.name)}
+                    >
+                      <span>{skill.name}</span>
+                      {count > 0 && <span className={styles.chipCount}>{count}</span>}
+                    </button>
+                  );
+                })}
+                {visibleSkills.length === 0 && (
+                  <p className={styles.noSkillsHint}>No skills in this category nearby</p>
+                )}
+              </div>
+
+              {/* Auto-suggest Skill Input */}
+              <div className={styles.skillDropdownWrap} ref={dropdownRef}>
                 <input
                   className={styles.skillInput}
-                  placeholder="+ Add skill..."
+                  placeholder="+ Search any skill..."
                   value={skillInput}
                   onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
                 {skillInput && filteredSkillOptions.length > 0 && (
                   <div className={styles.dropdown}>
-                    {filteredSkillOptions.slice(0, 8).map((s) => (
+                    {filteredSkillOptions.slice(0, 8).map((s, idx) => (
                       <button
                         key={s.id}
-                        className={styles.dropdownItem}
+                        className={`${styles.dropdownItem} ${idx === highlightedIndex ? styles.dropdownItemHighlighted : ''}`}
                         onClick={() => {
                           toggleSkill(s.name);
                           setSkillInput('');
+                          setHighlightedIndex(-1);
                         }}
                       >
-                        {s.name}
-                        <span className={styles.dropdownCat}>{s.category}</span>
+                        <span>{s.name}</span>
+                        <span className={styles.dropdownMeta}>
+                          <span className={styles.dropdownCat}>{SKILL_CATEGORIES[s.category] || s.category}</span>
+                          {(countMap.get(s.name) || 0) > 0 && (
+                            <span className={styles.dropdownCount}>{countMap.get(s.name)} nearby</span>
+                          )}
+                        </span>
                       </button>
                     ))}
                   </div>

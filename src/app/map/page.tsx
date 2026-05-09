@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, Users, MapPin, Search } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
-import { useGeolocation } from '@/hooks/useGeolocation';
+import LocationIndicator from '@/components/ui/LocationIndicator';
+import { useLocationSync } from '@/hooks/useLocationSync';
 import { useNearbyUsers } from '@/hooks/useNearbyUsers';
-import { useProfile } from '@/hooks/useProfile';
 import { useSkills } from '@/hooks/useSkills';
 import { SKILL_CATEGORIES } from '@/lib/types';
 import styles from './page.module.css';
@@ -16,20 +16,12 @@ import styles from './page.module.css';
 const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false });
 
 export default function MapPage() {
-  const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, permissionState } = useGeolocation();
-  const { profile, updateLocation } = useProfile();
+  const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, permissionState, isWatching, isSyncing, lastSyncedAt } = useLocationSync();
   const { skills: allSkills } = useSkills();
   const [radiusKm, setRadiusKm] = useState(2);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [collegeFilter, setCollegeFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-
-  // Sync user location to Supabase to appear on other users' maps
-  useEffect(() => {
-    if (latitude && longitude && profile) {
-      updateLocation(latitude, longitude);
-    }
-  }, [latitude, longitude, profile?.id]); // Only re-sync if coords or profile ID changes
 
   const searchParamsUrl = useSearchParams();
   const globalQuery = searchParamsUrl.get('q');
@@ -39,7 +31,7 @@ export default function MapPage() {
     
     // Parse global search query
     let nameSearchFilter: string | undefined = undefined;
-    let computedSkills = [...selectedSkills];
+    const computedSkills = [...selectedSkills];
 
     if (globalQuery) {
       const qLower = globalQuery.toLowerCase();
@@ -152,6 +144,13 @@ export default function MapPage() {
                 <span>{users.length} builder{users.length !== 1 ? 's' : ''} nearby</span>
               </div>
             </div>
+
+            <LocationIndicator
+              isWatching={isWatching}
+              isSyncing={isSyncing}
+              permissionState={permissionState}
+              lastSyncedAt={lastSyncedAt}
+            />
 
             <div className={styles.filterSection}>
               <label className={styles.filterLabel}>

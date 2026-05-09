@@ -283,3 +283,54 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-hover);
 }
+
+/* Premium Modal Backdrop & Layout Controls */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal-content {
+  position: relative;
+  z-index: 2010;
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ---- Global Mobile Responsive ---- */
+@media (max-width: 768px) {
+  .modal-backdrop {
+    padding: 16px;
+    align-items: center;
+  }
+
+  .modal-content {
+    max-width: 100%;
+  }
+
+  .btn {
+    min-height: 44px; /* Touch target minimum */
+  }
+
+  .btn-lg {
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 15px;
+  }
+}
+

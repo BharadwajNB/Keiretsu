@@ -10,7 +10,11 @@ import { useEffect, useState } from 'react';
 import { Search, LogOut, Loader2, User } from 'lucide-react';
 import styles from './Navbar.module.css';
 
-export default function Navbar() {
+interface NavbarProps {
+  onSignInClick?: () => void;
+}
+
+export default function Navbar({ onSignInClick }: NavbarProps) {
   const { user, loading, signOut } = useAuth();
   const { profile } = useProfile();
   const pathname = usePathname();
@@ -38,7 +42,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isAuthPage = pathname === '/login' || pathname === '/auth/callback';
+  const isAuthPage = (pathname === '/login' && !onSignInClick) || pathname === '/auth/callback';
 
   if (isAuthPage) return null;
 
@@ -109,6 +113,10 @@ export default function Navbar() {
                 <LogOut size={18} />
               </button>
             </div>
+          ) : onSignInClick ? (
+            <button onClick={onSignInClick} className={styles.loginBtn}>
+              Sign In
+            </button>
           ) : (
             <Link href="/login" className={styles.loginBtn}>
               Sign In

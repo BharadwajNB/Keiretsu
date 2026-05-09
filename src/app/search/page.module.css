@@ -14,6 +14,13 @@
   margin-bottom: 32px;
 }
 
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .pageTitle {
   font-size: 32px;
   font-weight: 800;
@@ -132,14 +139,15 @@
   box-shadow: 0 0 10px rgba(129, 140, 248, 0.5);
 }
 
-/* ---- Skills filter row ---- */
-.skillsRow {
+/* ---- Selected skills row ---- */
+.selectedSkillsRow {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .skillsLabel {
@@ -151,33 +159,149 @@
   flex-shrink: 0;
 }
 
+/* ---- Category Section ---- */
+.categorySection {
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.categorySectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-primary);
+  margin-bottom: 12px;
+}
+
+/* ---- Category Tabs ---- */
+.categoryTabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.categoryTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.categoryTab {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.categoryTab:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.categoryTabActive {
+  background: rgba(129, 140, 248, 0.12);
+  border-color: rgba(129, 140, 248, 0.3);
+  color: #a5b4fc;
+}
+
+/* ---- Skill Chip Grid ---- */
+.skillChipGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.skillChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.skillChip:hover {
+  border-color: rgba(129, 140, 248, 0.4);
+  color: var(--text-primary);
+  background: rgba(129, 140, 248, 0.06);
+  transform: translateY(-1px);
+}
+
+.skillChipActive {
+  background: rgba(129, 140, 248, 0.15);
+  border-color: rgba(129, 140, 248, 0.35);
+  color: #a5b4fc;
+}
+
+.chipCount {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(129, 140, 248, 0.15);
+  color: #818cf8;
+  min-width: 18px;
+  text-align: center;
+}
+
+.noSkillsHint {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 0;
+}
+
+/* ---- Skill Auto-Suggest ---- */
 .skillDropdownWrap {
   position: relative;
 }
 
 .skillInput {
-  padding: 5px 14px;
+  padding: 8px 16px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-full);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 13px;
   outline: none;
-  width: 160px;
-  transition: border-color var(--transition-fast);
+  width: 220px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .skillInput:focus {
   border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
 }
 
 .dropdown {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  width: 230px;
-  max-height: 240px;
+  width: 300px;
+  max-height: 280px;
   overflow-y: auto;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -191,7 +315,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 9px 14px;
+  padding: 10px 14px;
   background: none;
   border: none;
   color: var(--text-primary);
@@ -202,8 +326,15 @@
   transition: background var(--transition-fast);
 }
 
-.dropdownItem:hover {
+.dropdownItem:hover,
+.dropdownItemHighlighted {
   background: var(--bg-card-hover);
+}
+
+.dropdownMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .dropdownCat {
@@ -211,6 +342,12 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.dropdownCount {
+  font-size: 10px;
+  color: #818cf8;
+  font-weight: 700;
 }
 
 /* ---- Results header ---- */
@@ -412,6 +549,11 @@
     grid-template-columns: 1fr;
   }
 
+  .headerRow {
+    flex-direction: column;
+    gap: 12px;
+  }
+
   .cardTop {
     flex-wrap: wrap;
   }
@@ -421,5 +563,14 @@
     width: 100%;
     align-items: center;
     margin-top: 8px;
+  }
+
+  .skillInput {
+    width: 100%;
+  }
+
+  .dropdown {
+    width: calc(100vw - 72px);
+    max-width: 300px;
   }
 }
