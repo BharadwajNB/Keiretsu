@@ -4,6 +4,8 @@
 
 A proximity-based network for students and engineers to discover, connect, and collaborate with builders nearby.
 
+https://keiretsu.vercel.app/
+
 ---
 
 ## Overview
