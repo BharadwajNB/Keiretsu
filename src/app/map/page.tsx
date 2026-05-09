@@ -51,7 +51,7 @@ function MapPageContent() {
     return {
       lat: latitude,
       lng: longitude,
-      radiusKm,
+      radiusKm: globalQuery ? 20000 : radiusKm, // Expand to global (20000km) if using the global search bar
       skillFilter: computedSkills.length > 0 ? computedSkills : undefined,
       collegeFilter: collegeFilter || undefined,
       nameSearch: nameSearchFilter,
@@ -158,9 +158,9 @@ function MapPageContent() {
               </label>
               <input
                 type="range"
-                min="0.5"
-                max="25"
-                step="0.5"
+                min="1"
+                max="100"
+                step="1"
                 value={radiusKm}
                 onChange={(e) => setRadiusKm(Number(e.target.value))}
                 className={styles.slider}
