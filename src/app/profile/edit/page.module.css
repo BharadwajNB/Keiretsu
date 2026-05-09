@@ -108,23 +108,12 @@
   font-weight: 600;
   color: var(--accent-green);
   margin-bottom: 4px;
-}
-
 .locationDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--accent-green);
   animation: pulse 2s infinite;
-}
-
-.saveBar {
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: flex-end;
-  gap: 16px;
 }
 
 @media (max-width: 768px) {

@@ -110,20 +110,21 @@ function ProfileEditContent() {
           <div className={styles.header}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <button 
-                onClick={() => router.back()} 
+                onClick={() => router.push('/map')} 
                 className="btn btn-secondary" 
                 style={{ padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                title="Go Back"
+                title="Back to Multiverse"
               >
                 <ArrowLeft size={18} />
               </button>
               <h1 style={{ margin: 0 }}>Edit Profile</h1>
             </div>
             <button
-              onClick={() => profile && router.push(`/profile/${profile.id}`)}
-              className="btn btn-secondary btn-sm"
+              onClick={handleSave}
+              disabled={saving || !name || !college || !githubUrl}
+              className="btn btn-primary btn-sm"
             >
-              View Public Profile
+              {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Profile'}
             </button>
           </div>
 
@@ -279,22 +280,6 @@ function ProfileEditContent() {
                 )}
               </div>
             </div>
-          </div>
-
-          <div className={styles.saveBar}>
-            <button 
-              onClick={() => router.back()} 
-              className="btn btn-secondary btn-lg"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving || !name || !college || !githubUrl}
-              className="btn btn-primary btn-lg"
-            >
-              {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Profile'}
-            </button>
           </div>
         </div>
       </main>
