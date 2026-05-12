@@ -35,10 +35,10 @@ const MOCK_CONVERSATIONS: Conversation[] = [
     lastMessage: 'Let\'s schedule a call for tomorrow?',
     time: '2m ago',
     messages: [
-      { id: 'm1', text: 'Hey Sarah! Thanks for reaching out.', senderId: 'me', timestamp: '10:30 AM' },
-      { id: 'm2', text: 'I saw your project idea for the fintech startup.', senderId: 'me', timestamp: '10:31 AM' },
-      { id: 'm3', text: 'Hi! Yes, I think your background in Next.js would be perfect for the frontend.', senderId: 'sarah', timestamp: '10:35 AM' },
-      { id: 'm4', text: 'Let\'s schedule a call for tomorrow?', senderId: 'sarah', timestamp: '10:36 AM' },
+      { id: 'm1', text: "Hey Sarah! Thanks for reaching out. I've been reviewing the project brief you sent over.", senderId: 'me', timestamp: '10:30 AM' },
+      { id: 'm2', text: "The fintech space is definitely ready for a proximity-based networking tool. Your vision for local liquidity pools is fascinating.", senderId: 'me', timestamp: '10:31 AM' },
+      { id: 'm3', text: "Hi! Exactly. I think your background in Next.js and real-time systems would be perfect for the frontend architecture.", senderId: 'sarah', timestamp: '10:35 AM' },
+      { id: 'm4', text: "I've drafted some initial wireframes in Figma. Let's schedule a call for tomorrow to sync on the roadmap?", senderId: 'sarah', timestamp: '10:36 AM' },
     ]
   },
   {
@@ -51,9 +51,9 @@ const MOCK_CONVERSATIONS: Conversation[] = [
     lastMessage: 'The repo is public now.',
     time: '1h ago',
     messages: [
-      { id: 'm1', text: 'Ready for the hackathon?', senderId: 'marcus', timestamp: 'Yesterday' },
-      { id: 'm2', text: 'Almost! Just finishing the base boilerplate.', senderId: 'me', timestamp: 'Yesterday' },
-      { id: 'm3', text: 'The repo is public now.', senderId: 'marcus', timestamp: '9:15 AM' },
+      { id: 'm1', text: 'Yo! Ready for the Global AI Hackathon this weekend? I just saw the prize pool.', senderId: 'marcus', timestamp: 'Yesterday' },
+      { id: 'm2', text: 'Almost! Just finishing the base boilerplate with Tailwind and Framer Motion. We should focus on the RAG pipeline first.', senderId: 'me', timestamp: 'Yesterday' },
+      { id: 'm3', text: 'Agreed. I just pushed the initial vector store setup to GitHub. The repo is public now.', senderId: 'marcus', timestamp: '9:15 AM' },
     ]
   },
   {
@@ -66,8 +66,9 @@ const MOCK_CONVERSATIONS: Conversation[] = [
     lastMessage: 'The weights are finished training.',
     time: '15m ago',
     messages: [
-      { id: 'm1', text: 'How are the training runs looking?', senderId: 'me', timestamp: '11:00 AM' },
-      { id: 'm2', text: 'The weights are finished training.', senderId: 'ai', timestamp: '11:45 AM' },
+      { id: 'm1', text: 'How are the training runs looking for the multimodal model?', senderId: 'me', timestamp: '11:00 AM' },
+      { id: 'm2', text: 'Loss is converging nicely. We hit a new baseline on the validation set!', senderId: 'ai', timestamp: '11:30 AM' },
+      { id: 'm3', text: 'Just checked the cluster. The weights are finished training and uploaded to S3.', senderId: 'ai', timestamp: '11:45 AM' },
     ]
   }
 ];
