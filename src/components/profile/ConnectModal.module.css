@@ -181,6 +181,51 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+.successView {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.checkmarkWrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(52, 211, 153, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  color: var(--accent-green);
+  position: relative;
+  box-shadow: 0 0 30px rgba(52, 211, 153, 0.2);
+  animation: successGlow 2s infinite ease-in-out;
+}
+
+@keyframes successGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(52, 211, 153, 0.1); }
+  50% { box-shadow: 0 0 40px rgba(52, 211, 153, 0.3); }
+}
+
+.successTitle {
+  font-family: var(--font-playmegames);
+  font-size: 24px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  background: linear-gradient(to bottom, #fff 0%, var(--accent-green) 150%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.successSubtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 240px;
+}
+
 .modalCloseIcon {
   position: absolute;
   top: 24px;
