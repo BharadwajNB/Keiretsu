@@ -29,8 +29,7 @@ Keiretsu helps you find technically strong people around you—on campus or with
 ![Supabase](https://img.shields.io/badge/Supabase-Backend-green)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
 ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-Styling-38B2AC)
-![Render](https://img.shields.io/badge/Render-Deployment-purple)
-
+![Vercel](https://img.shields.io/badge/Vercel-Deployment-black?logo=vercel)
 ---
 
 ## Project Structure
