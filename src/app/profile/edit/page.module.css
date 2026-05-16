@@ -74,6 +74,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  margin-top: 16px;
 }
 
 .skillChip {
@@ -116,20 +117,6 @@
   border-radius: 50%;
   background: var(--accent-green);
   animation: pulse 2s infinite;
-}
-
-.saveBar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16px 24px;
-  background: rgba(10, 10, 15, 0.9);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: center;
-  z-index: 100;
 }
 
 @media (max-width: 768px) {

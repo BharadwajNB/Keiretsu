@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, Users, MapPin, Search } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
-import { useGeolocation } from '@/hooks/useGeolocation';
+import LocationIndicator from '@/components/ui/LocationIndicator';
+import { useLocationSync } from '@/hooks/useLocationSync';
 import { useNearbyUsers } from '@/hooks/useNearbyUsers';
 import { useSkills } from '@/hooks/useSkills';
 import { SKILL_CATEGORIES } from '@/lib/types';
@@ -13,24 +15,50 @@ import styles from './page.module.css';
 
 const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false });
 
-export default function MapPage() {
-  const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, permissionState } = useGeolocation();
+function MapPageContent() {
+  const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, permissionState, isWatching, isSyncing, lastSyncedAt } = useLocationSync();
   const { skills: allSkills } = useSkills();
   const [radiusKm, setRadiusKm] = useState(2);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [collegeFilter, setCollegeFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const router = useRouter();
+
+  const searchParamsUrl = useSearchParams();
+  const globalQuery = searchParamsUrl.get('q');
 
   const params = useMemo(() => {
     if (!latitude || !longitude) return null;
+    
+    // Parse global search query
+    let nameSearchFilter: string | undefined = undefined;
+    const computedSkills = [...selectedSkills];
+
+    if (globalQuery) {
+      const qLower = globalQuery.toLowerCase();
+      // Check if query matches any known skill exactly or partially
+      const matchedSkill = allSkills.find(s => s.name.toLowerCase() === qLower || s.name.toLowerCase().includes(qLower));
+      
+      if (matchedSkill) {
+        if (!computedSkills.includes(matchedSkill.name)) {
+          computedSkills.push(matchedSkill.name);
+        }
+      } else {
+        // If not a skill, assume it's a name search
+        nameSearchFilter = globalQuery;
+      }
+    }
+
     return {
       lat: latitude,
       lng: longitude,
-      radiusKm,
-      skillFilter: selectedSkills.length > 0 ? selectedSkills : undefined,
+      radiusKm: globalQuery ? 20000 : radiusKm, // Expand to global (20000km) if using the global search bar
+      skillFilter: computedSkills.length > 0 ? computedSkills : undefined,
       collegeFilter: collegeFilter || undefined,
+      nameSearch: nameSearchFilter,
     };
-  }, [latitude, longitude, radiusKm, selectedSkills, collegeFilter]);
+  }, [latitude, longitude, radiusKm, selectedSkills, collegeFilter, globalQuery, allSkills]);
 
   const { users, loading: usersLoading } = useNearbyUsers(params);
 
@@ -99,6 +127,7 @@ export default function MapPage() {
               center={[latitude, longitude]}
               radiusKm={radiusKm}
               users={users}
+              selectedUserId={selectedUserId}
             />
           )}
         </div>
@@ -119,15 +148,22 @@ export default function MapPage() {
               </div>
             </div>
 
+            <LocationIndicator
+              isWatching={isWatching}
+              isSyncing={isSyncing}
+              permissionState={permissionState}
+              lastSyncedAt={lastSyncedAt}
+            />
+
             <div className={styles.filterSection}>
               <label className={styles.filterLabel}>
                 Search Radius: <strong>{radiusKm} km</strong>
               </label>
               <input
                 type="range"
-                min="0.5"
-                max="25"
-                step="0.5"
+                min="1"
+                max="100"
+                step="1"
                 value={radiusKm}
                 onChange={(e) => setRadiusKm(Number(e.target.value))}
                 className={styles.slider}
@@ -169,7 +205,7 @@ export default function MapPage() {
                 >
                   <div className={styles.skillFilters}>
                     {/* Simplified for brevity, similar to old one but nicer tags */}
-                    {Object.entries(groupedSkills).slice(0, 3).map(([category, skills]) => (
+                    {Object.entries(groupedSkills).map(([category, skills]) => (
                       <div key={category} style={{ marginBottom: 12 }}>
                         <span style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
                           {SKILL_CATEGORIES[category] || category}
@@ -202,31 +238,51 @@ export default function MapPage() {
                   <p>No builders found in this area.</p>
                 </div>
               ) : (
-                users.map((user, i) => (
-                  <motion.a
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    key={user.id}
-                    href={`/profile/${user.id}`}
-                    className={styles.userCard}
-                  >
-                    <div className={styles.userCardHeader}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={user.avatar_url || '/default-avatar.svg'} alt={user.name} className={styles.userAvatar} />
-                      <div>
-                        <h4>{user.name}</h4>
-                        <p className={styles.userMeta}>Year {user.year} · {user.college}</p>
+                users.map((user, i) => {
+                  const hasLocation = user.latitude && user.longitude;
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      key={user.id}
+                      onClick={() => {
+                        if (hasLocation) {
+                          setSelectedUserId(user.id);
+                        } else {
+                          router.push(`/profile/${user.id}`);
+                        }
+                      }}
+                      className={styles.userCard}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className={styles.userCardHeader}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={user.avatar_url || '/default-avatar.svg'} alt={user.name} className={styles.userAvatar} />
+                        <div>
+                          <h4>{user.name}</h4>
+                          <p className={styles.userMeta}>Year {user.year} · {user.college}</p>
+                        </div>
+                        <span className={styles.userDistance}>
+                          {user.distance_km != null ? `${user.distance_km}km` : 'Global'}
+                        </span>
                       </div>
-                      <span className={styles.userDistance}>{user.distance_km}km</span>
-                    </div>
-                  </motion.a>
-                ))
+                    </motion.div>
+                  );
+                })
               )}
             </div>
           </div>
         </motion.aside>
       </div>
     </div>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="page"><Navbar /><div className="page-center"><div className="spinner" /></div></div>}>
+      <MapPageContent />
+    </Suspense>
   );
 }

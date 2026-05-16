@@ -1,47 +1,114 @@
+/* ---- Layout ---- */
 .main {
   flex: 1;
+  padding: 80px 24px 80px;
   display: flex;
-  justify-content: center;
-  padding: 100px 24px 60px;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
 }
 
+/* ---- Skeleton Loading ---- */
+.skeletonPage {
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.skeleton {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  animation: skPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes skPulse {
+  0%, 100% { opacity: 0.12; }
+  50%       { opacity: 0.05; }
+}
+
+.skHero {
+  height: 220px;
+  border-radius: var(--radius-xl);
+}
+
+.skAvatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  margin-top: -48px;
+  margin-left: 40px;
+}
+
+.skLine {
+  height: 16px;
+}
+
+.skLineSm {
+  height: 12px;
+}
+
+/* ---- Hero Banner ---- */
+.heroBanner {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  height: 200px;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #0d0d18 100%);
+  border: 1px solid var(--border-color);
+  border-bottom: none;
+  flex-shrink: 0;
+}
+
+.heroBannerGlow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 80% at 50% 120%, rgba(129, 140, 248, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.heroBannerGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+/* ---- Profile Card Body ---- */
 .profileCard {
   position: relative;
   width: 100%;
-  max-width: 640px;
+  max-width: 760px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
-  padding: 40px;
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  border-top: none;
+  padding: 0 40px 40px;
+  overflow: visible;
 }
 
-.glow {
-  position: absolute;
-  top: -100px;
-  left: -100px;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(129, 140, 248, 0.15) 0%, rgba(10, 10, 10, 0) 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.profileHeader {
-  position: relative;
-  z-index: 1;
+/* ---- Avatar Row (overlapping the banner) ---- */
+.avatarRow {
   display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  margin-bottom: 32px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: -52px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 5;
 }
 
-.avatarWrapper {
-  flex-shrink: 0;
+.avatarRing {
   padding: 4px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
   border-radius: 50%;
+  background: var(--bg-card);
+  flex-shrink: 0;
 }
 
 .avatar {
@@ -49,119 +116,296 @@
   height: 96px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--bg-card);
+  display: block;
+  border: 3px solid var(--bg-card);
+  box-shadow: 0 0 0 2px var(--border-color), 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
-.headerInfo {
-  flex: 1;
-  padding-top: 8px;
+.availabilityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border: 1px solid;
+}
+
+.availabilityBadge.green {
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--accent-green);
+  border-color: rgba(52, 211, 153, 0.25);
+}
+
+.availabilityBadge.red {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--accent-red);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+.availabilityBadge.amber {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--accent-amber);
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+.availabilityDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  flex-shrink: 0;
+}
+
+.availabilityDot.pulsing {
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(1.4); }
+}
+
+/* ---- Identity ---- */
+.nameBlock {
+  margin-bottom: 20px;
 }
 
 .name {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin-bottom: 12px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
+  line-height: 1.1;
+  margin-bottom: 10px;
 }
 
 .metaRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: 20px;
 }
 
 .metaItem {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   font-size: 14px;
   color: var(--text-secondary);
 }
 
+/* ---- Divider ---- */
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 24px 0;
+}
+
+/* ---- Bio ---- */
 .bioSection {
-  position: relative;
-  z-index: 1;
-  padding: 24px;
+  padding: 20px 24px;
   background: rgba(255, 255, 255, 0.02);
   border-radius: var(--radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  margin-bottom: 32px;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.bioQuoteMark {
+  position: absolute;
+  top: 12px;
+  left: 18px;
+  font-size: 40px;
+  color: var(--accent-primary);
+  opacity: 0.2;
+  font-family: Georgia, serif;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
 }
 
 .bio {
   font-size: 15px;
   color: var(--text-secondary);
-  line-height: 1.6;
-  font-style: italic;
+  line-height: 1.7;
+  padding-top: 16px;
 }
 
-.skillsSection {
-  position: relative;
-  z-index: 1;
-  margin-bottom: 32px;
-}
-
-.sectionTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
+/* ---- Skills ---- */
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 16px;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 14px;
 }
 
-.skillTags {
+.skillGrid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 28px;
 }
 
+.skillTag {
+  padding: 6px 14px;
+  background: rgba(129, 140, 248, 0.08);
+  border: 1px solid rgba(129, 140, 248, 0.18);
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  color: #a5b4fc;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.skillTag:hover {
+  background: rgba(129, 140, 248, 0.15);
+  border-color: rgba(129, 140, 248, 0.35);
+}
+
+/* ---- Footer Actions ---- */
 .footerActions {
-  position: relative;
-  z-index: 1;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   padding-top: 24px;
   border-top: 1px solid var(--border-color);
+  flex-wrap: wrap;
 }
 
-.distanceBadge {
-  display: flex;
+.connectBtn {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: rgba(129, 140, 248, 0.1);
-  color: var(--accent-primary);
+  gap: 9px;
+  padding: 11px 24px;
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+  border: none;
   border-radius: var(--radius-full);
   font-size: 14px;
   font-weight: 600;
+  font-family: var(--font-sans);
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 12px rgba(129, 140, 248, 0.25);
 }
 
-@media (max-width: 600px) {
+.connectBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(129, 140, 248, 0.35);
+  filter: brightness(1.1);
+}
+
+.mapBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 22px;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-green);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.mapBtn:hover {
+  background: rgba(52, 211, 153, 0.14);
+  border-color: rgba(52, 211, 153, 0.4);
+  transform: translateY(-1px);
+}
+
+.githubBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 22px;
+  background: var(--bg-card-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.githubBtn:hover {
+  border-color: var(--border-hover);
+  background: #222;
+  transform: translateY(-1px);
+}
+
+.distanceBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 18px;
+  background: rgba(129, 140, 248, 0.08);
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .main {
+    padding: 72px 0 60px;
+  }
+
+  .heroBanner {
+    border-radius: 0;
+    height: 160px;
+  }
+
   .profileCard {
-    padding: 24px;
+    border-radius: 0;
+    padding: 0 20px 32px;
   }
-  
-  .profileHeader {
+
+  .name {
+    font-size: 24px;
+  }
+
+  .avatarRow {
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: -40px;
   }
-  
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+  }
+
   .metaRow {
-    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
   }
-  
+
   .footerActions {
     flex-direction: column;
-    width: 100%;
+    align-items: stretch;
   }
-  
-  .footerActions > * {
-    width: 100%;
+
+  .connectBtn,
+  .mapBtn,
+  .githubBtn,
+  .distanceBadge {
     justify-content: center;
   }
+
+  .bioSection {
+    padding: 16px 18px;
+  }
 }
+

@@ -1,39 +1,68 @@
+/* ---- Layout ---- */
 .main {
-  padding-top: 84px;
-  padding-bottom: 60px;
-  min-height: 100vh;
+  flex: 1;
+  padding: 84px 24px 80px;
 }
 
 .container {
-  max-width: 1000px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 0 24px;
 }
 
-.header {
-  margin-bottom: 28px;
+/* ---- Page Header ---- */
+.pageHeader {
+  margin-bottom: 32px;
 }
 
-.header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
 
-.controls {
+.pageTitle {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.pageSubtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+/* ---- Filter Panel ---- */
+.filterPanel {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 20px;
+  border-radius: var(--radius-xl);
+  padding: 24px;
   margin-bottom: 28px;
 }
 
-.searchRow {
-  display: flex;
+.filterRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
   gap: 16px;
-  align-items: flex-end;
+  align-items: end;
   margin-bottom: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
 }
 
 .inputWrapper {
@@ -47,38 +76,45 @@
   left: 14px;
   color: var(--text-muted);
   pointer-events: none;
+  flex-shrink: 0;
 }
 
-.searchBar {
+.searchInput {
   width: 100%;
-  padding: 12px 14px 12px 42px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 11px 14px 11px 42px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
-  transition: all var(--transition-fast);
   outline: none;
+  transition: all var(--transition-fast);
 }
 
-.searchBar:focus {
+.searchInput:focus {
   border-color: var(--accent-primary);
-  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
 }
 
-.radiusControl {
+/* ---- Radius control ---- */
+.radiusGroup {
   min-width: 160px;
 }
 
-.radiusLabel {
-  display: block;
-  font-size: 12px;
-  color: var(--text-secondary);
+.radiusValue {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
   margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.radiusLabel strong {
+.radiusValue strong {
   color: var(--accent-primary);
 }
 
@@ -90,63 +126,187 @@
   border-radius: 2px;
   outline: none;
   cursor: pointer;
+  margin-top: 6px;
 }
 
 .slider::-webkit-slider-thumb {
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   background: var(--accent-primary);
   border-radius: 50%;
   cursor: grab;
-  box-shadow: 0 0 8px rgba(129, 140, 248, 0.4);
+  box-shadow: 0 0 10px rgba(129, 140, 248, 0.5);
 }
 
-.skillRow {
+/* ---- Selected skills row ---- */
+.selectedSkillsRow {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.skillLabel {
+.skillsLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ---- Category Section ---- */
+.categorySection {
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.categorySectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-primary);
+  margin-bottom: 12px;
+}
+
+/* ---- Category Tabs ---- */
+.categoryTabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.categoryTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.categoryTab {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.categoryTab:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.categoryTabActive {
+  background: rgba(129, 140, 248, 0.12);
+  border-color: rgba(129, 140, 248, 0.3);
+  color: #a5b4fc;
+}
+
+/* ---- Skill Chip Grid ---- */
+.skillChipGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.skillChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.skillChip:hover {
+  border-color: rgba(129, 140, 248, 0.4);
+  color: var(--text-primary);
+  background: rgba(129, 140, 248, 0.06);
+  transform: translateY(-1px);
+}
+
+.skillChipActive {
+  background: rgba(129, 140, 248, 0.15);
+  border-color: rgba(129, 140, 248, 0.35);
+  color: #a5b4fc;
+}
+
+.chipCount {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(129, 140, 248, 0.15);
+  color: #818cf8;
+  min-width: 18px;
+  text-align: center;
+}
+
+.noSkillsHint {
   font-size: 13px;
   color: var(--text-muted);
-  font-weight: 600;
+  font-style: italic;
+  padding: 8px 0;
 }
 
-.skillDropdown {
+/* ---- Skill Auto-Suggest ---- */
+.skillDropdownWrap {
   position: relative;
 }
 
 .skillInput {
-  padding: 5px 12px;
+  padding: 8px 16px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-full);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 13px;
   outline: none;
-  width: 180px;
-  transition: border-color var(--transition-fast);
+  width: 220px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .skillInput:focus {
   border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
 }
 
 .dropdown {
   position: absolute;
-  top: 32px;
+  top: calc(100% + 6px);
   left: 0;
-  width: 220px;
-  max-height: 240px;
+  width: 300px;
+  max-height: 280px;
   overflow-y: auto;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
   z-index: 50;
 }
 
@@ -155,7 +315,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 8px 14px;
+  padding: 10px 14px;
   background: none;
   border: none;
   color: var(--text-primary);
@@ -166,99 +326,170 @@
   transition: background var(--transition-fast);
 }
 
-.dropdownItem:hover {
+.dropdownItem:hover,
+.dropdownItemHighlighted {
   background: var(--bg-card-hover);
+}
+
+.dropdownMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .dropdownCat {
   font-size: 10px;
   color: var(--text-muted);
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.results {
-  min-height: 200px;
+.dropdownCount {
+  font-size: 10px;
+  color: #818cf8;
+  font-weight: 700;
 }
 
-.resultsHeader {
-  font-size: 13px;
-  color: var(--text-muted);
+/* ---- Results header ---- */
+.resultsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 16px;
 }
 
-.noLocation,
-.empty {
+.resultsCount {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ---- Empty / No-location states ---- */
+.stateBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  padding: 48px 20px;
+  padding: 64px 24px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
+  gap: 12px;
 }
 
-.empty h3 {
-  margin-bottom: 6px;
+.stateBox h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
-.empty p {
-  color: var(--text-muted);
+.stateBox p {
   font-size: 14px;
+  color: var(--text-muted);
+  max-width: 280px;
 }
 
-.loading {
-  display: flex;
-  justify-content: center;
-  padding: 40px;
-}
-
-.grid {
+/* ---- Skeleton cards ---- */
+.skeletonGrid {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
+.skeletonCard {
+  height: 100px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  animation: skPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes skPulse {
+  0%, 100% { opacity: 0.12; }
+  50%       { opacity: 0.05; }
+}
+
+/* ---- Result grid ---- */
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- Result Card ---- */
 .resultCard {
   display: block;
-  padding: 20px;
+  padding: 20px 24px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   text-decoration: none;
   color: inherit;
   transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.resultCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.04), transparent);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  pointer-events: none;
 }
 
 .resultCard:hover {
-  border-color: var(--border-accent);
+  border-color: rgba(129, 140, 248, 0.35);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md), var(--shadow-glow);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(129, 140, 248, 0.12);
+}
+
+.resultCard:hover::before {
+  opacity: 1;
 }
 
 .cardTop {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .avatar {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--border-color);
+  flex-shrink: 0;
+  transition: border-color var(--transition-fast);
+}
+
+.resultCard:hover .avatar {
+  border-color: rgba(129, 140, 248, 0.4);
 }
 
 .cardInfo {
   flex: 1;
+  min-width: 0;
 }
 
-.cardInfo h3 {
+.cardName {
   font-size: 16px;
   font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.cardInfo p {
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .cardRight {
@@ -266,23 +497,25 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 6px;
+  flex-shrink: 0;
 }
 
-.distance {
-  font-size: 14px;
+.distanceTag {
+  font-size: 13px;
   font-weight: 700;
   color: var(--accent-primary);
 }
 
 .cardBio {
-  margin-top: 10px;
-  padding: 12px;
-  background: var(--bg-input);
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
   border-radius: var(--radius-md);
   font-size: 13px;
   color: var(--text-secondary);
   line-height: 1.6;
   font-style: italic;
+  border-left: 2px solid rgba(129, 140, 248, 0.2);
 }
 
 .cardSkills {
@@ -290,6 +523,15 @@
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 12px;
+}
+
+.cardSkillTag {
+  padding: 3px 10px;
+  background: rgba(129, 140, 248, 0.08);
+  border: 1px solid rgba(129, 140, 248, 0.15);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  color: #a5b4fc;
 }
 
 .cardGithub {
@@ -301,9 +543,15 @@
   color: var(--text-muted);
 }
 
+/* ---- Responsive ---- */
 @media (max-width: 768px) {
-  .searchRow {
+  .filterRow {
+    grid-template-columns: 1fr;
+  }
+
+  .headerRow {
     flex-direction: column;
+    gap: 12px;
   }
 
   .cardTop {
@@ -313,7 +561,16 @@
   .cardRight {
     flex-direction: row;
     width: 100%;
-    justify-content: flex-start;
+    align-items: center;
     margin-top: 8px;
+  }
+
+  .skillInput {
+    width: 100%;
+  }
+
+  .dropdown {
+    width: calc(100vw - 72px);
+    max-width: 300px;
   }
 }

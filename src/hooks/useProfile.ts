@@ -87,13 +87,34 @@ export function useProfile() {
     async (skillNames: string[]) => {
       if (!profile) return;
 
-      // Get skill IDs
-      const { data: skills } = await supabase
+      // Get existing skill IDs
+      const { data: existingSkills } = await supabase
         .from('skills')
         .select('id, name')
         .in('name', skillNames);
 
-      if (!skills) return;
+      let allSkills = existingSkills || [];
+      const existingNames = allSkills.map((s) => s.name.toLowerCase());
+      
+      // Find which ones are missing (case insensitive)
+      const missingNames = skillNames.filter((name) => !existingNames.includes(name.toLowerCase()));
+
+      // Insert missing skills
+      if (missingNames.length > 0) {
+        const { data: newSkills, error: insertError } = await supabase
+          .from('skills')
+          .insert(missingNames.map((name) => ({ name, category: 'general' })))
+          .select('id, name');
+
+        if (newSkills) {
+          allSkills = [...allSkills, ...newSkills];
+        } else {
+          console.error("Failed to insert custom skills:", insertError);
+          // If RLS fails, we just ignore the custom skills and proceed with existing
+        }
+      }
+
+      if (allSkills.length === 0) return;
 
       // Delete existing skills
       await supabase
@@ -101,15 +122,13 @@ export function useProfile() {
         .delete()
         .eq('profile_id', profile.id);
 
-      // Insert new skills
-      if (skills.length > 0) {
-        await supabase.from('profile_skills').insert(
-          skills.map((s) => ({
-            profile_id: profile.id,
-            skill_id: s.id,
-          }))
-        );
-      }
+      // Insert all skills
+      await supabase.from('profile_skills').insert(
+        allSkills.map((s) => ({
+          profile_id: profile.id,
+          skill_id: s.id,
+        }))
+      );
 
       await fetchProfile();
     },

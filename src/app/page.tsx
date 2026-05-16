@@ -8,8 +8,12 @@ import { MapPin, Code2, Users2, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import StarField from '@/components/globe/StarField';
 import UniversityPopup from '@/components/globe/UniversityPopup';
-import { UNIVERSITIES, TOTAL_BUILDERS, TOTAL_UNIVERSITIES } from '@/lib/universityData';
+import { UNIVERSITIES } from '@/lib/universityData';
 import type { UniversityNode } from '@/lib/universityData';
+import { useAuth } from '@/hooks/useAuth';
+import AuthenticatedHub from '@/components/home/AuthenticatedHub';
+import { usePathname, useRouter } from 'next/navigation';
+import { LoginContent } from './login/page';
 import styles from './page.module.css';
 
 // Dynamic import of GlobeView — no SSR (WebGL)
@@ -36,13 +40,25 @@ const stagger: Variants = {
   visible: { transition: { staggerChildren: 0.1 } },
 };
 
-export default function Home() {
+export default function Home({ defaultShowLogin = false }: { defaultShowLogin?: boolean }) {
+  const { user, loading } = useAuth();
   const [selectedUniversity, setSelectedUniversity] = useState<UniversityNode | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [showDetailedMap, setShowDetailedMap] = useState(false);
   const [fullyHideGlobe, setFullyHideGlobe] = useState(false);
   const [isGlobeReady, setIsGlobeReady] = useState(false);
   const heroRightRef = useRef<HTMLDivElement>(null);
+
+  const [showLoginModal, setShowLoginModal] = useState(defaultShowLogin);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleCloseLoginModal = useCallback(() => {
+    setShowLoginModal(false);
+    if (pathname === '/login') {
+      router.push('/');
+    }
+  }, [pathname, router]);
 
   useEffect(() => {
     // Delay the heavy WebGL globe initialization so Framer Motion text animations
@@ -87,12 +103,54 @@ export default function Home() {
     }, 300);
   }, []);
 
-  // Duplicate ticker list for seamless loop
-  const tickerItems = [...UNIVERSITIES, ...UNIVERSITIES];
+  if (loading) {
+    return (
+      <div className="page">
+        <Navbar />
+        <main className={styles.main}>
+          <section className={styles.hero} style={{ pointerEvents: 'none' }}>
+            {/* Left: Skeleton Details */}
+            <div className={styles.heroLeft}>
+              <div className={`${styles.skeleton} ${styles.skeletonBadge}`} />
+              <div className={`${styles.skeleton} ${styles.skeletonTitle}`} />
+              <div className={`${styles.skeleton} ${styles.skeletonTitle}`} style={{ width: '70%', marginTop: '12px' }} />
+              <div className={styles.accentLine} style={{ opacity: 0.1 }} />
+              <div className={`${styles.skeleton} ${styles.skeletonText}`} />
+              <div className={`${styles.skeleton} ${styles.skeletonText}`} style={{ width: '85%' }} />
+              <div className={`${styles.skeleton} ${styles.skeletonText}`} style={{ width: '50%' }} />
+              
+              <div className={styles.ctaGroup} style={{ marginTop: '36px' }}>
+                <div className={`${styles.skeleton} ${styles.skeletonBtn}`} />
+                <div className={`${styles.skeleton} ${styles.skeletonBtn}`} style={{ width: '130px' }} />
+              </div>
+            </div>
+
+            {/* Right: Skeleton Globe */}
+            <div className={styles.heroRight}>
+              <div className={styles.globeGlow} style={{ opacity: 0.5 }} />
+              <div className={`${styles.skeleton} ${styles.skeletonGlobe}`} />
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
+  if (user) {
+    return (
+      <div className="page">
+        <Navbar />
+        <main className={styles.main}>
+          <StarField />
+          <AuthenticatedHub />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="page">
-      <Navbar />
+      <Navbar onSignInClick={() => setShowLoginModal(true)} />
 
       <main className={styles.main}>
         {/* Hero Section — Split Layout */}
@@ -122,26 +180,11 @@ export default function Home() {
                 Discover who is building what around you, and find your next co-founder.
               </motion.p>
 
-              <motion.div variants={fadeIn} className={styles.statsRow}>
-                <div className={styles.stat}>
-                  <span className={styles.statValue}>{TOTAL_BUILDERS}+</span>
-                  <span className={styles.statLabel}>Builders</span>
-                </div>
-                <div className={styles.stat}>
-                  <span className={styles.statValue}>{TOTAL_UNIVERSITIES}</span>
-                  <span className={styles.statLabel}>Universities</span>
-                </div>
-                <div className={styles.stat}>
-                  <span className={styles.statValue}>12</span>
-                  <span className={styles.statLabel}>Cities</span>
-                </div>
-              </motion.div>
-
               <motion.div variants={fadeIn} className={styles.ctaGroup}>
-                <Link href="/login" className={styles.primaryBtn}>
+                <button onClick={() => setShowLoginModal(true)} className={styles.primaryBtn}>
                   Get Started
                   <ArrowRight size={16} className={styles.btnIcon} />
-                </Link>
+                </button>
                 <Link href="/search" className={styles.secondaryBtn}>
                   Explore Skills
                 </Link>
@@ -195,21 +238,52 @@ export default function Home() {
           </div>
         </section>
 
-        {/* University Ticker */}
-        <section className={styles.universityTicker}>
-          <div className={styles.tickerLabel}>Trusted by builders at</div>
-          <div className={styles.tickerTrack}>
-            {tickerItems.map((uni, i) => (
-              <div key={`${uni.id}-${i}`} className={styles.tickerItem}>
-                <span className={styles.tickerDot} />
-                <span>{uni.shortName}</span>
+        {/* How It Works Section */}
+        <section className={styles.howItWorks}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionBadge}>How It Works</span>
+            <h2 className={styles.sectionTitle}>Join the proximity network in three steps</h2>
+            <p className={styles.sectionSubtitle}>Connecting with local developers has never been easier.</p>
+          </div>
+          
+          <div className={styles.stepsGrid}>
+            <div className={styles.stepCard}>
+              <div className={styles.stepNumber}>01</div>
+              <div className={styles.iconWrapper}>
+                <MapPin size={24} className={styles.featureIcon} />
               </div>
-            ))}
+              <h3>Drop a Pin</h3>
+              <p>Securely share your approximate coordinates. You choose exactly when and how your profile is visible on the local map.</p>
+            </div>
+
+            <div className={styles.stepCard}>
+              <div className={styles.stepNumber}>02</div>
+              <div className={styles.iconWrapper}>
+                <Code2 size={24} className={styles.featureIcon} />
+              </div>
+              <h3>Tag Your Stack</h3>
+              <p>Add your technical skills and clear availability status: open to collaborate, looking for a co-founder, or busy.</p>
+            </div>
+
+            <div className={styles.stepCard}>
+              <div className={styles.stepNumber}>03</div>
+              <div className={styles.iconWrapper}>
+                <Users2 size={24} className={styles.featureIcon} />
+              </div>
+              <h3>Discover Builders</h3>
+              <p>Browse the map, filter by exact skills, and reach out to nearby developers for walking-distance collaboration.</p>
+            </div>
           </div>
         </section>
 
         {/* Features Section */}
         <section className={styles.features}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionBadge}>Core Pillars</span>
+            <h2 className={styles.sectionTitle}>Engineered for real-world collaboration</h2>
+            <p className={styles.sectionSubtitle}>A secure, developer-first platform built to eliminate friction and spark innovation.</p>
+          </div>
+
           <motion.div
             className={styles.featureGrid}
             initial="hidden"
@@ -243,6 +317,30 @@ export default function Home() {
           </motion.div>
         </section>
       </main>
+
+      <AnimatePresence>
+        {showLoginModal && (
+          <motion.div 
+            className="modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={handleCloseLoginModal}
+          >
+            <motion.div 
+              className="modal-content"
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <LoginContent isModal={true} onCancel={handleCloseLoginModal} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

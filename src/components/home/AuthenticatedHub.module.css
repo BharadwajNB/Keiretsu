@@ -1,0 +1,152 @@
+.hubWrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 40px 40px;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.hubCard {
+  width: 100%;
+  max-width: 1400px;
+  height: 80vh;
+  min-height: 600px;
+  background: rgba(10, 10, 12, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 48px;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.5);
+}
+
+.cardLeft {
+  flex: 1;
+  padding: 80px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 10;
+  position: relative;
+}
+
+.cardRight {
+  flex: 1.5;
+  position: relative;
+  height: 100%;
+  /* Use a mask to softly fade the globe on the left edge into the text */
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15%);
+  mask-image: linear-gradient(to right, transparent, black 15%);
+}
+
+.globeWrapper {
+  width: 140%;
+  height: 140%;
+  position: absolute;
+  top: 50%;
+  left: 30%;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+/* Typography matching the screenshot */
+.title {
+  font-family: var(--font-sans);
+  font-size: clamp(48px, 5vw, 72px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+}
+
+.accentLine {
+  width: 64px;
+  height: 4px;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  margin-bottom: 24px;
+}
+
+.subtitle {
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 400;
+  color: var(--text-secondary);
+  letter-spacing: -0.01em;
+}
+
+/* Expand Action */
+.expandButton {
+  position: absolute;
+  top: 32px;
+  right: 32px;
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  transition: all var(--transition-base);
+  z-index: 20;
+  cursor: pointer;
+}
+
+.expandButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.expandButton:active {
+  transform: scale(0.95);
+}
+
+/* Controls */
+.controls {
+  position: absolute;
+  bottom: 32px;
+  right: 60px;
+  display: flex;
+  gap: 16px;
+  z-index: 20;
+}
+
+@media (max-width: 1024px) {
+  .hubCard {
+    flex-direction: column;
+    border-radius: 32px;
+    height: auto;
+  }
+  
+  .cardLeft {
+    flex: none;
+    padding: 40px;
+    text-align: center;
+    align-items: center;
+  }
+  
+  .cardRight {
+    flex: none;
+    height: 400px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%);
+    mask-image: linear-gradient(to bottom, transparent, black 15%);
+  }
+
+  .globeWrapper {
+    width: 100%;
+    left: 50%;
+  }
+
+  .controls {
+    bottom: 20px;
+    right: 50%;
+    transform: translateX(50%);
+  }
+}

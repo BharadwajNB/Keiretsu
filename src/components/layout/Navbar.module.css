@@ -30,9 +30,9 @@
 
 .container {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -45,6 +45,12 @@
   gap: 8px;
   font-size: 18px;
   letter-spacing: -0.03em;
+}
+
+.brandIcon {
+  filter: invert(1);
+  border-radius: 50%;
+  margin-right: 4px;
 }
 
 .brandPrimary {
@@ -194,4 +200,41 @@
   .centerSection {
     display: none; /* Hide global search on small mobile */
   }
+
+  .loginBtn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
 }
+
+@media (max-width: 1024px) {
+  .container {
+    padding: 0 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  .navbar {
+    height: 60px;
+  }
+
+  .brand {
+    font-size: 16px;
+  }
+
+  .brandIcon {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .avatarBtn,
+  .iconBtn {
+    width: 32px;
+    height: 32px;
+  }
+}
+

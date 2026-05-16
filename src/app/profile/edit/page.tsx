@@ -8,6 +8,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSkills } from '@/hooks/useSkills';
 import { AVAILABILITY_LABELS } from '@/lib/types';
 import type { AvailabilityStatus } from '@/lib/types';
+import { ArrowLeft } from 'lucide-react';
 import styles from './page.module.css';
 
 function ProfileEditContent() {
@@ -107,12 +108,23 @@ function ProfileEditContent() {
           )}
 
           <div className={styles.header}>
-            <h1>Edit Profile</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <button 
+                onClick={() => router.push('/map')} 
+                className="btn btn-secondary" 
+                style={{ padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                title="Back to Multiverse"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <h1 style={{ margin: 0 }}>Edit Profile</h1>
+            </div>
             <button
-              onClick={() => profile && router.push(`/profile/${profile.id}`)}
-              className="btn btn-secondary btn-sm"
+              onClick={handleSave}
+              disabled={saving || !name || !college || !githubUrl}
+              className="btn btn-primary btn-sm"
             >
-              View Public Profile
+              {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Profile'}
             </button>
           </div>
 
@@ -217,16 +229,42 @@ function ProfileEditContent() {
                   className="input"
                   value={skillSearch}
                   onChange={(e) => setSkillSearch(e.target.value)}
-                  placeholder="Search skills to add..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const query = skillSearch.trim();
+                      if (query && !selectedSkills.some(s => s.toLowerCase() === query.toLowerCase())) {
+                        toggleSkill(query);
+                        setSkillSearch('');
+                      }
+                    }
+                  }}
+                  placeholder="Search or type a custom skill and press Enter..."
                 />
               </div>
 
               <div className={styles.skillGrid}>
+                {skillSearch.trim() && !allSkills.some(s => s.name.toLowerCase() === skillSearch.trim().toLowerCase()) && !selectedSkills.some(s => s.toLowerCase() === skillSearch.trim().toLowerCase()) && (
+                  <button
+                    className={styles.skillChip}
+                    style={{ background: 'rgba(129, 140, 248, 0.15)', borderColor: '#818cf8', color: '#818cf8' }}
+                    onClick={() => {
+                      toggleSkill(skillSearch.trim());
+                      setSkillSearch('');
+                    }}
+                  >
+                    + Add "{skillSearch.trim()}" (Custom)
+                  </button>
+                )}
+
                 {filteredSkills.slice(0, 20).map((skill) => (
                   <button
                     key={skill.id}
                     className={styles.skillChip}
-                    onClick={() => toggleSkill(skill.name)}
+                    onClick={() => {
+                      toggleSkill(skill.name);
+                      setSkillSearch('');
+                    }}
                   >
                     + {skill.name}
                   </button>
@@ -268,16 +306,6 @@ function ProfileEditContent() {
                 )}
               </div>
             </div>
-          </div>
-
-          <div className={styles.saveBar}>
-            <button
-              onClick={handleSave}
-              disabled={saving || !name || !college || !githubUrl}
-              className="btn btn-primary btn-lg"
-            >
-              {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Profile'}
-            </button>
           </div>
         </div>
       </main>

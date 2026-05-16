@@ -46,11 +46,30 @@ export function useAuth() {
     });
   }, [supabase.auth]);
 
+  const signUpWithEmail = useCallback(async (email: string, password: string, fullName: string) => {
+    return await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
+    });
+  }, [supabase.auth]);
+
+  const signInWithEmail = useCallback(async (email: string, password: string) => {
+    return await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+  }, [supabase.auth]);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
     window.location.href = '/';
   }, [supabase.auth]);
 
-  return { user, loading, signInWithGoogle, signInWithGithub, signOut };
+  return { user, loading, signInWithGoogle, signInWithGithub, signUpWithEmail, signInWithEmail, signOut };
 }

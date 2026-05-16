@@ -1,17 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect, useState } from 'react';
+import { useProfile } from '@/hooks/useProfile';
+import { useEffect, useState, Suspense } from 'react';
 
 import { Search, LogOut, Loader2, User } from 'lucide-react';
 import styles from './Navbar.module.css';
 
-export default function Navbar() {
+interface NavbarProps {
+  onSignInClick?: () => void;
+}
+
+function NavbarContent({ onSignInClick }: NavbarProps) {
   const { user, loading, signOut } = useAuth();
+  const { profile } = useProfile();
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Sync initial search query from URL if present
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q) setSearchQuery(q);
+  }, [searchParams]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,9 +42,19 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isAuthPage = pathname === '/login' || pathname === '/auth/callback';
+  const isAuthPage = (pathname === '/login' && !onSignInClick) || pathname === '/auth/callback';
 
   if (isAuthPage) return null;
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      if (searchQuery.trim()) {
+        router.push(`/map?q=${encodeURIComponent(searchQuery.trim())}`);
+      } else {
+        router.push(`/map`);
+      }
+    }
+  };
 
   return (
     <nav className={`${styles.navbar} ${isScrolled ? styles.hidden : ''}`}>
@@ -37,8 +63,14 @@ export default function Navbar() {
       <div className={styles.container}>
         {/* Left: Brand */}
         <Link href="/" className={styles.brand}>
+          <Image 
+            src="/custom-globe-transparent.png" 
+            alt="Keiretsu Globe" 
+            width={28} 
+            height={28} 
+            className={styles.brandIcon} 
+          />
           <span className={styles.brandPrimary}>Keiretsu</span>
-          <span className={styles.brandSecondary}>Multiverse</span>
         </Link>
 
         {/* Center: Global Search (Only if logged in or on landing) */}
@@ -47,11 +79,13 @@ export default function Navbar() {
             <Search size={16} className={styles.searchIcon} />
             <input 
               type="text" 
-              placeholder="Search universities..." 
+              placeholder="Search builders or skills..." 
               className={styles.searchInput}
-              // Add onChange or onKeyDown later to hook up to actual search route
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
             />
-            <div className={styles.searchShortcut}>⌘K</div>
+            <div className={styles.searchShortcut}>↵</div>
           </div>
         </div>
 
@@ -61,13 +95,28 @@ export default function Navbar() {
             <Loader2 className="spinner" size={20} />
           ) : user ? (
             <div className={styles.userControls}>
-              <Link href={`/profile/${user.id}`} className={styles.avatarBtn} title="Profile">
-                <User size={18} />
-              </Link>
+              {profile ? (
+                <Link href={`/profile/${profile.id}`} className={styles.avatarBtn} title="Profile">
+                  {profile.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profile.avatar_url} alt="Avatar" style={{ width: 24, height: 24, borderRadius: '50%' }} />
+                  ) : (
+                    <User size={18} />
+                  )}
+                </Link>
+              ) : (
+                <Link href="/profile/edit" className={styles.avatarBtn} title="Setup Profile">
+                  <User size={18} />
+                </Link>
+              )}
               <button onClick={signOut} className={styles.iconBtn} title="Sign Out">
                 <LogOut size={18} />
               </button>
             </div>
+          ) : onSignInClick ? (
+            <button onClick={onSignInClick} className={styles.loginBtn}>
+              Sign In
+            </button>
           ) : (
             <Link href="/login" className={styles.loginBtn}>
               Sign In
@@ -76,5 +125,13 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+  );
+}
+
+export default function Navbar(props: NavbarProps) {
+  return (
+    <Suspense fallback={<nav className={`${styles.navbar}`}><div className={styles.glassBackground} /></nav>}>
+      <NavbarContent {...props} />
+    </Suspense>
   );
 }
