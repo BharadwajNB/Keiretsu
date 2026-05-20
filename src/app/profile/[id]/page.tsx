@@ -8,6 +8,7 @@ import { AVAILABILITY_LABELS } from '@/lib/types';
 import type { Profile } from '@/lib/types';
 import { MapPin, ExternalLink, Building2, Calendar, MessageCircle, Map, Edit3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import GitHubCard from '@/components/profile/GitHubCard';
 import styles from './page.module.css';
 
 // ---- Skeleton ----------------------------------------------------------------
@@ -194,6 +195,11 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 ))}
               </motion.div>
             </div>
+          )}
+
+          {/* GitHub Activity */}
+          {profile.github_url && (
+            <GitHubCard githubUrl={profile.github_url} />
           )}
 
           {/* Footer Actions */}

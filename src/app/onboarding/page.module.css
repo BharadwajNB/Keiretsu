@@ -1,0 +1,365 @@
+/* ---- Onboarding Layout ---- */
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px 60px;
+  min-height: 100vh;
+}
+
+.container {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: relative;
+}
+
+/* ---- Skip Button ---- */
+.skipBtn {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.skipBtn:hover {
+  color: var(--text-secondary);
+}
+
+/* ---- Progress Bar ---- */
+.progressBar {
+  width: 100%;
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), #a78bfa);
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---- Step Indicator ---- */
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.stepDot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  color: var(--text-muted);
+  transition: all var(--transition-base);
+}
+
+.stepDotActive {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.stepDotCurrent {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+  box-shadow: 0 0 12px rgba(129, 140, 248, 0.3);
+}
+
+/* ---- Card Wrapper (animation boundary) ---- */
+.cardWrapper {
+  position: relative;
+  min-height: 340px;
+}
+
+/* ---- Step Card ---- */
+.stepCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.stepHeader {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.stepEmoji {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.stepHeading {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.stepSub {
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 380px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* ---- Step Body ---- */
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- GitHub Detection ---- */
+.detecting {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.detected {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--accent-green);
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* ---- Skill Chips ---- */
+.suggestedSection {
+  padding: 16px;
+  background: rgba(129, 140, 248, 0.04);
+  border: 1px solid rgba(129, 140, 248, 0.12);
+  border-radius: var(--radius-lg);
+}
+
+.suggestedLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  margin-bottom: 10px;
+}
+
+.chipGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 6px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.chip:hover {
+  background: var(--accent-glow);
+  border-color: var(--border-accent);
+  color: var(--accent-primary);
+}
+
+.chipActive {
+  background: rgba(129, 140, 248, 0.12);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.selectedRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+/* ---- Location Card ---- */
+.locationCard {
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.locationGranted {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.locationCheck {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--accent-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.locationDenied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-red);
+}
+
+.locationPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.locationIcon {
+  color: var(--accent-primary);
+  opacity: 0.6;
+}
+
+.locationTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.locationSub {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+/* ---- Navigation Row ---- */
+.navRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.backBtn:hover {
+  background: var(--bg-card);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.continueBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+  border: none;
+  border-radius: var(--radius-full);
+  color: white;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 12px rgba(129, 140, 248, 0.25);
+}
+
+.continueBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(129, 140, 248, 0.4);
+  filter: brightness(1.1);
+}
+
+.continueBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 640px) {
+  .main {
+    padding: 72px 16px 40px;
+    align-items: flex-start;
+  }
+
+  .stepCard {
+    padding: 24px 20px;
+  }
+
+  .stepHeading {
+    font-size: 20px;
+  }
+
+  .skipBtn {
+    top: -36px;
+  }
+
+  .navRow {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .continueBtn {
+    flex: 1;
+    justify-content: center;
+  }
+}

@@ -23,7 +23,7 @@ export async function GET(request: Request) {
           .single();
 
         if (profile && (!profile.college || !profile.github_url)) {
-          return NextResponse.redirect(`${origin}/profile/edit?welcome=true`);
+          return NextResponse.redirect(`${origin}/onboarding`);
         }
       }
 

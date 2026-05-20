@@ -1,0 +1,226 @@
+/* ---- GitHub Stats Card ---- */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 24px 28px;
+  margin-bottom: 28px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.cardTitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.ghIcon {
+  color: var(--text-secondary);
+}
+
+/* ---- Stats Row ---- */
+.statsRow {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.statValue {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ---- Streak Badge ---- */
+.streakBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-green);
+  margin-left: auto;
+}
+
+/* ---- Language Bars ---- */
+.languageSection {
+  margin-bottom: 20px;
+}
+
+.langBar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-input);
+  margin-bottom: 10px;
+}
+
+.langSegment {
+  transition: width 0.6s ease;
+}
+
+.langLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.langItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.langDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.langPercent {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* ---- Pinned Repos ---- */
+.reposSection {
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+}
+
+.reposGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.repoCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: inherit;
+  transition: all var(--transition-fast);
+}
+
+.repoCard:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(129, 140, 248, 0.2);
+  transform: translateX(4px);
+}
+
+.repoInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.repoName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.repoDesc {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.repoMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+.repoLang {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.repoStars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ---- Loading / Error ---- */
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.errorState {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 640px) {
+  .card {
+    padding: 20px;
+  }
+
+  .statsRow {
+    gap: 16px;
+  }
+
+  .statValue {
+    font-size: 18px;
+  }
+
+  .repoMeta {
+    display: none;
+  }
+}

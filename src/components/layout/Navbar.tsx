@@ -5,9 +5,11 @@ import Image from 'next/image';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useMemo } from 'react';
 
 import { Search, LogOut, Loader2, User } from 'lucide-react';
+import { getProfileCompletion } from '@/lib/profileCompletion';
+import type { Profile } from '@/lib/types';
 import styles from './Navbar.module.css';
 
 interface NavbarProps {
@@ -23,9 +25,9 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Sync initial search query from URL if present
   useEffect(() => {
     const q = searchParams.get('q');
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (q) setSearchQuery(q);
   }, [searchParams]);
 
@@ -105,10 +107,11 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
                   )}
                 </Link>
               ) : (
-                <Link href="/profile/edit" className={styles.avatarBtn} title="Setup Profile">
+                <Link href="/onboarding" className={styles.avatarBtn} title="Setup Profile">
                   <User size={18} />
                 </Link>
               )}
+              <CompletionBadge profile={profile} />
               <button onClick={signOut} className={styles.iconBtn} title="Sign Out">
                 <LogOut size={18} />
               </button>
@@ -125,6 +128,50 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
         </div>
       </div>
     </nav>
+  );
+}
+
+function CompletionBadge({ profile }: { profile: Profile | null }) {
+  const completion = useMemo(() => getProfileCompletion(profile), [profile]);
+
+  if (!profile || completion.percentage >= 100) return null;
+
+  const radius = 10;
+  const stroke = 2.5;
+  const normalizedRadius = radius - stroke * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (completion.percentage / 100) * circumference;
+
+  return (
+    <Link
+      href="/onboarding"
+      className={styles.completionBadge}
+      title={`Profile ${completion.percentage}% complete. Click to finish setup!`}
+    >
+      <div className={styles.progressRingWrapper}>
+        <svg height={radius * 2} width={radius * 2} className={styles.progressRing}>
+          <circle
+            stroke="rgba(255, 255, 255, 0.1)"
+            fill="transparent"
+            strokeWidth={stroke}
+            r={normalizedRadius}
+            cx={radius}
+            cy={radius}
+          />
+          <circle
+            stroke="var(--accent-primary)"
+            fill="transparent"
+            strokeWidth={stroke}
+            strokeDasharray={circumference + ' ' + circumference}
+            style={{ strokeDashoffset }}
+            r={normalizedRadius}
+            cx={radius}
+            cy={radius}
+          />
+        </svg>
+        <span className={styles.completionText}>{completion.percentage}%</span>
+      </div>
+    </Link>
   );
 }
 
