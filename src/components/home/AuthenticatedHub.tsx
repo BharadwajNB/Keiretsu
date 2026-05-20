@@ -5,6 +5,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { Maximize2 } from 'lucide-react';
+import RequestList from '../dashboard/RequestList';
 import styles from './AuthenticatedHub.module.css';
 
 // Reusing the same GlobeView for consistency, no SSR
@@ -73,13 +74,20 @@ export default function AuthenticatedHub() {
           <Maximize2 size={24} />
         </Link>
 
-        {/* Controls Overlay (bottom right inside the card) */}
         <div className={styles.controls}>
           <div className="badge" style={{ background: 'rgba(16,16,20,0.8)' }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent-green)', display: 'inline-block', marginRight: 8, boxShadow: '0 0 8px var(--accent-green)' }} />
             Interaction Active
           </div>
         </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.8 }}
+      >
+        <RequestList />
       </motion.div>
     </div>
   );

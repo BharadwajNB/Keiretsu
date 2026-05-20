@@ -10,6 +10,7 @@ import { MapPin, ExternalLink, Building2, Calendar, MessageCircle, Map, Edit3 } 
 import { useAuth } from '@/hooks/useAuth';
 import GitHubCard from '@/components/profile/GitHubCard';
 import styles from './page.module.css';
+import ConnectModal from '@/components/profile/ConnectModal';
 
 // ---- Skeleton ----------------------------------------------------------------
 function ProfileSkeleton() {
@@ -35,6 +36,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showConnectModal, setShowConnectModal] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -210,7 +212,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 Edit Profile
               </a>
             ) : (
-              <button className={styles.connectBtn}>
+              <button className={styles.connectBtn} onClick={() => setShowConnectModal(true)}>
                 <MessageCircle size={16} />
                 Connect
               </button>
@@ -243,6 +245,12 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           </div>
         </motion.div>
       </main>
+
+      <ConnectModal
+        isOpen={showConnectModal}
+        onClose={() => setShowConnectModal(false)}
+        recipientName={profile.name}
+      />
     </div>
   );
 }
