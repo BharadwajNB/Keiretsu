@@ -8,7 +8,8 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSkills } from '@/hooks/useSkills';
 import { AVAILABILITY_LABELS } from '@/lib/types';
 import type { AvailabilityStatus } from '@/lib/types';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Globe, Save, Briefcase, Code, MapPin, X, User } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import styles from './page.module.css';
 
 function ProfileEditContent() {
@@ -48,7 +49,8 @@ function ProfileEditContent() {
     if (latitude && longitude && profile) {
       updateLocation(latitude, longitude);
     }
-  }, [latitude, longitude]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latitude, longitude]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -84,6 +86,18 @@ function ProfileEditContent() {
       !selectedSkills.includes(s.name)
   );
 
+  const progress = (() => {
+    let score = 0;
+    if (name) score += 15;
+    if (college) score += 15;
+    if (year) score += 10;
+    if (githubUrl) score += 15;
+    if (bio) score += 15;
+    if (selectedSkills.length > 0) score += 15;
+    if (availability) score += 15;
+    return Math.min(100, score);
+  })();
+
   if (loading) {
     return (
       <div className="page">
@@ -99,19 +113,26 @@ function ProfileEditContent() {
     <div className="page">
       <Navbar />
       <main className={styles.main}>
+        <div className={styles.bgGlow1} />
+        <div className={styles.bgGlow2} />
+
         <div className={styles.container}>
           {isWelcome && (
-            <div className={styles.welcomeBanner}>
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={styles.welcomeBanner}
+            >
               <h2>🎉 Welcome to Keiretsu!</h2>
               <p>Complete your profile to appear on the skill map.</p>
-            </div>
+            </motion.div>
           )}
 
           <div className={styles.header}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <button 
-                onClick={() => router.push('/map')} 
-                className="btn btn-secondary" 
+              <button
+                onClick={() => router.push('/map')}
+                className="btn btn-secondary"
                 style={{ padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 title="Back to Multiverse"
               >
@@ -119,44 +140,79 @@ function ProfileEditContent() {
               </button>
               <h1 style={{ margin: 0 }}>Edit Profile</h1>
             </div>
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleSave}
               disabled={saving || !name || !college || !githubUrl}
-              className="btn btn-primary btn-sm"
+              className={styles.saveBtn}
             >
-              {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Profile'}
-            </button>
+              <Save size={16} />
+              {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
+            </motion.button>
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={styles.heroProfile}
+          >
+            <div className={styles.avatarWrapper}>
+              <div className={styles.avatarRing} />
+              <div className={styles.avatarInner}>
+                {name ? name.charAt(0) : <User size={48} />}
+              </div>
+            </div>
+            <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>
+              {name || 'New User'}
+            </h2>
+            <p style={{ color: 'var(--text-secondary)' }}>
+              {college || 'Add your college'} • Class of {new Date().getFullYear() + (4 - year)}
+            </p>
+            <div className={styles.profileProgress}>
+              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+            </div>
+            <span style={{ fontSize: 12, color: 'var(--accent-primary)', marginTop: 8, fontWeight: 600 }}>
+              {progress}% Completed
+            </span>
+          </motion.div>
 
           <div className={styles.grid}>
             {/* Left Column - Profile Info */}
-            <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>Basic Info</h2>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className={styles.section}
+            >
+              <h2 className={styles.sectionTitle}>
+                <User size={16} /> Profile Info
+              </h2>
 
-              <div className="input-group">
-                <label className="label">Name *</label>
+              <div className={styles.cyberInputGroup}>
+                <label className={styles.cyberLabel}>Name *</label>
                 <input
-                  className="input"
+                  className={styles.cyberInput}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your full name"
                 />
               </div>
 
-              <div className="input-group">
-                <label className="label">College / Institution *</label>
+              <div className={styles.cyberInputGroup}>
+                <label className={styles.cyberLabel}>College / Institution *</label>
                 <input
-                  className="input"
+                  className={styles.cyberInput}
                   value={college}
                   onChange={(e) => setCollege(e.target.value)}
                   placeholder="e.g. JNTU Hyderabad"
                 />
               </div>
 
-              <div className="input-group">
-                <label className="label">Year *</label>
+              <div className={styles.cyberInputGroup}>
+                <label className={styles.cyberLabel}>Year *</label>
                 <select
-                  className="input"
+                  className={styles.cyberInput}
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value))}
                 >
@@ -169,143 +225,175 @@ function ProfileEditContent() {
                 </select>
               </div>
 
-              <div className="input-group">
-                <label className="label">GitHub URL *</label>
+              <div className={styles.cyberInputGroup}>
+                <label className={styles.cyberLabel}><Globe size={14} /> GitHub Profile *</label>
                 <input
-                  className="input"
+                  className={styles.cyberInput}
                   value={githubUrl}
                   onChange={(e) => setGithubUrl(e.target.value)}
                   placeholder="https://github.com/yourusername"
                 />
               </div>
 
-              <div className="input-group">
-                <label className="label">Bio</label>
+              <div className={styles.cyberInputGroup}>
+                <label className={styles.cyberLabel}>Bio</label>
                 <textarea
-                  className="input"
+                  className={styles.cyberInput}
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="What are you building? What do you want to learn?"
                   rows={3}
                 />
               </div>
+            </motion.div>
 
-              <div className="input-group">
-                <label className="label">Availability</label>
-                <select
-                  className="input"
-                  value={availability}
-                  onChange={(e) => setAvailability(e.target.value as AvailabilityStatus)}
-                >
+            {/* Right Column - Status, Skills & Location */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              style={{ display: 'flex', flexDirection: 'column', gap: 32 }}
+            >
+              <div className={styles.section}>
+                <h2 className={styles.sectionTitle}>
+                  <Briefcase size={16} /> Availability
+                </h2>
+                <div className={styles.availabilityGrid}>
                   {Object.entries(AVAILABILITY_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Right Column - Skills & Location */}
-            <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>Skills</h2>
-
-              {selectedSkills.length > 0 && (
-                <div className={styles.selectedSkills}>
-                  {selectedSkills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="tag tag-removable"
-                      onClick={() => toggleSkill(skill)}
+                    <motion.div
+                      key={value}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      className={`${styles.availabilityCard} ${availability === value ? styles.active : ''}`}
+                      onClick={() => setAvailability(value as AvailabilityStatus)}
                     >
-                      {skill} ✕
-                    </span>
+                      <div>
+                        <div className={styles.availabilityTitle}>{label}</div>
+                        <div className={styles.availabilityDesc}>
+                          {value === 'open_to_collab' ? 'Looking for projects and teams to join.'
+                            : value === 'building_solo' ? 'Focused on my own ideas right now.'
+                              : 'Currently unavailable for new side quests.'}
+                        </div>
+                      </div>
+                      <div className={styles.availabilityIcon} />
+                    </motion.div>
                   ))}
                 </div>
-              )}
+              </div>
 
-              <div className="input-group">
-                <input
-                  className="input"
-                  value={skillSearch}
-                  onChange={(e) => setSkillSearch(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      const query = skillSearch.trim();
-                      if (query && !selectedSkills.some(s => s.toLowerCase() === query.toLowerCase())) {
-                        toggleSkill(query);
-                        setSkillSearch('');
+              <div className={styles.section}>
+                <h2 className={styles.sectionTitle}>
+                  <Code size={16} /> Skills
+                </h2>
+
+                <AnimatePresence>
+                  {selectedSkills.length > 0 && (
+                    <motion.div className={styles.selectedSkills}>
+                      {selectedSkills.map((skill) => (
+                        <motion.span
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          key={skill}
+                          className={styles.skillChip}
+                          onClick={() => toggleSkill(skill)}
+                        >
+                          {skill} <X size={14} />
+                        </motion.span>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className={styles.cyberInputGroup}>
+                  <input
+                    className={styles.cyberInput}
+                    value={skillSearch}
+                    onChange={(e) => setSkillSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const query = skillSearch.trim();
+                        if (query && !selectedSkills.some(s => s.toLowerCase() === query.toLowerCase())) {
+                          toggleSkill(query);
+                          setSkillSearch('');
+                        }
                       }
-                    }
-                  }}
-                  placeholder="Search or type a custom skill and press Enter..."
-                />
-              </div>
-
-              <div className={styles.skillGrid}>
-                {skillSearch.trim() && !allSkills.some(s => s.name.toLowerCase() === skillSearch.trim().toLowerCase()) && !selectedSkills.some(s => s.toLowerCase() === skillSearch.trim().toLowerCase()) && (
-                  <button
-                    className={styles.skillChip}
-                    style={{ background: 'rgba(129, 140, 248, 0.15)', borderColor: '#818cf8', color: '#818cf8' }}
-                    onClick={() => {
-                      toggleSkill(skillSearch.trim());
-                      setSkillSearch('');
                     }}
-                  >
-                    + Add "{skillSearch.trim()}" (Custom)
-                  </button>
-                )}
+                    placeholder="Search or type a custom skill and press Enter..."
+                  />
+                </div>
 
-                {filteredSkills.slice(0, 20).map((skill) => (
-                  <button
-                    key={skill.id}
-                    className={styles.skillChip}
-                    onClick={() => {
-                      toggleSkill(skill.name);
-                      setSkillSearch('');
-                    }}
-                  >
-                    + {skill.name}
-                  </button>
-                ))}
+                <div className={styles.skillGrid}>
+                  {skillSearch.trim() && !allSkills.some(s => s.name.toLowerCase() === skillSearch.trim().toLowerCase()) && !selectedSkills.some(s => s.toLowerCase() === skillSearch.trim().toLowerCase()) && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={styles.suggestedSkill}
+                      style={{ background: 'rgba(129, 140, 248, 0.15)', borderColor: '#818cf8', color: '#818cf8' }}
+                      onClick={() => {
+                        toggleSkill(skillSearch.trim());
+                        setSkillSearch('');
+                      }}
+                    >
+                      + Add "{skillSearch.trim()}" (Custom)
+                    </motion.button>
+                  )}
+
+                  {filteredSkills.slice(0, 15).map((skill) => (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      key={skill.id}
+                      className={styles.suggestedSkill}
+                      onClick={() => {
+                        toggleSkill(skill.name);
+                        setSkillSearch('');
+                      }}
+                    >
+                      + {skill.name}
+                    </motion.button>
+                  ))}
+                </div>
               </div>
 
-              <h2 className={styles.sectionTitle} style={{ marginTop: 32 }}>
-                📍 Location
-              </h2>
+              <div className={styles.section}>
+                <h2 className={styles.sectionTitle}>
+                  <MapPin size={16} /> Location
+                </h2>
 
-              <div className={styles.locationCard}>
-                {permissionState === 'granted' && latitude ? (
-                  <div>
-                    <p className={styles.locationStatus}>
-                      <span className={styles.locationDot} /> Location active
-                    </p>
-                    <p className="text-muted" style={{ fontSize: 13 }}>
-                      Your position is shared on the map. Others nearby can discover you.
-                    </p>
-                  </div>
-                ) : permissionState === 'denied' ? (
-                  <div>
-                    <p style={{ color: 'var(--accent-red)', fontWeight: 600 }}>
-                      Location permission denied
-                    </p>
-                    <p className="text-muted" style={{ fontSize: 13, marginTop: 4 }}>
-                      Enable location in your browser settings to appear on the map.
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <p style={{ fontWeight: 600, marginBottom: 8 }}>
-                      Enable location to appear on the map
-                    </p>
-                    <button onClick={requestLocation} className="btn btn-primary btn-sm">
-                      📍 Share My Location
-                    </button>
-                  </div>
-                )}
+                <div className={styles.locationCard}>
+                  {permissionState === 'granted' && latitude ? (
+                    <div>
+                      <p className={styles.locationStatus}>
+                        <span className={styles.locationDot} /> Location active
+                      </p>
+                      <p className="text-muted" style={{ fontSize: 13 }}>
+                        Your position is shared on the map. Others nearby can discover you.
+                      </p>
+                    </div>
+                  ) : permissionState === 'denied' ? (
+                    <div>
+                      <p style={{ color: 'var(--accent-red)', fontWeight: 600 }}>
+                        Location permission denied
+                      </p>
+                      <p className="text-muted" style={{ fontSize: 13, marginTop: 4 }}>
+                        Enable location in your browser settings to appear on the map.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p style={{ fontWeight: 600, marginBottom: 8, color: 'white' }}>
+                        Enable location to appear on the map
+                      </p>
+                      <button onClick={requestLocation} className="btn btn-primary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <MapPin size={14} /> Share My Location
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </main>
