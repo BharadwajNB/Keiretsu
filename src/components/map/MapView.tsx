@@ -38,25 +38,17 @@ function createAvatarMarkerIcon(user: Profile): L.DivIcon {
     ? `<div class="avatar-pulse-halo" style="border-color:${ringColor};"></div>`
     : '';
 
-  // We use an <img> with onerror fallback to an initials <div>
+  // We use an <img> with fallback to an initials <div>
   const imgHtml = avatarSrc
     ? `<img
         id="av-${uid}"
         src="${avatarSrc}"
         alt="${initials}"
         class="avatar-marker-img"
-        onerror="
-          var el=document.getElementById('av-${uid}');
-          if(el){
-            el.style.display='none';
-            var fb=document.getElementById('fb-${uid}');
-            if(fb) fb.style.display='flex';
-          }
-        "
       />`
     : '';
 
-  // Initials fallback — hidden by default when avatar loads, shown on error
+  // Initials fallback — hidden by default when avatar loads
   const fallbackHtml = `
     <div
       id="fb-${uid}"

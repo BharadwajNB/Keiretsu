@@ -391,7 +391,14 @@ export default function SearchPage() {
                   <div className={styles.cardTop}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={user.avatar_url || '/default-avatar.svg'}
+                      src={(() => {
+                        if (user.avatar_url) return user.avatar_url;
+                        if (user.github_url) {
+                          const match = user.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+                          if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
+                        }
+                        return '/default-avatar.svg';
+                      })()}
                       alt={user.name}
                       className={styles.avatar}
                     />
