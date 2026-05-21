@@ -114,12 +114,22 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
               )}
               {profile ? (
                 <Link href={`/profile/${profile.id}`} className={styles.avatarBtn} title="Profile">
-                  {profile.avatar_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profile.avatar_url} alt="Avatar" style={{ width: 24, height: 24, borderRadius: '50%' }} />
-                  ) : (
-                    <User size={18} />
-                  )}
+                  {(() => {
+                    const avatarUrl = (() => {
+                      if (profile.avatar_url) return profile.avatar_url;
+                      if (profile.github_url) {
+                        const match = profile.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+                        if (match) return `https://github.com/${match[1]}.png`;
+                      }
+                      return null;
+                    })();
+
+                    if (avatarUrl) {
+                      // eslint-disable-next-line @next/next/no-img-element
+                      return <img src={avatarUrl} alt="Avatar" style={{ width: 24, height: 24, borderRadius: '50%' }} />;
+                    }
+                    return <User size={18} />;
+                  })()}
                 </Link>
               ) : (
                 <Link href="/onboarding" className={styles.avatarBtn} title="Setup Profile">

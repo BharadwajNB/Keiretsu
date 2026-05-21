@@ -129,7 +129,14 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             <div className={styles.avatarRing}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={profile.avatar_url || '/default-avatar.svg'}
+                src={(() => {
+                  if (profile.avatar_url) return profile.avatar_url;
+                  if (profile.github_url) {
+                    const match = profile.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+                    if (match) return `https://github.com/${match[1]}.png`;
+                  }
+                  return '/default-avatar.svg';
+                })()}
                 alt={profile.name}
                 className={styles.avatar}
               />

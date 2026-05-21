@@ -269,7 +269,18 @@ function MapPageContent() {
                     >
                       <div className={styles.userCardHeader}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={user.avatar_url || '/default-avatar.svg'} alt={user.name} className={styles.userAvatar} />
+                        <img
+                          src={(() => {
+                            if (user.avatar_url) return user.avatar_url;
+                            if (user.github_url) {
+                              const match = user.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+                              if (match) return `https://github.com/${match[1]}.png`;
+                            }
+                            return '/default-avatar.svg';
+                          })()}
+                          alt={user.name}
+                          className={styles.userAvatar}
+                        />
                         <div>
                           <h4>{user.name}</h4>
                           <p className={styles.userMeta}>Year {user.year} · {user.college}</p>

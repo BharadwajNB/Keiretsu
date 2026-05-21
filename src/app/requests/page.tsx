@@ -68,7 +68,14 @@ function RequestCard({
           <div className={styles.avatarRing}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={sender.avatar_url || '/default-avatar.svg'}
+              src={(() => {
+                if (sender.avatar_url) return sender.avatar_url;
+                if (sender.github_url) {
+                  const match = sender.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+                  if (match) return `https://github.com/${match[1]}.png`;
+                }
+                return '/default-avatar.svg';
+              })()}
               alt={sender.name}
               className={styles.avatar}
             />
