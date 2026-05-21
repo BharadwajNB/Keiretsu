@@ -274,7 +274,7 @@ function MapPageContent() {
                             if (user.avatar_url) return user.avatar_url;
                             if (user.github_url) {
                               const match = user.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
-                              if (match) return `https://github.com/${match[1]}.png`;
+                              if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
                             }
                             return '/default-avatar.svg';
                           })()}

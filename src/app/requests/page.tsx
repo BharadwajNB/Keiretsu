@@ -72,7 +72,7 @@ function RequestCard({
                 if (sender.avatar_url) return sender.avatar_url;
                 if (sender.github_url) {
                   const match = sender.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
-                  if (match) return `https://github.com/${match[1]}.png`;
+                  if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
                 }
                 return '/default-avatar.svg';
               })()}

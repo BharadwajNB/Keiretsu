@@ -25,7 +25,11 @@ function createAvatarMarkerIcon(user: Profile): L.DivIcon {
   const ringColor = AVAILABILITY_COLORS[user.availability_status] || '#818cf8';
   const isPulsing = user.availability_status === 'open_to_collab';
   const initials = getInitials(user.name || '?');
-  const avatarSrc = user.avatar_url || '';
+  let avatarSrc = user.avatar_url || '';
+  if (!avatarSrc && user.github_url) {
+    const match = user.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+    if (match) avatarSrc = `https://avatars.githubusercontent.com/${match[1]}`;
+  }
 
   // Unique id so each marker's onerror handler targets the right element
   const uid = user.id.replace(/-/g, '').slice(0, 8);
@@ -179,10 +183,19 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
             .join('')
         : '';
 
+      const popupAvatarUrl = (() => {
+        if (user.avatar_url) return user.avatar_url;
+        if (user.github_url) {
+          const match = user.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+          if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
+        }
+        return '/default-avatar.svg';
+      })();
+
       const popupHtml = `
         <div style="font-family:Inter,sans-serif;min-width:220px;padding:4px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-            <img src="${user.avatar_url || '/default-avatar.svg'}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" alt="" />
+            <img src="${popupAvatarUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" alt="" />
             <div>
               <div style="font-weight:700;font-size:14px;color:#f0f0f5;">${user.name}</div>
               <div style="font-size:12px;color:#a0a0b8;">Year ${user.year} · ${user.college}</div>

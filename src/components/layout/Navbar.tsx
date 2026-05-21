@@ -119,7 +119,7 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
                       if (profile.avatar_url) return profile.avatar_url;
                       if (profile.github_url) {
                         const match = profile.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
-                        if (match) return `https://github.com/${match[1]}.png`;
+                        if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
                       }
                       return null;
                     })();
