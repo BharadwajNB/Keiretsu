@@ -7,9 +7,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useEffect, useState, Suspense, useMemo } from 'react';
 
-import { Search, LogOut, Loader2, User } from 'lucide-react';
+import { Search, LogOut, Loader2, User, Inbox } from 'lucide-react';
 import { getProfileCompletion } from '@/lib/profileCompletion';
 import type { Profile } from '@/lib/types';
+import { useConnectionRequests } from '@/hooks/useConnectionRequests';
 import styles from './Navbar.module.css';
 
 interface NavbarProps {
@@ -19,11 +20,14 @@ interface NavbarProps {
 function NavbarContent({ onSignInClick }: NavbarProps) {
   const { user, loading, signOut } = useAuth();
   const { profile } = useProfile();
+  const { requests } = useConnectionRequests();
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const pendingCount = requests.length;
 
   useEffect(() => {
     const q = searchParams.get('q');
@@ -45,6 +49,7 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
   }, []);
 
   const isAuthPage = (pathname === '/login' && !onSignInClick) || pathname === '/auth/callback';
+  const isOnboardingPage = pathname === '/onboarding';
 
   if (isAuthPage) return null;
 
@@ -75,21 +80,23 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
           <span className={styles.brandPrimary}>Keiretsu</span>
         </Link>
 
-        {/* Center: Global Search (Only if logged in or on landing) */}
-        <div className={styles.centerSection}>
-          <div className={styles.searchWrapper}>
-            <Search size={16} className={styles.searchIcon} />
-            <input 
-              type="text" 
-              placeholder="Search builders or skills..." 
-              className={styles.searchInput}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-            />
-            <div className={styles.searchShortcut}>↵</div>
+        {/* Center: Global Search (Only if logged in or on landing, hidden during onboarding) */}
+        {!isOnboardingPage && (
+          <div className={styles.centerSection}>
+            <div className={styles.searchWrapper}>
+              <Search size={16} className={styles.searchIcon} />
+              <input 
+                type="text" 
+                placeholder="Search builders or skills..." 
+                className={styles.searchInput}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+              />
+              <div className={styles.searchShortcut}>↵</div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Right: Actions */}
         <div className={styles.actions}>
@@ -97,6 +104,14 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
             <Loader2 className="spinner" size={20} />
           ) : user ? (
             <div className={styles.userControls}>
+              {!isOnboardingPage && (
+                <Link href="/requests" className={styles.iconBtn} title="Collaboration Requests" style={{ position: 'relative' }}>
+                  <Inbox size={18} />
+                  {pendingCount > 0 && (
+                    <span className={styles.badge}>{pendingCount}</span>
+                  )}
+                </Link>
+              )}
               {profile ? (
                 <Link href={`/profile/${profile.id}`} className={styles.avatarBtn} title="Profile">
                   {profile.avatar_url ? (
@@ -111,7 +126,7 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
                   <User size={18} />
                 </Link>
               )}
-              <CompletionBadge profile={profile} />
+              {!isOnboardingPage && <CompletionBadge profile={profile} />}
               <button onClick={signOut} className={styles.iconBtn} title="Sign Out">
                 <LogOut size={18} />
               </button>

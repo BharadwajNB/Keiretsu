@@ -17,6 +17,7 @@ const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false }
 
 function MapPageContent() {
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, permissionState, isWatching, isSyncing, lastSyncedAt } = useLocationSync();
+  const [sandboxCoords, setSandboxCoords] = useState<{ lat: number; lng: number } | null>(null);
   const { skills: allSkills } = useSkills();
   const [radiusKm, setRadiusKm] = useState(2);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
@@ -28,8 +29,11 @@ function MapPageContent() {
   const searchParamsUrl = useSearchParams();
   const globalQuery = searchParamsUrl.get('q');
 
+  const activeLat = latitude || sandboxCoords?.lat;
+  const activeLng = longitude || sandboxCoords?.lng;
+
   const params = useMemo(() => {
-    if (!latitude || !longitude) return null;
+    if (!activeLat || !activeLng) return null;
     
     // Parse global search query
     let nameSearchFilter: string | undefined = undefined;
@@ -51,14 +55,14 @@ function MapPageContent() {
     }
 
     return {
-      lat: latitude,
-      lng: longitude,
+      lat: activeLat,
+      lng: activeLng,
       radiusKm: globalQuery ? 20000 : radiusKm, // Expand to global (20000km) if using the global search bar
       skillFilter: computedSkills.length > 0 ? computedSkills : undefined,
       collegeFilter: collegeFilter || undefined,
       nameSearch: nameSearchFilter,
     };
-  }, [latitude, longitude, radiusKm, selectedSkills, collegeFilter, globalQuery, allSkills]);
+  }, [activeLat, activeLng, radiusKm, selectedSkills, collegeFilter, globalQuery, allSkills]);
 
   const { users, loading: usersLoading } = useNearbyUsers(params);
 
@@ -79,7 +83,7 @@ function MapPageContent() {
   }, [allSkills]);
 
   // Location permission not yet granted
-  if (!geoLoading && !latitude && permissionState !== 'granted') {
+  if (!geoLoading && !activeLat && permissionState !== 'granted') {
     return (
       <div className="page">
         <Navbar />
@@ -96,8 +100,15 @@ function MapPageContent() {
               Keiretsu needs your location to show builders around you.
             </p>
             {geoError && <p style={{ color: 'var(--accent-red)', fontSize: 13, marginBottom: 16 }}>{geoError}</p>}
-            <button onClick={requestLocation} className="btn btn-primary btn-lg">
+            <button onClick={requestLocation} className="btn btn-primary btn-lg" style={{ width: '100%', marginBottom: 12 }}>
               Share My Location
+            </button>
+            <button 
+              onClick={() => setSandboxCoords({ lat: 16.4641, lng: 80.5065 })} 
+              className="btn btn-secondary"
+              style={{ width: '100%', border: '1px solid var(--border-color)', background: 'transparent', color: 'white', padding: '10px 16px', borderRadius: 8, cursor: 'pointer' }}
+            >
+              Use Sandbox Location (Vijayawada)
             </button>
           </motion.div>
         </div>
@@ -122,9 +133,9 @@ function MapPageContent() {
       <div className={styles.mapLayout}>
         {/* Map Background */}
         <div className={styles.mapContainer}>
-          {latitude && longitude && (
+          {activeLat && activeLng && (
             <MapView
-              center={[latitude, longitude]}
+              center={[activeLat, activeLng]}
               radiusKm={radiusKm}
               users={users}
               selectedUserId={selectedUserId}

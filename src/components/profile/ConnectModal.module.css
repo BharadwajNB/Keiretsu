@@ -1,9 +1,9 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -14,15 +14,13 @@
 .modal {
   width: 100%;
   max-width: 500px;
-  background: rgba(17, 17, 17, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: #141414;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   padding: 32px;
   position: relative;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
-              0 0 40px rgba(129, 140, 248, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7),
+              0 0 40px rgba(129, 140, 248, 0.08);
   overflow: hidden;
 }
 
@@ -47,7 +45,8 @@
   font-size: 28px;
   color: var(--text-primary);
   margin-bottom: 8px;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.06em;
+  word-spacing: 0.15em;
   background: linear-gradient(to bottom, #fff 0%, #a1a1aa 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

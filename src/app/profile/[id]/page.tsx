@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import Navbar from '@/components/layout/Navbar';
@@ -207,10 +208,10 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           {/* Footer Actions */}
           <div className={styles.footerActions}>
             {isOwner ? (
-              <a href="/profile/edit" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+              <Link href="/profile/edit" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
                 <Edit3 size={16} />
                 Edit Profile
-              </a>
+              </Link>
             ) : (
               <button className={styles.connectBtn} onClick={() => setShowConnectModal(true)}>
                 <MessageCircle size={16} />
@@ -250,6 +251,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         isOpen={showConnectModal}
         onClose={() => setShowConnectModal(false)}
         recipientName={profile.name}
+        recipientId={profile.id}
       />
     </div>
   );

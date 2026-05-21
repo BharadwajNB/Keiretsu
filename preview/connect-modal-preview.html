@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ConnectModal Preview</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <button id="openBtn" class="openBtn">Open Connect Modal</button>
+
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div id="contentArea">
+        <div class="header">
+          <h2 class="title">Start Collaboration</h2>
+          <p class="subtitle">Connect with Jane Doe and build something amazing together</p>
+        </div>
+
+        <div class="intentGrid" id="intentGrid">
+          <button class="intentCard" data-id="startup">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"></path></svg>
+            <span class="intentLabel">Startup Idea</span>
+          </button>
+          <button class="intentCard" data-id="hackathon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="7" r="3"></circle><path d="M5.5 21a6.5 6.5 0 0113 0"></path></svg>
+            <span class="intentLabel">Hackathon Team</span>
+          </button>
+          <button class="intentCard" data-id="opensource">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="14" rx="2"></rect><path d="M8 14h8"></path></svg>
+            <span class="intentLabel">Open Source</span>
+          </button>
+          <button class="intentCard" data-id="aiml">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v4"></path><path d="M12 18v4"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <span class="intentLabel">AI/ML Project</span>
+          </button>
+        </div>
+
+        <div class="textareaWrapper">
+          <textarea id="message" class="textarea" placeholder="Briefly introduce yourself and your idea..."></textarea>
+        </div>
+
+        <div class="actions">
+          <button id="sendBtn" class="sendBtn" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2L11 13"></path><path d="M22 2l-7 20 8-8-4-4"></path></svg>
+            <span>Send Request</span>
+          </button>
+          <button id="cancelBtn" class="closeBtn">Cancel</button>
+        </div>
+      </div>
+
+      <button id="closeIcon" class="modalCloseIcon" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg>
+      </button>
+
+      <div id="successView" class="successView" style="display:none;">
+        <div class="checkmarkWrapper">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17L4 12"></path></svg>
+        </div>
+        <h2 class="successTitle">Request Sent Successfully</h2>
+        <p class="successSubtitle">Your collaboration request has been shared with Jane Doe</p>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  const openBtn = document.getElementById('openBtn');
+  const overlay = document.getElementById('overlay');
+  const closeIcon = document.getElementById('closeIcon');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const intentGrid = document.getElementById('intentGrid');
+  const sendBtn = document.getElementById('sendBtn');
+  const textarea = document.getElementById('message');
+  const successView = document.getElementById('successView');
+  const contentArea = document.getElementById('contentArea');
+
+  let selectedIntent = null;
+
+  openBtn.addEventListener('click', () => {
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden', 'false');
+    successView.style.display = 'none';
+    contentArea.style.display = 'block';
+    sendBtn.disabled = true;
+  });
+
+  function closeModal() {
+    overlay.style.display = 'none';
+    overlay.setAttribute('aria-hidden', 'true');
+    selectedIntent = null;
+    textarea.value = '';
+    document.querySelectorAll('.intentCard').forEach(c => c.classList.remove('intentCardActive'));
+  }
+
+  closeIcon.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
+
+  intentGrid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.intentCard');
+    if (!btn) return;
+    document.querySelectorAll('.intentCard').forEach(c => c.classList.remove('intentCardActive'));
+    btn.classList.add('intentCardActive');
+    selectedIntent = btn.getAttribute('data-id');
+    updateSendState();
+  });
+
+  textarea.addEventListener('input', updateSendState);
+
+  function updateSendState() {
+    sendBtn.disabled = !selectedIntent || textarea.value.trim().length === 0;
+  }
+
+  sendBtn.addEventListener('click', () => {
+    if (!selectedIntent) return;
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<span class="spinner" style="width:18px;height:18px;display:inline-block;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite"></span>';
+    setTimeout(() => {
+      // show success
+      contentArea.style.display = 'none';
+      successView.style.display = 'flex';
+      sendBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2L11 13"></path><path d="M22 2l-7 20 8-8-4-4"></path></svg><span>Send Request</span>';
+      setTimeout(() => closeModal(), 2000);
+    }, 1400);
+  });
+</script>
+</body>
+</html>

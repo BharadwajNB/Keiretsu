@@ -68,3 +68,16 @@ export const SKILL_CATEGORIES: Record<string, string> = {
   security: 'Security',
   general: 'General',
 };
+
+export interface ConnectionRequest {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  intent: 'startup' | 'hackathon' | 'opensource' | 'aiml';
+  message?: string;
+  status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
+  updated_at: string;
+  sender_profile?: Profile;
+}
+

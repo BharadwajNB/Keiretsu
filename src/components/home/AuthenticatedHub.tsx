@@ -5,7 +5,6 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { Maximize2 } from 'lucide-react';
-import RequestList from '../dashboard/RequestList';
 import styles from './AuthenticatedHub.module.css';
 
 // Reusing the same GlobeView for consistency, no SSR
@@ -80,14 +79,6 @@ export default function AuthenticatedHub() {
             Interaction Active
           </div>
         </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.8 }}
-      >
-        <RequestList />
       </motion.div>
     </div>
   );

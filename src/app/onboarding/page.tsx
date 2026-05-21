@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, MapPin, Check, Sparkles, SkipForward } from 'lucide-react';
+import { ArrowRight, ArrowLeft, MapPin, Check, Sparkles, SkipForward, User, GraduationCap, Code2 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import { useProfile } from '@/hooks/useProfile';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -14,17 +14,17 @@ import styles from './page.module.css';
 const STEPS = ['Identity', 'College', 'Skills', 'Location'];
 
 const STEP_META = [
-  { emoji: '👋', heading: "Let\u2019s get you discovered", sub: 'Start with the basics so builders can find you.' },
-  { emoji: '🏫', heading: 'Where do you build?', sub: 'Your college helps match you with nearby collaborators.' },
-  { emoji: '⚡', heading: 'What do you build?', sub: 'Select your tech stack — this powers skill-based search.' },
-  { emoji: '📍', heading: 'Show up on the map', sub: 'Share your location so others nearby can discover you.' },
+  { icon: User, heading: "Let\u2019s get you discovered", sub: 'Start with the basics so builders can find you.' },
+  { icon: GraduationCap, heading: 'Where do you build?', sub: 'Your college helps match you with nearby collaborators.' },
+  { icon: Code2, heading: 'What do you build?', sub: 'Select your tech stack — this powers skill-based search.' },
+  { icon: MapPin, heading: 'Show up on the map', sub: 'Share your location so others nearby can discover you.' },
 ];
 
 // ---- Slide animation variants -----------------------------------------------
 const slideVariants = {
-  enter: (dir: number) => ({ x: dir > 0 ? 120 : -120, opacity: 0 }),
-  center: { x: 0, opacity: 1 },
-  exit: (dir: number) => ({ x: dir > 0 ? -120 : 120, opacity: 0 }),
+  enter: (dir: number) => ({ x: dir > 0 ? 50 : -50, opacity: 0, scale: 0.98 }),
+  center: { x: 0, opacity: 1, scale: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? -50 : 50, opacity: 0, scale: 0.98 }),
 };
 
 // ---- Main Content (wrapped in Suspense boundary) ----------------------------
@@ -150,6 +150,7 @@ function OnboardingContent() {
   }
 
   const meta = STEP_META[step];
+  const StepIcon = meta.icon;
   const isLastStep = step === 3;
   const locationGranted = permissionState === 'granted' && !!latitude;
 
@@ -158,27 +159,21 @@ function OnboardingContent() {
       <Navbar />
       <main className={styles.main}>
         <div className={styles.container}>
-          {/* Skip link */}
-          <button onClick={skip} className={styles.skipBtn}>
-            Skip for now <SkipForward size={14} />
-          </button>
+          {/* Progress Header */}
+          <div className={styles.progressHeader}>
+            <span className={styles.stepTitle}>Step {step + 1} of {STEPS.length}</span>
+            <button onClick={skip} className={styles.skipBtnInline}>
+              Skip for now <SkipForward size={14} />
+            </button>
+          </div>
 
           {/* Progress Bar */}
           <div className={styles.progressBar}>
-            <div
+            <motion.div
               className={styles.progressFill}
-              style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+              animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             />
-          </div>
-          <div className={styles.stepIndicator}>
-            {STEPS.map((label, i) => (
-              <span
-                key={label}
-                className={`${styles.stepDot} ${i <= step ? styles.stepDotActive : ''} ${i === step ? styles.stepDotCurrent : ''}`}
-              >
-                {i < step ? <Check size={12} /> : i + 1}
-              </span>
-            ))}
           </div>
 
           {/* Step Card */}
@@ -192,10 +187,12 @@ function OnboardingContent() {
                 initial="enter"
                 animate="center"
                 exit="exit"
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               >
                 <div className={styles.stepHeader}>
-                  <span className={styles.stepEmoji}>{meta.emoji}</span>
+                  <div className={styles.stepIconContainer}>
+                    <StepIcon className={styles.stepIcon} size={24} />
+                  </div>
                   <h1 className={styles.stepHeading}>{meta.heading}</h1>
                   <p className={styles.stepSub}>{meta.sub}</p>
                 </div>
@@ -374,27 +371,27 @@ function OnboardingContent() {
                     </div>
                   </div>
                 )}
+
+                {/* Navigation inside Card */}
+                <div className={styles.navRow}>
+                  {step > 0 ? (
+                    <button onClick={goBack} className={styles.backBtn}>
+                      <ArrowLeft size={16} /> Back
+                    </button>
+                  ) : (
+                    <div />
+                  )}
+                  <button
+                    onClick={goNext}
+                    disabled={!canContinue() || saving}
+                    className={styles.continueBtn}
+                  >
+                    {saving ? 'Saving...' : isLastStep ? "Let\u2019s Go!" : 'Continue'}
+                    {!isLastStep && <ArrowRight size={16} />}
+                  </button>
+                </div>
               </motion.div>
             </AnimatePresence>
-          </div>
-
-          {/* Navigation */}
-          <div className={styles.navRow}>
-            {step > 0 ? (
-              <button onClick={goBack} className={styles.backBtn}>
-                <ArrowLeft size={16} /> Back
-              </button>
-            ) : (
-              <div />
-            )}
-            <button
-              onClick={goNext}
-              disabled={!canContinue() || saving}
-              className={styles.continueBtn}
-            >
-              {saving ? 'Saving...' : isLastStep ? "Let\u2019s Go!" : 'Continue'}
-              {!isLastStep && <ArrowRight size={16} />}
-            </button>
           </div>
         </div>
       </main>

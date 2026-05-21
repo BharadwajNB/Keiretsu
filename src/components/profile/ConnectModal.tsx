@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Rocket, Users, Code, Cpu, Send, X } from 'lucide-react';
+import { useConnectionRequests } from '@/hooks/useConnectionRequests';
 import styles from './ConnectModal.module.css';
 
 interface ConnectModalProps {
   isOpen: boolean;
   onClose: () => void;
   recipientName: string;
+  recipientId: string;
 }
 
 const COLLAB_INTENTS = [
@@ -18,11 +20,12 @@ const COLLAB_INTENTS = [
   { id: 'aiml', label: 'AI/ML Project', icon: Cpu },
 ];
 
-export default function ConnectModal({ isOpen, onClose, recipientName }: ConnectModalProps) {
+export default function ConnectModal({ isOpen, onClose, recipientName, recipientId }: ConnectModalProps) {
   const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { sendRequest } = useConnectionRequests();
 
   // Reset form when modal closes
   useEffect(() => {
@@ -44,14 +47,16 @@ export default function ConnectModal({ isOpen, onClose, recipientName }: Connect
     }
   }, [isSuccess, onClose]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!selectedIntent) return;
     setIsSending(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSending(false);
+    const res = await sendRequest(recipientId, selectedIntent as any, message);
+    setIsSending(false);
+    if (res.success) {
       setIsSuccess(true);
-    }, 1500);
+    } else {
+      alert(res.error || 'Failed to send collaboration request.');
+    }
   };
 
   return (
