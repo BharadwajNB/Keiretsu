@@ -19,7 +19,7 @@ function MapPageContent() {
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, permissionState, isWatching, isSyncing, lastSyncedAt } = useLocationSync();
   const [sandboxCoords, setSandboxCoords] = useState<{ lat: number; lng: number } | null>(null);
   const { skills: allSkills } = useSkills();
-  const [radiusKm, setRadiusKm] = useState(2);
+  const [radiusKm, setRadiusKm] = useState(500);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [collegeFilter, setCollegeFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -172,9 +172,9 @@ function MapPageContent() {
               </label>
               <input
                 type="range"
-                min="1"
-                max="100"
-                step="1"
+                min="10"
+                max="1000"
+                step="10"
                 value={radiusKm}
                 onChange={(e) => setRadiusKm(Number(e.target.value))}
                 className={styles.slider}
