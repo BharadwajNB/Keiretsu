@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useEffect, useState, Suspense, useMemo } from 'react';
 
-import { Search, LogOut, Loader2, User, Inbox } from 'lucide-react';
+import { LogOut, Loader2, User, Inbox } from 'lucide-react';
 import { getProfileCompletion } from '@/lib/profileCompletion';
 import type { Profile } from '@/lib/types';
 import { useConnectionRequests } from '@/hooks/useConnectionRequests';
@@ -23,17 +23,9 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
   const { requests } = useConnectionRequests();
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const pendingCount = requests.length;
-
-  useEffect(() => {
-    const q = searchParams.get('q');
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (q) setSearchQuery(q);
-  }, [searchParams]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,16 +45,6 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
 
   if (isAuthPage) return null;
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      if (searchQuery.trim()) {
-        router.push(`/map?q=${encodeURIComponent(searchQuery.trim())}`);
-      } else {
-        router.push(`/map`);
-      }
-    }
-  };
-
   return (
     <nav className={`${styles.navbar} ${isScrolled ? styles.hidden : ''}`}>
       <div className={styles.glassBackground} />
@@ -79,24 +61,6 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
           />
           <span className={styles.brandPrimary}>Keiretsu</span>
         </Link>
-
-        {/* Center: Global Search (Only if logged in or on landing, hidden during onboarding) */}
-        {!isOnboardingPage && (
-          <div className={styles.centerSection}>
-            <div className={styles.searchWrapper}>
-              <Search size={16} className={styles.searchIcon} />
-              <input 
-                type="text" 
-                placeholder="Search builders or skills..." 
-                className={styles.searchInput}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-              />
-              <div className={styles.searchShortcut}>↵</div>
-            </div>
-          </div>
-        )}
 
         {/* Right: Actions */}
         <div className={styles.actions}>
