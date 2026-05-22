@@ -42,7 +42,7 @@ export default function AuthenticatedHub() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            Keiretsu Multiverse
+            Keiretsu Metaverse
           </motion.h1>
           <motion.div 
             className={styles.accentLine} 

@@ -113,7 +113,7 @@ function ProfileEditContent() {
                 onClick={() => router.push('/map')} 
                 className="btn btn-secondary" 
                 style={{ padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                title="Back to Multiverse"
+                title="Back to Metaverse"
               >
                 <ArrowLeft size={18} />
               </button>
