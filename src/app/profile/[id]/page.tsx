@@ -7,11 +7,13 @@ import { createClient } from '@/lib/supabase/client';
 import Navbar from '@/components/layout/Navbar';
 import { AVAILABILITY_LABELS } from '@/lib/types';
 import type { Profile } from '@/lib/types';
-import { MapPin, ExternalLink, Building2, Calendar, MessageCircle, Map, Edit3 } from 'lucide-react';
+import { MapPin, ExternalLink, Building2, Calendar, MessageCircle, Map, Edit3, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import GitHubCard from '@/components/profile/GitHubCard';
 import styles from './page.module.css';
 import ConnectModal from '@/components/profile/ConnectModal';
+import type { ConnectionRequest } from '@/lib/types';
 
 // ---- Skeleton ----------------------------------------------------------------
 function ProfileSkeleton() {
@@ -35,9 +37,11 @@ function ProfileSkeleton() {
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { user: currentUser } = useAuth();
+  const { profile: myProfile } = useProfile();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showConnectModal, setShowConnectModal] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'accepted' | 'declined'>('none');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -63,6 +67,56 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
     fetchProfile();
   }, [id]);
+
+  useEffect(() => {
+    if (!myProfile || !id || myProfile.id === id) return;
+
+    const checkConnection = async () => {
+      const supabase = createClient();
+      try {
+        const { data, error } = await supabase
+          .from('connection_requests')
+          .select('status, sender_id, receiver_id')
+          .or(`sender_id.eq.${myProfile.id},receiver_id.eq.${myProfile.id}`);
+
+        if (error) throw error;
+
+        const relevant = data?.filter(r => r.sender_id === id || r.receiver_id === id) || [];
+        if (relevant.length > 0) {
+          const isAccepted = relevant.some(r => r.status === 'accepted');
+          if (isAccepted) {
+            setConnectionStatus('accepted');
+          } else {
+            const isPending = relevant.some(r => r.status === 'pending');
+            if (isPending) {
+              setConnectionStatus('pending');
+            } else {
+              setConnectionStatus('none');
+            }
+          }
+        } else {
+          setConnectionStatus('none');
+        }
+      } catch (err) {
+        console.warn('Failed to fetch connection status from DB, checking LocalStorage fallback:', err);
+        const localRequestsStr = localStorage.getItem(`requests_${myProfile.id}`);
+        if (localRequestsStr) {
+          const localRequests = JSON.parse(localRequestsStr) as ConnectionRequest[];
+          const hasPending = localRequests.some(r => 
+            (r.sender_id === myProfile.id && r.receiver_id === id) || 
+            (r.sender_id === id && r.receiver_id === myProfile.id)
+          );
+          if (hasPending) {
+            setConnectionStatus('pending');
+            return;
+          }
+        }
+        setConnectionStatus('none');
+      }
+    };
+
+    checkConnection();
+  }, [myProfile, id, showConnectModal]);
 
   // ---- Loading ---------------------------------------------------------------
   if (loading) {
@@ -219,6 +273,16 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 <Edit3 size={16} />
                 Edit Profile
               </Link>
+            ) : connectionStatus === 'accepted' ? (
+              <Link href="/chat" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+                <MessageCircle size={16} />
+                Message
+              </Link>
+            ) : connectionStatus === 'pending' ? (
+              <button className={styles.connectBtn} disabled style={{ opacity: 0.7, cursor: 'not-allowed' }}>
+                <Clock size={16} />
+                Pending Request
+              </button>
             ) : (
               <button className={styles.connectBtn} onClick={() => setShowConnectModal(true)}>
                 <MessageCircle size={16} />

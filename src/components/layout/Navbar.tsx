@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useEffect, useState, Suspense, useMemo } from 'react';
@@ -22,7 +22,6 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
   const { profile } = useProfile();
   const { requests } = useConnectionRequests();
   const pathname = usePathname();
-  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
 
   const pendingCount = requests.length;
