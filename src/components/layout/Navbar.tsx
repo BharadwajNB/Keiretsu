@@ -34,7 +34,7 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
         setIsScrolled(false);
       }
     };
-    
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -47,16 +47,16 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
   return (
     <nav className={`${styles.navbar} ${isScrolled ? styles.hidden : ''}`}>
       <div className={styles.glassBackground} />
-      
+
       <div className={styles.container}>
         {/* Left: Brand */}
         <Link href="/" className={styles.brand}>
-          <Image 
-            src="/custom-globe-transparent.png" 
-            alt="Keiretsu Globe" 
-            width={28} 
-            height={28} 
-            className={styles.brandIcon} 
+          <Image
+            src="/custom-globe-transparent.png"
+            alt="Keiretsu Globe"
+            width={28}
+            height={28}
+            className={styles.brandIcon}
           />
           <span className={styles.brandPrimary}>Keiretsu</span>
         </Link>

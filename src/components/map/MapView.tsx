@@ -82,6 +82,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
   const containerRef = useRef<HTMLDivElement>(null);
   const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
   const lastFlownUserIdRef = useRef<string | null>(null);
+  const activeMoveEndListenerRef = useRef<(() => void) | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -91,6 +92,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
       center: center,
       zoom: 14,
       zoomControl: false,
+      preferCanvas: true,
     });
 
     // Dark tile layer
@@ -218,7 +220,11 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
 
   // Handle selected user
   useEffect(() => {
-    // Clear any existing timer immediately
+    // Clean up any pending listeners and timers
+    if (activeMoveEndListenerRef.current && mapRef.current) {
+      mapRef.current.off('moveend', activeMoveEndListenerRef.current);
+      activeMoveEndListenerRef.current = null;
+    }
     if (timeoutIdRef.current) {
       clearTimeout(timeoutIdRef.current);
       timeoutIdRef.current = null;
@@ -232,34 +238,58 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
     const marker = markerMapRef.current[selectedUserId];
     if (!marker) return;
 
-    // Prevent redundant flies to the active selection
-    if (lastFlownUserIdRef.current === selectedUserId) {
+    if (typeof marker.getLatLng !== 'function' || typeof mapRef.current.setView !== 'function') {
+      return;
+    }
+
+    const latLng = marker.getLatLng();
+    const currentCenter = mapRef.current.getCenter();
+    const currentZoom = mapRef.current.getZoom();
+
+    // Prevent redundant setView if already centered at zoom 16
+    const isAlreadyCentered = currentZoom === 16 && currentCenter.distanceTo(latLng) < 10;
+
+    if (isAlreadyCentered) {
+      lastFlownUserIdRef.current = selectedUserId;
       if (typeof marker.openPopup === 'function') {
         marker.openPopup();
       }
       return;
     }
 
-    if (typeof marker.getLatLng !== 'function' || typeof mapRef.current.flyTo !== 'function') {
-      return;
-    }
-
-    const latLng = marker.getLatLng();
     lastFlownUserIdRef.current = selectedUserId;
-    
-    // Fly to location with snappy 0.5s duration
-    mapRef.current.flyTo(latLng, 16, { duration: 0.5 });
-    
-    // Wait for fly animation to finish, then open popup
-    timeoutIdRef.current = setTimeout(() => {
+
+    // Define the moveend listener callback
+    const handleMoveEnd = () => {
       const activeMarker = markerMapRef.current[selectedUserId];
       if (activeMarker && mapRef.current && typeof activeMarker.openPopup === 'function') {
         activeMarker.openPopup();
       }
+      activeMoveEndListenerRef.current = null;
+    };
+
+    activeMoveEndListenerRef.current = handleMoveEnd;
+    mapRef.current.once('moveend', handleMoveEnd);
+
+    // Smoothly pan to location (zoom level 16)
+    mapRef.current.setView(latLng, 16, { animate: true, duration: 0.25 });
+
+    // Fallback timer to ensure the popup opens even if Leaflet suppresses the moveend event
+    timeoutIdRef.current = setTimeout(() => {
+      if (activeMoveEndListenerRef.current) {
+        if (mapRef.current) {
+          mapRef.current.off('moveend', activeMoveEndListenerRef.current);
+        }
+        handleMoveEnd();
+      }
       timeoutIdRef.current = null;
-    }, 500);
+    }, 400);
 
     return () => {
+      if (activeMoveEndListenerRef.current && mapRef.current) {
+        mapRef.current.off('moveend', activeMoveEndListenerRef.current);
+        activeMoveEndListenerRef.current = null;
+      }
       if (timeoutIdRef.current) {
         clearTimeout(timeoutIdRef.current);
         timeoutIdRef.current = null;
