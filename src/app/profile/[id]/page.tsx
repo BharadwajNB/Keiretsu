@@ -201,7 +201,13 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           {/* Footer Actions */}
           <div className={styles.footerActions}>
             {isOwner ? (
-              <a href="/profile/edit" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+              <a 
+                href="/profile/edit" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className={styles.connectBtn} 
+                style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+              >
                 <Edit3 size={16} />
                 Edit Profile
               </a>
