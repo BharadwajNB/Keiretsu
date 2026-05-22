@@ -80,6 +80,8 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
   const markerMapRef = useRef<Record<string, L.Marker>>({});
   const circleRef = useRef<L.Circle | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFlownUserIdRef = useRef<string | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -216,21 +218,50 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
 
   // Handle selected user
   useEffect(() => {
-    if (selectedUserId && mapRef.current && markerMapRef.current[selectedUserId]) {
-      const marker = markerMapRef.current[selectedUserId];
-      const latLng = marker.getLatLng();
-      
-      // Fly to location
-      mapRef.current.flyTo(latLng, 16, { duration: 1.5 });
-      
-      // Wait for fly animation to finish, then open popup
-      setTimeout(() => {
-        if (mapRef.current) {
-          marker.openPopup();
-        }
-      }, 1500);
+    // Clear any existing timer immediately
+    if (timeoutIdRef.current) {
+      clearTimeout(timeoutIdRef.current);
+      timeoutIdRef.current = null;
     }
-  }, [selectedUserId]);
+
+    if (!selectedUserId || !mapRef.current) {
+      lastFlownUserIdRef.current = null;
+      return;
+    }
+
+    const marker = markerMapRef.current[selectedUserId];
+    if (!marker) return;
+
+    // Prevent redundant flies to the active selection
+    if (lastFlownUserIdRef.current === selectedUserId) {
+      if (!marker.isPopupOpen()) {
+        marker.openPopup();
+      }
+      return;
+    }
+
+    const latLng = marker.getLatLng();
+    lastFlownUserIdRef.current = selectedUserId;
+    
+    // Fly to location with snappy 0.5s duration
+    mapRef.current.flyTo(latLng, 16, { duration: 0.5 });
+    
+    // Wait for fly animation to finish, then open popup
+    timeoutIdRef.current = setTimeout(() => {
+      const activeMarker = markerMapRef.current[selectedUserId];
+      if (activeMarker && mapRef.current) {
+        activeMarker.openPopup();
+      }
+      timeoutIdRef.current = null;
+    }, 500);
+
+    return () => {
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
+        timeoutIdRef.current = null;
+      }
+    };
+  }, [selectedUserId, users]);
 
   return (
     <>
