@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useProfile } from './useProfile';
 import type { ConnectionRequest, Profile } from '@/lib/types';
@@ -18,32 +18,37 @@ export function useConnectionRequests() {
   const [requests, setRequests] = useState<ConnectionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [isUsingDb, setIsUsingDb] = useState(false);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Helper to fetch other profiles for fallback/mock seeding
-  const fetchOtherProfiles = async (excludeId: string): Promise<Profile[]> => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .neq('id', excludeId)
-      .limit(5);
+  const fetchOtherProfiles = useCallback(async (excludeId: string): Promise<Profile[]> => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .neq('id', excludeId)
+        .limit(5);
 
-    if (!data || data.length === 0) return [];
+      if (!data || data.length === 0) return [];
 
-    // Fetch skills for each profile to make it realistic
-    const enriched = await Promise.all(
-      data.map(async (p) => {
-        const { data: skillData } = await supabase
-          .from('profile_skills')
-          .select('skills(name)')
-          .eq('profile_id', p.id);
-        const skills = skillData?.map((s: any) => s.skills?.name).filter(Boolean) || [];
-        return { ...p, skills };
-      })
-    );
+      // Fetch skills for each profile to make it realistic
+      const enriched = await Promise.all(
+        data.map(async (p: any) => {
+          const { data: skillData } = await supabase
+            .from('profile_skills')
+            .select('skills(name)')
+            .eq('profile_id', p.id);
+          const skills = skillData?.map((s: any) => s.skills?.name).filter(Boolean) || [];
+          return { ...p, skills };
+        })
+      );
 
-    return enriched;
-  };
+      return enriched;
+    } catch (err) {
+      console.warn('Failed to fetch other profiles:', err);
+      return [];
+    }
+  }, [supabase]);
 
   // Primary loader function
   const loadRequests = useCallback(async () => {
@@ -150,34 +155,39 @@ export function useConnectionRequests() {
       console.warn('Supabase connection_requests query failed, falling back to LocalStorage:', dbError);
       setIsUsingDb(false);
 
-      const localDataStr = localStorage.getItem(`requests_${myProfile.id}`);
-      if (localDataStr) {
-        setRequests(JSON.parse(localDataStr));
-      } else {
-        // Seed LocalStorage with real database profiles to make them clickable
-        const otherProfiles = await fetchOtherProfiles(myProfile.id);
-        if (otherProfiles.length > 0) {
-          const localSeeds: ConnectionRequest[] = otherProfiles.slice(0, 3).map((op, idx) => ({
-            id: `local_req_${op.id}_${idx}`,
-            sender_id: op.id,
-            receiver_id: myProfile.id,
-            intent: MOCK_INTENTS[idx % MOCK_INTENTS.length],
-            message: MOCK_MESSAGES[idx % MOCK_MESSAGES.length],
-            status: 'pending',
-            created_at: new Date(Date.now() - idx * 3600000).toISOString(),
-            updated_at: new Date(Date.now() - idx * 3600000).toISOString(),
-            sender_profile: op
-          }));
-          localStorage.setItem(`requests_${myProfile.id}`, JSON.stringify(localSeeds));
-          setRequests(localSeeds);
+      try {
+        const localDataStr = localStorage.getItem(`requests_${myProfile.id}`);
+        if (localDataStr) {
+          setRequests(JSON.parse(localDataStr));
         } else {
-          setRequests([]);
+          // Seed LocalStorage with real database profiles to make them clickable
+          const otherProfiles = await fetchOtherProfiles(myProfile.id);
+          if (otherProfiles.length > 0) {
+            const localSeeds: ConnectionRequest[] = otherProfiles.slice(0, 3).map((op, idx) => ({
+              id: `local_req_${op.id}_${idx}`,
+              sender_id: op.id,
+              receiver_id: myProfile.id,
+              intent: MOCK_INTENTS[idx % MOCK_INTENTS.length],
+              message: MOCK_MESSAGES[idx % MOCK_MESSAGES.length],
+              status: 'pending',
+              created_at: new Date(Date.now() - idx * 3600000).toISOString(),
+              updated_at: new Date(Date.now() - idx * 3600000).toISOString(),
+              sender_profile: op
+            }));
+            localStorage.setItem(`requests_${myProfile.id}`, JSON.stringify(localSeeds));
+            setRequests(localSeeds);
+          } else {
+            setRequests([]);
+          }
         }
+      } catch (localErr) {
+        console.warn('LocalStorage fallback failed:', localErr);
+        setRequests([]);
       }
     } finally {
       setLoading(false);
     }
-  }, [myProfile, supabase]);
+  }, [myProfile, supabase, fetchOtherProfiles]);
 
   // Load requests initially when profile changes
   useEffect(() => {
@@ -274,3 +284,4 @@ export function useConnectionRequests() {
     refetch: loadRequests,
   };
 }
+

@@ -1,42 +1,47 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/lib/types';
 
 export function useProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   const fetchProfile = useCallback(async () => {
     setLoading(true);
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    const user = authData?.user;
-    if (!user) {
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (data && !error) {
+        // Fetch skills
+        const { data: skillData } = await supabase
+          .from('profile_skills')
+          .select('skills(name)')
+          .eq('profile_id', data.id);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const skills = skillData?.map((s: any) => s.skills?.name).filter(Boolean) || [];
+
+        setProfile({ ...data, skills });
+      }
+    } catch (err) {
+      console.warn('Failed to fetch profile:', err);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    if (data && !error) {
-      // Fetch skills
-      const { data: skillData } = await supabase
-        .from('profile_skills')
-        .select('skills(name)')
-        .eq('profile_id', data.id);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const skills = skillData?.map((s: any) => s.skills?.name).filter(Boolean) || [];
-
-      setProfile({ ...data, skills });
-    }
-    setLoading(false);
   }, [supabase]);
 
   useEffect(() => {
@@ -46,7 +51,7 @@ export function useProfile() {
 
   const updateProfile = useCallback(
     async (updates: Partial<Profile>) => {
-      const { data, error: authError } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getUser();
       const user = data?.user;
       if (!user) return { error: 'Not authenticated' };
 
@@ -69,7 +74,7 @@ export function useProfile() {
 
   const updateLocation = useCallback(
     async (lat: number, lng: number) => {
-      const { data, error: authError } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getUser();
       const user = data?.user;
       if (!user) return;
 
@@ -94,7 +99,7 @@ export function useProfile() {
         .in('name', skillNames);
 
       let allSkills = existingSkills || [];
-      const existingNames = allSkills.map((s) => s.name.toLowerCase());
+      const existingNames = allSkills.map((s: any) => s.name.toLowerCase());
       
       // Find which ones are missing (case insensitive)
       const missingNames = skillNames.filter((name) => !existingNames.includes(name.toLowerCase()));
@@ -124,7 +129,7 @@ export function useProfile() {
 
       // Insert all skills
       await supabase.from('profile_skills').insert(
-        allSkills.map((s) => ({
+        allSkills.map((s: any) => ({
           profile_id: profile.id,
           skill_id: s.id,
         }))
@@ -137,3 +142,4 @@ export function useProfile() {
 
   return { profile, loading, updateProfile, updateLocation, updateSkills, refetch: fetchProfile };
 }
+
