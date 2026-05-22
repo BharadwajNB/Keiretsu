@@ -234,9 +234,13 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
 
     // Prevent redundant flies to the active selection
     if (lastFlownUserIdRef.current === selectedUserId) {
-      if (!marker.isPopupOpen()) {
+      if (typeof marker.openPopup === 'function') {
         marker.openPopup();
       }
+      return;
+    }
+
+    if (typeof marker.getLatLng !== 'function' || typeof mapRef.current.flyTo !== 'function') {
       return;
     }
 
@@ -249,7 +253,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
     // Wait for fly animation to finish, then open popup
     timeoutIdRef.current = setTimeout(() => {
       const activeMarker = markerMapRef.current[selectedUserId];
-      if (activeMarker && mapRef.current) {
+      if (activeMarker && mapRef.current && typeof activeMarker.openPopup === 'function') {
         activeMarker.openPopup();
       }
       timeoutIdRef.current = null;
