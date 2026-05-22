@@ -8,7 +8,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSkills } from '@/hooks/useSkills';
 import { AVAILABILITY_LABELS } from '@/lib/types';
 import type { AvailabilityStatus } from '@/lib/types';
-import { ArrowLeft, Globe, Save, Briefcase, Code, MapPin, X, User } from 'lucide-react';
+import { ArrowLeft, Globe, Save, Briefcase, Code, MapPin, X, User, Activity, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './page.module.css';
 
@@ -166,84 +166,121 @@ function ProfileEditContent() {
             <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>
               {name || 'New User'}
             </h2>
-            <p style={{ color: 'var(--text-secondary)' }}>
+            <p style={{ color: 'var(--text-secondary)', marginTop: 8, marginBottom: 0 }}>
               {college || 'Add your college'} • Class of {new Date().getFullYear() + (4 - year)}
             </p>
-            <div className={styles.profileProgress}>
-              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
-            </div>
-            <span style={{ fontSize: 12, color: 'var(--accent-primary)', marginTop: 8, fontWeight: 600 }}>
-              {progress}% Completed
-            </span>
           </motion.div>
 
           <div className={styles.grid}>
-            {/* Left Column - Profile Info */}
+            {/* Left Column - Profile Info & Insights */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
-              className={styles.section}
+              style={{ display: 'flex', flexDirection: 'column', gap: 32, height: '100%' }}
             >
-              <h2 className={styles.sectionTitle}>
-                <User size={16} /> Profile Info
-              </h2>
+              <div className={styles.section}>
+                <h2 className={styles.sectionTitle}>
+                  <User size={16} /> Profile Info
+                </h2>
 
-              <div className={styles.cyberInputGroup}>
-                <label className={styles.cyberLabel}>Name *</label>
-                <input
-                  className={styles.cyberInput}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your full name"
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div className={styles.inputRow}>
+                    <div className={styles.cyberInputGroup} style={{ marginBottom: 0 }}>
+                      <label className={styles.cyberLabel}>Name *</label>
+                      <input
+                        className={styles.cyberInput}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Your full name"
+                      />
+                    </div>
+
+                    <div className={styles.cyberInputGroup} style={{ marginBottom: 0 }}>
+                      <label className={styles.cyberLabel}>Year *</label>
+                      <select
+                        className={styles.cyberInput}
+                        value={year}
+                        onChange={(e) => setYear(Number(e.target.value))}
+                      >
+                        <option value={1}>1st Year</option>
+                        <option value={2}>2nd Year</option>
+                        <option value={3}>3rd Year</option>
+                        <option value={4}>4th Year</option>
+                        <option value={5}>5th Year</option>
+                        <option value={6}>Graduate</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className={styles.cyberInputGroup} style={{ marginBottom: 0 }}>
+                    <label className={styles.cyberLabel}>College / Institution *</label>
+                    <input
+                      className={styles.cyberInput}
+                      value={college}
+                      onChange={(e) => setCollege(e.target.value)}
+                      placeholder="e.g. JNTU Hyderabad"
+                    />
+                  </div>
+
+                  <div className={styles.cyberInputGroup} style={{ marginBottom: 0 }}>
+                    <label className={styles.cyberLabel}><Globe size={14} /> GitHub Profile *</label>
+                    <input
+                      className={styles.cyberInput}
+                      value={githubUrl}
+                      onChange={(e) => setGithubUrl(e.target.value)}
+                      placeholder="https://github.com/yourusername"
+                    />
+                  </div>
+
+                  <div className={styles.cyberInputGroup} style={{ marginBottom: 0 }}>
+                    <label className={styles.cyberLabel}>Bio</label>
+                    <textarea
+                      className={styles.cyberInput}
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="What are you building? What do you want to learn?"
+                      rows={4}
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className={styles.cyberInputGroup}>
-                <label className={styles.cyberLabel}>College / Institution *</label>
-                <input
-                  className={styles.cyberInput}
-                  value={college}
-                  onChange={(e) => setCollege(e.target.value)}
-                  placeholder="e.g. JNTU Hyderabad"
-                />
-              </div>
+              <div className={styles.section} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <h2 className={styles.sectionTitle}>
+                  <Activity size={16} /> Profile Insights
+                </h2>
+                
+                <div className={styles.insightsGrid}>
+                  <div className={`${styles.insightCard} ${styles.fullWidth}`}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 16 }}>
+                      <div>
+                        <div className={styles.insightValue}>{progress}%</div>
+                        <div className={styles.insightLabel}>Profile Completion</div>
+                      </div>
+                      {progress === 100 && (
+                        <span style={{ fontSize: 13, color: 'var(--accent-green)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Zap size={14} fill="currentColor" /> Max Level
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.profileProgress} style={{ marginTop: 0, maxWidth: '100%', height: 8 }}>
+                      <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+                    </div>
+                  </div>
 
-              <div className={styles.cyberInputGroup}>
-                <label className={styles.cyberLabel}>Year *</label>
-                <select
-                  className={styles.cyberInput}
-                  value={year}
-                  onChange={(e) => setYear(Number(e.target.value))}
-                >
-                  <option value={1}>1st Year</option>
-                  <option value={2}>2nd Year</option>
-                  <option value={3}>3rd Year</option>
-                  <option value={4}>4th Year</option>
-                  <option value={5}>5th Year</option>
-                  <option value={6}>Graduate</option>
-                </select>
-              </div>
+                  <div className={styles.insightCard}>
+                    <div className={styles.insightValue}>{selectedSkills.length}</div>
+                    <div className={styles.insightLabel}>Skills Added</div>
+                  </div>
 
-              <div className={styles.cyberInputGroup}>
-                <label className={styles.cyberLabel}><Globe size={14} /> GitHub Profile *</label>
-                <input
-                  className={styles.cyberInput}
-                  value={githubUrl}
-                  onChange={(e) => setGithubUrl(e.target.value)}
-                  placeholder="https://github.com/yourusername"
-                />
-              </div>
-
-              <div className={styles.cyberInputGroup}>
-                <label className={styles.cyberLabel}>Bio</label>
-                <textarea
-                  className={styles.cyberInput}
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="What are you building? What do you want to learn?"
-                  rows={3}
-                />
+                  <div className={styles.insightCard}>
+                    <div className={styles.insightValue} style={{ fontSize: 20 }}>
+                      {availability === 'open_to_collab' ? 'Open' : availability === 'building_solo' ? 'Solo' : 'Busy'}
+                    </div>
+                    <div className={styles.insightLabel}>Status</div>
+                  </div>
+                </div>
               </div>
             </motion.div>
 
