@@ -1,32 +1,48 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
+import type { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
+    let cancelled = false;
+
     const getUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      setUser(data?.user || null);
-      setLoading(false);
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (!cancelled) {
+          setUser(data?.user || null);
+          setLoading(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setUser(null);
+          setLoading(false);
+        }
+      }
     };
 
     getUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
+      (_event: AuthChangeEvent, session: Session | null) => {
+        if (!cancelled) {
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   const signInWithGoogle = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
@@ -35,7 +51,7 @@ export function useAuth() {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-  }, [supabase.auth]);
+  }, [supabase]);
 
   const signInWithGithub = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
@@ -44,7 +60,7 @@ export function useAuth() {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-  }, [supabase.auth]);
+  }, [supabase]);
 
   const signUpWithEmail = useCallback(async (email: string, password: string, fullName: string) => {
     return await supabase.auth.signUp({
@@ -56,20 +72,20 @@ export function useAuth() {
         },
       },
     });
-  }, [supabase.auth]);
+  }, [supabase]);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
     return await supabase.auth.signInWithPassword({
       email,
       password,
     });
-  }, [supabase.auth]);
+  }, [supabase]);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
     window.location.href = '/';
-  }, [supabase.auth]);
+  }, [supabase]);
 
   return { user, loading, signInWithGoogle, signInWithGithub, signUpWithEmail, signInWithEmail, signOut };
 }

@@ -25,7 +25,11 @@ function createAvatarMarkerIcon(user: Profile): L.DivIcon {
   const ringColor = AVAILABILITY_COLORS[user.availability_status] || '#818cf8';
   const isPulsing = user.availability_status === 'open_to_collab';
   const initials = getInitials(user.name || '?');
-  const avatarSrc = user.avatar_url || '';
+  let avatarSrc = user.avatar_url || '';
+  if (!avatarSrc && user.github_url) {
+    const match = user.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+    if (match) avatarSrc = `https://avatars.githubusercontent.com/${match[1]}`;
+  }
 
   // Unique id so each marker's onerror handler targets the right element
   const uid = user.id.replace(/-/g, '').slice(0, 8);
@@ -34,25 +38,17 @@ function createAvatarMarkerIcon(user: Profile): L.DivIcon {
     ? `<div class="avatar-pulse-halo" style="border-color:${ringColor};"></div>`
     : '';
 
-  // We use an <img> with onerror fallback to an initials <div>
+  // We use an <img> with fallback to an initials <div>
   const imgHtml = avatarSrc
     ? `<img
         id="av-${uid}"
         src="${avatarSrc}"
         alt="${initials}"
         class="avatar-marker-img"
-        onerror="
-          var el=document.getElementById('av-${uid}');
-          if(el){
-            el.style.display='none';
-            var fb=document.getElementById('fb-${uid}');
-            if(fb) fb.style.display='flex';
-          }
-        "
       />`
     : '';
 
-  // Initials fallback — hidden by default when avatar loads, shown on error
+  // Initials fallback — hidden by default when avatar loads
   const fallbackHtml = `
     <div
       id="fb-${uid}"
@@ -84,6 +80,9 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
   const markerMapRef = useRef<Record<string, L.Marker>>({});
   const circleRef = useRef<L.Circle | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFlownUserIdRef = useRef<string | null>(null);
+  const activeMoveEndListenerRef = useRef<(() => void) | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -93,6 +92,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
       center: center,
       zoom: 14,
       zoomControl: false,
+      preferCanvas: true,
     });
 
     // Dark tile layer
@@ -179,10 +179,19 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
             .join('')
         : '';
 
+      const popupAvatarUrl = (() => {
+        if (user.avatar_url) return user.avatar_url;
+        if (user.github_url) {
+          const match = user.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+          if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
+        }
+        return '/default-avatar.svg';
+      })();
+
       const popupHtml = `
         <div style="font-family:Inter,sans-serif;min-width:220px;padding:4px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-            <img src="${user.avatar_url || '/default-avatar.svg'}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" alt="" />
+            <img src="${popupAvatarUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" alt="" />
             <div>
               <div style="font-weight:700;font-size:14px;color:#f0f0f5;">${user.name}</div>
               <div style="font-size:12px;color:#a0a0b8;">Year ${user.year} · ${user.college}</div>
@@ -211,21 +220,82 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
 
   // Handle selected user
   useEffect(() => {
-    if (selectedUserId && mapRef.current && markerMapRef.current[selectedUserId]) {
-      const marker = markerMapRef.current[selectedUserId];
-      const latLng = marker.getLatLng();
-      
-      // Fly to location
-      mapRef.current.flyTo(latLng, 16, { duration: 1.5 });
-      
-      // Wait for fly animation to finish, then open popup
-      setTimeout(() => {
-        if (mapRef.current) {
-          marker.openPopup();
-        }
-      }, 1500);
+    // Clean up any pending listeners and timers
+    if (activeMoveEndListenerRef.current && mapRef.current) {
+      mapRef.current.off('moveend', activeMoveEndListenerRef.current);
+      activeMoveEndListenerRef.current = null;
     }
-  }, [selectedUserId]);
+    if (timeoutIdRef.current) {
+      clearTimeout(timeoutIdRef.current);
+      timeoutIdRef.current = null;
+    }
+
+    if (!selectedUserId || !mapRef.current) {
+      lastFlownUserIdRef.current = null;
+      return;
+    }
+
+    const marker = markerMapRef.current[selectedUserId];
+    if (!marker) return;
+
+    if (typeof marker.getLatLng !== 'function' || typeof mapRef.current.setView !== 'function') {
+      return;
+    }
+
+    const latLng = marker.getLatLng();
+    const currentCenter = mapRef.current.getCenter();
+    const currentZoom = mapRef.current.getZoom();
+
+    // Prevent redundant setView if already centered at zoom 16
+    const isAlreadyCentered = currentZoom === 16 && currentCenter.distanceTo(latLng) < 10;
+
+    if (isAlreadyCentered) {
+      lastFlownUserIdRef.current = selectedUserId;
+      if (typeof marker.openPopup === 'function') {
+        marker.openPopup();
+      }
+      return;
+    }
+
+    lastFlownUserIdRef.current = selectedUserId;
+
+    // Define the moveend listener callback
+    const handleMoveEnd = () => {
+      const activeMarker = markerMapRef.current[selectedUserId];
+      if (activeMarker && mapRef.current && typeof activeMarker.openPopup === 'function') {
+        activeMarker.openPopup();
+      }
+      activeMoveEndListenerRef.current = null;
+    };
+
+    activeMoveEndListenerRef.current = handleMoveEnd;
+    mapRef.current.once('moveend', handleMoveEnd);
+
+    // Smoothly pan to location (zoom level 16)
+    mapRef.current.setView(latLng, 16, { animate: true, duration: 0.25 });
+
+    // Fallback timer to ensure the popup opens even if Leaflet suppresses the moveend event
+    timeoutIdRef.current = setTimeout(() => {
+      if (activeMoveEndListenerRef.current) {
+        if (mapRef.current) {
+          mapRef.current.off('moveend', activeMoveEndListenerRef.current);
+        }
+        handleMoveEnd();
+      }
+      timeoutIdRef.current = null;
+    }, 400);
+
+    return () => {
+      if (activeMoveEndListenerRef.current && mapRef.current) {
+        mapRef.current.off('moveend', activeMoveEndListenerRef.current);
+        activeMoveEndListenerRef.current = null;
+      }
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
+        timeoutIdRef.current = null;
+      }
+    };
+  }, [selectedUserId, users]);
 
   return (
     <>

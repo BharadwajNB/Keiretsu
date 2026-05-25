@@ -1,0 +1,434 @@
+/* ---- Onboarding Layout ---- */
+.main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px 60px;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle radial ambient glow behind the card */
+.main::before {
+  content: '';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 700px;
+  height: 700px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- Progress Header ---- */
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.stepTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.skipBtnInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.skipBtnInline:hover {
+  color: var(--text-secondary);
+  transform: translateX(2px);
+}
+
+/* ---- Progress Bar ---- */
+.progressBar {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), #a78bfa, var(--accent-primary));
+  background-size: 200% 100%;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: progressShimmer 3s ease-in-out infinite;
+}
+
+@keyframes progressShimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ---- Card Wrapper (animation boundary) ---- */
+.cardWrapper {
+  position: relative;
+  width: 100%;
+  will-change: transform;
+}
+
+/* ---- Step Card ---- */
+.stepCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 36px 32px 32px;
+  position: relative;
+  width: 100%;
+  will-change: transform, opacity;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.stepHeader {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.stepIconContainer {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: rgba(129, 140, 248, 0.06);
+  border: 1px solid rgba(129, 140, 248, 0.12);
+  color: var(--accent-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.stepCard:hover .stepIconContainer {
+  background: rgba(129, 140, 248, 0.1);
+  border-color: rgba(129, 140, 248, 0.2);
+}
+
+.stepIcon {
+  display: block;
+}
+
+.stepHeading {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.stepSub {
+  font-size: 14px;
+  color: var(--text-muted);
+  max-width: 380px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ---- Step Body ---- */
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- GitHub Detection ---- */
+.detecting {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  animation: fadeInUp 0.3s ease;
+}
+
+.detected {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--accent-green);
+  margin-top: 6px;
+  font-weight: 500;
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Skill Chips ---- */
+.suggestedSection {
+  padding: 16px;
+  background: rgba(129, 140, 248, 0.03);
+  border: 1px solid rgba(129, 140, 248, 0.1);
+  border-radius: var(--radius-lg);
+}
+
+.suggestedLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  margin-bottom: 10px;
+}
+
+.chipGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 6px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  will-change: transform;
+}
+
+.chip:hover {
+  background: var(--accent-glow);
+  border-color: rgba(129, 140, 248, 0.3);
+  color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+.chip:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.chipActive {
+  background: rgba(129, 140, 248, 0.12);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.selectedRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+/* ---- Location Card ---- */
+.locationCard {
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  transition: border-color 0.3s ease;
+}
+
+.locationGranted {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.locationCheck {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(52, 211, 153, 0.1);
+  color: var(--accent-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.locationDenied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-red);
+}
+
+.locationPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.locationIcon {
+  color: var(--accent-primary);
+  opacity: 0.5;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+.locationTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.locationSub {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+/* ---- Navigation Row ---- */
+.navRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backBtn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  transform: translateX(-2px);
+}
+
+.continueBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+  border: none;
+  border-radius: var(--radius-full);
+  color: white;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 12px rgba(129, 140, 248, 0.2);
+  will-change: transform;
+}
+
+.continueBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(129, 140, 248, 0.35);
+  filter: brightness(1.08);
+}
+
+.continueBtn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(129, 140, 248, 0.2);
+}
+
+.continueBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 640px) {
+  .main {
+    padding: 72px 16px 40px;
+    align-items: flex-start;
+  }
+
+  .main::before {
+    width: 400px;
+    height: 400px;
+  }
+
+  .stepCard {
+    padding: 24px 20px 20px;
+  }
+
+  .stepHeading {
+    font-size: 20px;
+  }
+
+  .stepSub {
+    font-size: 13px;
+  }
+
+  .navRow {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .continueBtn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .progressHeader {
+    padding: 0;
+  }
+}

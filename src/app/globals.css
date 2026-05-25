@@ -64,6 +64,8 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -111,13 +113,14 @@ a {
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
-  transition: all var(--transition-fast);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   outline: none;
 }
 
 .input:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px var(--accent-glow);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.08);
+  background: rgba(26, 26, 26, 0.9);
 }
 
 .input:disabled {
@@ -145,14 +148,19 @@ a {
   font-weight: 500;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease;
   border: none;
   outline: none;
+  will-change: transform;
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .btn-primary {
@@ -252,7 +260,8 @@ a {
   border: 2px solid var(--border-color);
   border-top-color: var(--accent-primary);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
+  will-change: transform;
 }
 
 @keyframes spin {

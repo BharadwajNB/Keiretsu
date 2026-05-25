@@ -1,15 +1,19 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useMemo } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import Navbar from '@/components/layout/Navbar';
 import { AVAILABILITY_LABELS } from '@/lib/types';
 import type { Profile } from '@/lib/types';
-import { MapPin, ExternalLink, Building2, Calendar, MessageCircle, Map, Edit3 } from 'lucide-react';
+import { MapPin, ExternalLink, Building2, Calendar, MessageCircle, Map, Edit3, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
+import GitHubCard from '@/components/profile/GitHubCard';
 import styles from './page.module.css';
 import ConnectModal from '@/components/profile/ConnectModal';
+import type { ConnectionRequest } from '@/lib/types';
 
 // ---- Skeleton ----------------------------------------------------------------
 function ProfileSkeleton() {
@@ -33,34 +37,101 @@ function ProfileSkeleton() {
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { user: currentUser } = useAuth();
+  const { profile: myProfile } = useProfile();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showConnectModal, setShowConnectModal] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'accepted' | 'declined'>('none');
+
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchProfile = async () => {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', id)
-        .single();
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', id)
+          .single();
 
-      if (data) {
-        const { data: skillData } = await supabase
-          .from('profile_skills')
-          .select('skills(name)')
-          .eq('profile_id', data.id);
+        if (cancelled) return;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const skills = skillData?.map((s: any) => s.skills?.name).filter(Boolean) || [];
-        setProfile({ ...data, skills });
+        if (data) {
+          const { data: skillData } = await supabase
+            .from('profile_skills')
+            .select('skills(name)')
+            .eq('profile_id', data.id);
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const skills = skillData?.map((s: any) => s.skills?.name).filter(Boolean) || [];
+          if (!cancelled) setProfile({ ...data, skills });
+        }
+      } catch (err) {
+        console.warn('Failed to fetch profile:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchProfile();
-  }, [id]);
+    return () => { cancelled = true; };
+  }, [id, supabase]);
+
+  useEffect(() => {
+    if (!myProfile || !id || myProfile.id === id) return;
+
+    let cancelled = false;
+
+    const checkConnection = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('connection_requests')
+          .select('status, sender_id, receiver_id')
+          .or(`sender_id.eq.${myProfile.id},receiver_id.eq.${myProfile.id}`);
+
+        if (cancelled) return;
+        if (error) throw error;
+
+        const relevant = (data || []).filter((r: { sender_id: string; receiver_id: string; status: string }) => r.sender_id === id || r.receiver_id === id);
+        if (relevant.length > 0) {
+          const isAccepted = relevant.some((r: { status: string }) => r.status === 'accepted');
+          if (isAccepted) {
+            setConnectionStatus('accepted');
+          } else {
+            const isPending = relevant.some((r: { status: string }) => r.status === 'pending');
+            setConnectionStatus(isPending ? 'pending' : 'none');
+          }
+        } else {
+          setConnectionStatus('none');
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.warn('Failed to fetch connection status from DB, checking LocalStorage fallback:', err);
+        try {
+          const localRequestsStr = localStorage.getItem(`requests_${myProfile.id}`);
+          if (localRequestsStr) {
+            const localRequests = JSON.parse(localRequestsStr) as ConnectionRequest[];
+            const hasPending = localRequests.some(r => 
+              (r.sender_id === myProfile.id && r.receiver_id === id) || 
+              (r.sender_id === id && r.receiver_id === myProfile.id)
+            );
+            if (hasPending) {
+              setConnectionStatus('pending');
+              return;
+            }
+          }
+        } catch {
+          // localStorage unavailable
+        }
+        setConnectionStatus('none');
+      }
+    };
+
+    checkConnection();
+    return () => { cancelled = true; };
+  }, [myProfile, id, showConnectModal, supabase]);
 
   // ---- Loading ---------------------------------------------------------------
   if (loading) {
@@ -90,14 +161,15 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   }
 
   // ---- Derived values --------------------------------------------------------
+  const availStatus = profile.availability_status || 'busy';
   const availBadgeClass =
-    profile.availability_status === 'open_to_collab'
+    availStatus === 'open_to_collab'
       ? styles.green
-      : profile.availability_status === 'busy'
+      : availStatus === 'busy'
       ? styles.red
       : styles.amber;
 
-  const isPulsing = profile.availability_status === 'open_to_collab';
+  const isPulsing = availStatus === 'open_to_collab';
   const isOwner = currentUser?.id === profile.user_id;
 
   return (
@@ -127,7 +199,14 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             <div className={styles.avatarRing}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={profile.avatar_url || '/default-avatar.svg'}
+                src={(() => {
+                  if (profile.avatar_url) return profile.avatar_url;
+                  if (profile.github_url) {
+                    const match = profile.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+                    if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
+                  }
+                  return '/default-avatar.svg';
+                })()}
                 alt={profile.name}
                 className={styles.avatar}
               />
@@ -135,7 +214,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
             <div className={`${styles.availabilityBadge} ${availBadgeClass}`}>
               <span className={`${styles.availabilityDot} ${isPulsing ? styles.pulsing : ''}`} />
-              {AVAILABILITY_LABELS[profile.availability_status]}
+              {AVAILABILITY_LABELS[availStatus] || availStatus}
             </div>
           </div>
 
@@ -143,14 +222,18 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           <div className={styles.nameBlock}>
             <h1 className={styles.name}>{profile.name}</h1>
             <div className={styles.metaRow}>
-              <div className={styles.metaItem}>
-                <Building2 size={15} className="text-muted" />
-                <span>{profile.college}</span>
-              </div>
-              <div className={styles.metaItem}>
-                <Calendar size={15} className="text-muted" />
-                <span>Year {profile.year}</span>
-              </div>
+              {profile.college && (
+                <div className={styles.metaItem}>
+                  <Building2 size={15} className="text-muted" />
+                  <span>{profile.college}</span>
+                </div>
+              )}
+              {profile.year && (
+                <div className={styles.metaItem}>
+                  <Calendar size={15} className="text-muted" />
+                  <span>Year {profile.year}</span>
+                </div>
+              )}
               {profile.distance_km !== undefined && (
                 <div className={styles.metaItem}>
                   <MapPin size={15} style={{ color: 'var(--accent-primary)' }} />
@@ -198,19 +281,28 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             </div>
           )}
 
+          {/* GitHub Activity */}
+          {profile.github_url && (
+            <GitHubCard githubUrl={profile.github_url} />
+          )}
+
           {/* Footer Actions */}
           <div className={styles.footerActions}>
             {isOwner ? (
-              <a 
-                href="/profile/edit" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className={styles.connectBtn} 
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
-              >
+              <Link href="/profile/edit" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
                 <Edit3 size={16} />
                 Edit Profile
-              </a>
+              </Link>
+            ) : connectionStatus === 'accepted' ? (
+              <Link href="/chat" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+                <MessageCircle size={16} />
+                Message
+              </Link>
+            ) : connectionStatus === 'pending' ? (
+              <button className={styles.connectBtn} disabled style={{ opacity: 0.7, cursor: 'not-allowed' }}>
+                <Clock size={16} />
+                Pending Request
+              </button>
             ) : (
               <button className={styles.connectBtn} onClick={() => setShowConnectModal(true)}>
                 <MessageCircle size={16} />
@@ -250,6 +342,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         isOpen={showConnectModal}
         onClose={() => setShowConnectModal(false)}
         recipientName={profile.name}
+        recipientId={profile.id}
       />
     </div>
   );
