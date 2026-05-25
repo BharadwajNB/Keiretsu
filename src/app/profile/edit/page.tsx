@@ -43,14 +43,6 @@ function ProfileEditContent() {
     }
   }, [profile]);
 
-  // Auto-update location when available
-  useEffect(() => {
-    if (latitude && longitude && profile) {
-      updateLocation(latitude, longitude);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [latitude, longitude]);
-
   const handleSave = async () => {
     setSaving(true);
     const { error } = await updateProfile({
@@ -63,6 +55,10 @@ function ProfileEditContent() {
     });
 
     await updateSkills(selectedSkills);
+
+    if (latitude && longitude) {
+      await updateLocation(latitude, longitude);
+    }
 
     if (!error) {
       setSaved(true);

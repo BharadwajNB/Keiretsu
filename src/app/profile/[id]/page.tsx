@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, use, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import Navbar from '@/components/layout/Navbar';
@@ -34,8 +35,9 @@ function ProfileSkeleton() {
 }
 
 // ---- Main Page ---------------------------------------------------------------
-export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function ProfilePage() {
+  const params = useParams();
+  const id = params?.id as string;
   const { user: currentUser } = useAuth();
   const { profile: myProfile } = useProfile();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -48,6 +50,15 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
+    if (!id) return;
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
 
     const fetchProfile = async () => {
@@ -96,7 +107,8 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   }, []);
 
   useEffect(() => {
-    if (!myProfile || !id || myProfile.id === id) return;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!myProfile || !id || !uuidRegex.test(id) || myProfile.id === id) return;
 
     let cancelled = false;
 
