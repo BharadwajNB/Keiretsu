@@ -196,14 +196,14 @@ export default function SearchPage() {
             transition={{ duration: 0.4, delay: 0.1 }}
           >
             <div className={styles.filterRow}>
-              {/* Name search */}
+              {/* General search */}
               <div className={styles.inputGroup}>
-                <label className={styles.filterLabel}>Name</label>
+                <label className={styles.filterLabel}>Search</label>
                 <div className={styles.inputWrapper}>
                   <SearchIcon size={16} className={styles.inputIcon} />
                   <input
                     className={styles.searchInput}
-                    placeholder="Search by name..."
+                    placeholder="Search name, bio, skills, college..."
                     value={nameSearch}
                     onChange={(e) => setNameSearch(e.target.value)}
                   />
