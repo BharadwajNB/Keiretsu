@@ -30,10 +30,13 @@ export default function ConnectModal({ isOpen, onClose, recipientName, recipient
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setSelectedIntent(null);
-      setMessage('');
-      setIsSending(false);
-      setIsSuccess(false);
+      const timer = setTimeout(() => {
+        setSelectedIntent(null);
+        setMessage('');
+        setIsSending(false);
+        setIsSuccess(false);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 

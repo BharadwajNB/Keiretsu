@@ -45,8 +45,24 @@ export function useProfile() {
   }, [supabase]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchProfile();
+    const timer = setTimeout(() => {
+      fetchProfile();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    const channel = new BroadcastChannel('profile-updates');
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'profile-updated') {
+        fetchProfile();
+      }
+    };
+    channel.addEventListener('message', handleMessage);
+    return () => {
+      channel.removeEventListener('message', handleMessage);
+      channel.close();
+    };
   }, [fetchProfile]);
 
   const updateProfile = useCallback(

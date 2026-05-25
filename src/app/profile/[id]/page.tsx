@@ -43,6 +43,8 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'pending' | 'accepted' | 'declined'>('none');
 
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
@@ -77,7 +79,21 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
     fetchProfile();
     return () => { cancelled = true; };
-  }, [id, supabase]);
+  }, [id, supabase, refreshKey]);
+
+  useEffect(() => {
+    const channel = new BroadcastChannel('profile-updates');
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'profile-updated') {
+        setRefreshKey((prev) => prev + 1);
+      }
+    };
+    channel.addEventListener('message', handleMessage);
+    return () => {
+      channel.removeEventListener('message', handleMessage);
+      channel.close();
+    };
+  }, []);
 
   useEffect(() => {
     if (!myProfile || !id || myProfile.id === id) return;
@@ -289,7 +305,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
           {/* Footer Actions */}
           <div className={styles.footerActions}>
             {isOwner ? (
-              <Link href="/profile/edit" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+              <Link href="/profile/edit" target="_blank" rel="noopener noreferrer" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
                 <Edit3 size={16} />
                 Edit Profile
               </Link>

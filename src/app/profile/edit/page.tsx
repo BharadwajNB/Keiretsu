@@ -2,13 +2,12 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Navbar from '@/components/layout/Navbar';
 import { useProfile } from '@/hooks/useProfile';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSkills } from '@/hooks/useSkills';
 import { AVAILABILITY_LABELS } from '@/lib/types';
 import type { AvailabilityStatus } from '@/lib/types';
-import { ArrowLeft, Globe, Save, Briefcase, Code, MapPin, X, User, Activity, Zap } from 'lucide-react';
+import { Globe, Save, Briefcase, Code, MapPin, X, User, Activity, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './page.module.css';
 
@@ -67,6 +66,11 @@ function ProfileEditContent() {
 
     if (!error) {
       setSaved(true);
+      if (typeof window !== 'undefined') {
+        const channel = new BroadcastChannel('profile-updates');
+        channel.postMessage({ type: 'profile-updated' });
+        channel.close();
+      }
       setTimeout(() => setSaved(false), 3000);
     }
     setSaving(false);
@@ -101,7 +105,6 @@ function ProfileEditContent() {
   if (loading) {
     return (
       <div className="page">
-        <Navbar />
         <div className="page-center">
           <div className="spinner" />
         </div>
@@ -111,33 +114,13 @@ function ProfileEditContent() {
 
   return (
     <div className="page">
-      <Navbar />
       <main className={styles.main}>
         <div className={styles.bgGlow1} />
         <div className={styles.bgGlow2} />
 
-        <div className={styles.container}>
-          {isWelcome && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={styles.welcomeBanner}
-            >
-              <h2>🎉 Welcome to Keiretsu!</h2>
-              <p>Complete your profile to appear on the skill map.</p>
-            </motion.div>
-          )}
-
+        <div className={styles.headerContainer}>
           <div className={styles.header}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <button
-                onClick={() => router.push('/map')}
-                className="btn btn-secondary"
-                style={{ padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                title="Back to Metaverse"
-              >
-                <ArrowLeft size={18} />
-              </button>
               <h1 style={{ margin: 0 }}>Edit Profile</h1>
             </div>
             <motion.button
@@ -151,6 +134,19 @@ function ProfileEditContent() {
               {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
             </motion.button>
           </div>
+        </div>
+
+        <div className={styles.container}>
+          {isWelcome && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={styles.welcomeBanner}
+            >
+              <h2>🎉 Welcome to Keiretsu!</h2>
+              <p>Complete your profile to appear on the skill map.</p>
+            </motion.div>
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -276,7 +272,7 @@ function ProfileEditContent() {
 
                   <div className={styles.insightCard}>
                     <div className={styles.insightValue} style={{ fontSize: 20 }}>
-                      {availability === 'open_to_collab' ? 'Open' : availability === 'building_solo' ? 'Solo' : 'Busy'}
+                      {availability === 'open_to_collab' ? 'Open' : availability === 'looking_for_cofounder' ? 'Cofounder' : 'Busy'}
                     </div>
                     <div className={styles.insightLabel}>Status</div>
                   </div>
@@ -373,7 +369,7 @@ function ProfileEditContent() {
                         setSkillSearch('');
                       }}
                     >
-                      + Add "{skillSearch.trim()}" (Custom)
+                      + Add &quot;{skillSearch.trim()}&quot; (Custom)
                     </motion.button>
                   )}
 
