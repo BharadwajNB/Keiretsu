@@ -46,9 +46,11 @@ export default function SearchPage() {
     isWatching, isSyncing, lastSyncedAt,
   } = useLocationSync();
   const { skills: allSkills } = useSkills();
+  const [nameInput, setNameInput] = useState('');
   const [nameSearch, setNameSearch] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [collegeInput, setCollegeInput] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [radiusKm, setRadiusKm] = useState(10);
   const [skillInput, setSkillInput] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -63,8 +65,10 @@ export default function SearchPage() {
     return map;
   }, [skillCounts]);
 
+  const isSearching = !!(nameSearch.trim() || collegeFilter.trim() || selectedSkills.length > 0);
+
   const params = useMemo(() => {
-    if (!latitude || !longitude) return null;
+    if (!latitude || !longitude || !isSearching) return null;
     return {
       lat: latitude,
       lng: longitude,
@@ -73,7 +77,7 @@ export default function SearchPage() {
       collegeFilter: collegeFilter || undefined,
       nameSearch: nameSearch || undefined,
     };
-  }, [latitude, longitude, radiusKm, selectedSkills, collegeFilter, nameSearch]);
+  }, [latitude, longitude, radiusKm, selectedSkills, collegeFilter, nameSearch, isSearching]);
 
   const { users, loading } = useNearbyUsers(params);
 
@@ -204,8 +208,19 @@ export default function SearchPage() {
                   <input
                     className={styles.searchInput}
                     placeholder="Search name, bio, skills, college..."
-                    value={nameSearch}
-                    onChange={(e) => setNameSearch(e.target.value)}
+                    value={nameInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setNameInput(val);
+                      if (val.trim() === '') {
+                        setNameSearch('');
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setNameSearch(nameInput);
+                      }
+                    }}
                   />
                 </div>
               </div>
@@ -218,8 +233,19 @@ export default function SearchPage() {
                   <input
                     className={styles.searchInput}
                     placeholder="Filter by college..."
-                    value={collegeFilter}
-                    onChange={(e) => setCollegeFilter(e.target.value)}
+                    value={collegeInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCollegeInput(val);
+                      if (val.trim() === '') {
+                        setCollegeFilter('');
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setCollegeFilter(collegeInput);
+                      }
+                    }}
                   />
                 </div>
               </div>
@@ -348,7 +374,7 @@ export default function SearchPage() {
           {/* Results */}
           <div className={styles.resultsBar}>
             <span className={styles.resultsCount}>
-              {loading ? 'Searching…' : `${users.length} builder${users.length !== 1 ? 's' : ''} found`}
+              {!isSearching ? 'Enter search criteria to find builders' : loading ? 'Searching…' : `${users.length} builder${users.length !== 1 ? 's' : ''} found`}
             </span>
           </div>
 
@@ -368,8 +394,8 @@ export default function SearchPage() {
           {!loading && users.length === 0 && latitude && (
             <div className={styles.stateBox}>
               <SearchIcon size={44} style={{ opacity: 0.25 }} />
-              <h3>No builders found</h3>
-              <p>Try expanding your radius or adjusting your filters.</p>
+              <h3>{!isSearching ? 'Search for builders' : 'No builders found'}</h3>
+              <p>{!isSearching ? 'Use the filters above to discover builders in your area.' : 'Try expanding your radius or adjusting your filters.'}</p>
             </div>
           )}
 

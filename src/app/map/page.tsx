@@ -21,6 +21,7 @@ function MapPageContent() {
   const { skills: allSkills } = useSkills();
   const [radiusKm, setRadiusKm] = useState(500);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [collegeInput, setCollegeInput] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -32,8 +33,10 @@ function MapPageContent() {
   const activeLat = latitude || sandboxCoords?.lat;
   const activeLng = longitude || sandboxCoords?.lng;
 
+  const isSearching = !!(globalQuery || collegeFilter.trim() || selectedSkills.length > 0);
+
   const params = useMemo(() => {
-    if (!activeLat || !activeLng) return null;
+    if (!activeLat || !activeLng || !isSearching) return null;
     
     // Parse global search query
     let nameSearchFilter: string | undefined = undefined;
@@ -62,7 +65,7 @@ function MapPageContent() {
       collegeFilter: collegeFilter || undefined,
       nameSearch: nameSearchFilter,
     };
-  }, [activeLat, activeLng, radiusKm, selectedSkills, collegeFilter, globalQuery, allSkills]);
+  }, [activeLat, activeLng, radiusKm, selectedSkills, collegeFilter, globalQuery, allSkills, isSearching]);
 
   const { users, loading: usersLoading } = useNearbyUsers(params);
 
@@ -155,7 +158,7 @@ function MapPageContent() {
               <h2>Discover</h2>
               <div className={styles.userCount}>
                 <Users size={14} />
-                <span>{users.length} builder{users.length !== 1 ? 's' : ''} nearby</span>
+                <span>{isSearching ? users.length : 0} builder{(!isSearching || users.length !== 1) ? 's' : ''} nearby</span>
               </div>
             </div>
 
@@ -187,8 +190,19 @@ function MapPageContent() {
                 <input
                   style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '100%', fontSize: 14 }}
                   placeholder="Filter by college..."
-                  value={collegeFilter}
-                  onChange={(e) => setCollegeFilter(e.target.value)}
+                  value={collegeInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCollegeInput(val);
+                    if (val.trim() === '') {
+                      setCollegeFilter('');
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setCollegeFilter(collegeInput);
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -241,7 +255,12 @@ function MapPageContent() {
             </AnimatePresence>
 
             <div className={styles.userList}>
-              {usersLoading ? (
+              {!isSearching ? (
+                <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                  <Search size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
+                  <p>Type a college, select skills, or search to discover builders nearby.</p>
+                </div>
+              ) : usersLoading ? (
                 <div style={{ textAlign: 'center', padding: 20 }}><div className="spinner" style={{ margin: '0 auto' }}/></div>
               ) : users.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>

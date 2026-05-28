@@ -51,7 +51,11 @@ export function useNearbyUsers(params: NearbyUserParams | null) {
   const supabase = useMemo(() => createClient(), []);
 
   const fetchNearbyUsers = useCallback(async () => {
-    if (!params || !params.lat || !params.lng) return;
+    if (!params || !params.lat || !params.lng) {
+      setUsers([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
