@@ -46,16 +46,32 @@ export default function SearchPage() {
     isWatching, isSyncing, lastSyncedAt,
   } = useLocationSync();
   const { skills: allSkills } = useSkills();
-  const [nameInput, setNameInput] = useState('');
   const [nameSearch, setNameSearch] = useState('');
-  const [collegeInput, setCollegeInput] = useState('');
+  const [debouncedNameSearch, setDebouncedNameSearch] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('');
+  const [debouncedCollegeFilter, setDebouncedCollegeFilter] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [radiusKm, setRadiusKm] = useState(10);
   const [skillInput, setSkillInput] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Debouncing effect for search text
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedNameSearch(nameSearch);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [nameSearch]);
+
+  // Debouncing effect for college filter
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedCollegeFilter(collegeFilter);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [collegeFilter]);
 
   // Skill counts for nearby builder badges
   const { skillCounts } = useSkillCounts({ lat: latitude, lng: longitude, radiusKm });
@@ -65,19 +81,17 @@ export default function SearchPage() {
     return map;
   }, [skillCounts]);
 
-  const isSearching = !!(nameSearch.trim() || collegeFilter.trim() || selectedSkills.length > 0);
-
   const params = useMemo(() => {
-    if (!latitude || !longitude || !isSearching) return null;
+    if (!latitude || !longitude) return null;
     return {
       lat: latitude,
       lng: longitude,
       radiusKm,
       skillFilter: selectedSkills.length > 0 ? selectedSkills : undefined,
-      collegeFilter: collegeFilter || undefined,
-      nameSearch: nameSearch || undefined,
+      collegeFilter: debouncedCollegeFilter || undefined,
+      nameSearch: debouncedNameSearch || undefined,
     };
-  }, [latitude, longitude, radiusKm, selectedSkills, collegeFilter, nameSearch, isSearching]);
+  }, [latitude, longitude, radiusKm, selectedSkills, debouncedCollegeFilter, debouncedNameSearch]);
 
   const { users, loading } = useNearbyUsers(params);
 
@@ -208,19 +222,8 @@ export default function SearchPage() {
                   <input
                     className={styles.searchInput}
                     placeholder="Search name, bio, skills, college..."
-                    value={nameInput}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setNameInput(val);
-                      if (val.trim() === '') {
-                        setNameSearch('');
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        setNameSearch(nameInput);
-                      }
-                    }}
+                    value={nameSearch}
+                    onChange={(e) => setNameSearch(e.target.value)}
                   />
                 </div>
               </div>
@@ -233,19 +236,8 @@ export default function SearchPage() {
                   <input
                     className={styles.searchInput}
                     placeholder="Filter by college..."
-                    value={collegeInput}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setCollegeInput(val);
-                      if (val.trim() === '') {
-                        setCollegeFilter('');
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        setCollegeFilter(collegeInput);
-                      }
-                    }}
+                    value={collegeFilter}
+                    onChange={(e) => setCollegeFilter(e.target.value)}
                   />
                 </div>
               </div>
@@ -374,7 +366,7 @@ export default function SearchPage() {
           {/* Results */}
           <div className={styles.resultsBar}>
             <span className={styles.resultsCount}>
-              {!isSearching ? 'Enter search criteria to find builders' : loading ? 'Searching…' : `${users.length} builder${users.length !== 1 ? 's' : ''} found`}
+              {loading ? 'Searching…' : `${users.length} builder${users.length !== 1 ? 's' : ''} found`}
             </span>
           </div>
 
@@ -394,8 +386,8 @@ export default function SearchPage() {
           {!loading && users.length === 0 && latitude && (
             <div className={styles.stateBox}>
               <SearchIcon size={44} style={{ opacity: 0.25 }} />
-              <h3>{!isSearching ? 'Search for builders' : 'No builders found'}</h3>
-              <p>{!isSearching ? 'Use the filters above to discover builders in your area.' : 'Try expanding your radius or adjusting your filters.'}</p>
+              <h3>No builders found</h3>
+              <p>Try expanding your radius or adjusting your filters.</p>
             </div>
           )}
 
@@ -438,7 +430,9 @@ export default function SearchPage() {
                     </div>
 
                     <div className={styles.cardRight}>
-                      <span className={styles.distanceTag}>{user.distance_km} km</span>
+                      <span className={styles.distanceTag}>
+                        {user.distance_km != null ? `${user.distance_km} km` : 'Global'}
+                      </span>
                       <span className={badgeClass(user.availability_status)}>
                         {AVAILABILITY_LABELS[user.availability_status]}
                       </span>

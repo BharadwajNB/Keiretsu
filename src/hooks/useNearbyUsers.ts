@@ -44,6 +44,18 @@ function parseWkbPoint(wkbHex: string): { lat: number; lng: number } | null {
   }
 }
 
+function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export function useNearbyUsers(params: NearbyUserParams | null) {
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -128,6 +140,11 @@ export function useNearbyUsers(params: NearbyUserParams | null) {
           }
           const skills = u.profile_skills?.map(ps => ps.skills?.name).filter((name): name is string => !!name) || [];
 
+          let distanceKm: number | undefined = undefined;
+          if (latVal !== undefined && lngVal !== undefined && params.lat !== undefined && params.lng !== undefined) {
+            distanceKm = Number(getDistanceKm(params.lat, params.lng, latVal, lngVal).toFixed(1));
+          }
+
           return {
             id: u.id,
             user_id: u.user_id,
@@ -140,7 +157,7 @@ export function useNearbyUsers(params: NearbyUserParams | null) {
             availability_status: u.availability_status as Profile['availability_status'],
             latitude: latVal,
             longitude: lngVal,
-            distance_km: undefined, // Distance unknown
+            distance_km: distanceKm,
             skills,
             created_at: u.created_at,
             updated_at: u.updated_at,
@@ -173,6 +190,16 @@ export function useNearbyUsers(params: NearbyUserParams | null) {
       // Exclude current user
       if (currentProfileId && u.id === currentProfileId) return false;
       if (currentUserId && u.user_id === currentUserId) return false;
+
+      // Filter by radius (if computed)
+      if (params.radiusKm) {
+        if (u.distance_km !== undefined) {
+          if (u.distance_km > params.radiusKm) return false;
+        } else {
+          // If radius is requested but user location is unknown, exclude them
+          return false;
+        }
+      }
 
       // Filter by nameSearch (Unified search across name, bio, college, and skills)
       if (params.nameSearch) {
