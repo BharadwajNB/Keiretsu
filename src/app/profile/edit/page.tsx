@@ -151,9 +151,33 @@ function ProfileEditContent() {
           >
             <div className={styles.avatarWrapper}>
               <div className={styles.avatarRing} />
-              <div className={styles.avatarInner}>
-                {name ? name.charAt(0) : <User size={48} />}
-              </div>
+              {(() => {
+                const avatarUrl = (() => {
+                  if (profile?.avatar_url) return profile.avatar_url;
+                  if (githubUrl) {
+                    const match = githubUrl.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+                    if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
+                  }
+                  return null;
+                })();
+
+                if (avatarUrl) {
+                  return (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={avatarUrl}
+                      alt={name || 'Avatar'}
+                      className={styles.avatarInner}
+                      style={{ objectFit: 'cover' }}
+                    />
+                  );
+                }
+                return (
+                  <div className={styles.avatarInner}>
+                    {name ? name.charAt(0) : <User size={48} />}
+                  </div>
+                );
+              })()}
             </div>
             <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>
               {name || 'New User'}

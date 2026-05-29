@@ -18,9 +18,20 @@ export async function GET(request: Request) {
         
         const { data: profile } = await supabase
           .from('profiles')
-          .select('college, github_url')
+          .select('college, github_url, avatar_url')
           .eq('user_id', user.id)
           .single();
+
+        // Persist Google avatar on first login (if avatar_url is empty)
+        if (profile && !profile.avatar_url) {
+          const googleAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+          if (googleAvatar) {
+            await supabase
+              .from('profiles')
+              .update({ avatar_url: googleAvatar })
+              .eq('user_id', user.id);
+          }
+        }
 
         if (profile && (!profile.college || !profile.github_url)) {
           return NextResponse.redirect(`${origin}/onboarding`);
@@ -34,3 +45,4 @@ export async function GET(request: Request) {
   // Auth error — redirect to login with error
   return NextResponse.redirect(`${origin}/login?error=auth_failed`);
 }
+
