@@ -294,7 +294,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 Edit Profile
               </Link>
             ) : connectionStatus === 'accepted' ? (
-              <Link href="/chat" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+              <Link href={`/chat?userId=${profile.id}`} target="_blank" rel="noopener noreferrer" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
                 <MessageCircle size={16} />
                 Message
               </Link>

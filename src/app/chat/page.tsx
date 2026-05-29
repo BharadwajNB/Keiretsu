@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import ChatInterface from '@/components/chat/ChatInterface';
 
@@ -8,7 +9,9 @@ export default function ChatPage() {
     <div className="page" style={{ height: '100vh' }}>
       <Navbar />
       <main style={{ flex: 1, position: 'relative' }}>
-        <ChatInterface />
+        <Suspense fallback={<div className="page-center"><div className="spinner" /></div>}>
+          <ChatInterface />
+        </Suspense>
       </main>
     </div>
   );

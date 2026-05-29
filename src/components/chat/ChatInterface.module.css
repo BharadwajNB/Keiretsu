@@ -9,8 +9,7 @@
 /* Sidebar Styling */
 .sidebar {
   width: 340px;
-  background: rgba(17, 17, 17, 0.6);
-  backdrop-filter: blur(20px);
+  background: #09090d;
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -23,7 +22,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(17, 17, 17, 0.4);
+  background: #121219;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -75,14 +74,14 @@
 }
 
 .conversationItem:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.05);
+  background: #161622;
+  border-color: #242436;
   transform: translateX(4px);
 }
 
 .conversationItemActive {
-  background: rgba(129, 140, 248, 0.08);
-  border-color: rgba(129, 140, 248, 0.2);
+  background: #1a1a2b;
+  border-color: #34344e;
 }
 
 .conversationItemActive::before {
@@ -161,9 +160,7 @@
 /* Main Chat Area */
 .chatArea {
   flex: 1;
-  background: radial-gradient(circle at top right, rgba(129, 140, 248, 0.03), transparent 40%),
-              radial-gradient(circle at bottom left, rgba(129, 140, 248, 0.02), transparent 40%),
-              var(--bg-primary);
+  background: #09090c;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -171,8 +168,7 @@
 
 .chatHeader {
   padding: 16px 32px;
-  background: rgba(10, 10, 10, 0.7);
-  backdrop-filter: blur(20px);
+  background: #101017;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
@@ -213,8 +209,8 @@
 .compatibilityBadge {
   margin-left: 12px;
   padding: 4px 12px;
-  background: rgba(129, 140, 248, 0.1);
-  border: 1px solid rgba(129, 140, 248, 0.3);
+  background: #1c1b2c;
+  border: 1px solid #3c3b5c;
   border-radius: 20px;
   display: flex;
   align-items: center;
@@ -289,8 +285,8 @@
   align-items: center;
   gap: 8px;
   padding: 6px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #181822;
+  border: 1px solid #282836;
   border-radius: 12px;
   font-size: 11px;
   color: var(--text-muted);
@@ -329,10 +325,9 @@
 }
 
 .bubbleReceived {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(10px);
+  background: #1a1a24;
   color: var(--text-primary);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid #2a2a38;
   border-bottom-left-radius: 4px;
 }
 
@@ -356,11 +351,11 @@
   display: flex;
   gap: 5px;
   padding: 12px 18px;
-  background: rgba(255, 255, 255, 0.03);
+  background: #151522;
   border-radius: 20px;
   width: fit-content;
   align-self: flex-start;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid #2a2a3c;
 }
 
 .dot {
@@ -387,8 +382,7 @@
 }
 
 .inputWrapper {
-  background: rgba(26, 26, 26, 0.6);
-  backdrop-filter: blur(20px);
+  background: #13131c;
   border: 1px solid var(--border-color);
   border-radius: 24px;
   display: flex;

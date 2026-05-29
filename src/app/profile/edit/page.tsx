@@ -276,7 +276,7 @@ function ProfileEditContent() {
 
                   <div className={styles.insightCard}>
                     <div className={styles.insightValue} style={{ fontSize: 20 }}>
-                      {availability === 'open_to_collab' ? 'Open' : availability === 'building_solo' ? 'Solo' : 'Busy'}
+                      {availability === 'open_to_collab' ? 'Open' : availability === 'looking_for_cofounder' ? 'Co-founder' : 'Busy'}
                     </div>
                     <div className={styles.insightLabel}>Status</div>
                   </div>
@@ -308,7 +308,7 @@ function ProfileEditContent() {
                         <div className={styles.availabilityTitle}>{label}</div>
                         <div className={styles.availabilityDesc}>
                           {value === 'open_to_collab' ? 'Looking for projects and teams to join.'
-                            : value === 'building_solo' ? 'Focused on my own ideas right now.'
+                            : value === 'looking_for_cofounder' ? 'Looking for co-founders to start a new venture.'
                               : 'Currently unavailable for new side quests.'}
                         </div>
                       </div>
