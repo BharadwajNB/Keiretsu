@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo, Suspense, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,10 +21,18 @@ function MapPageContent() {
   const { skills: allSkills } = useSkills();
   const [radiusKm, setRadiusKm] = useState(500);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [collegeFilter, setCollegeFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   const searchParamsUrl = useSearchParams();
   const globalQuery = searchParamsUrl.get('q');
@@ -59,10 +67,10 @@ function MapPageContent() {
       lng: activeLng,
       radiusKm: globalQuery ? 20000 : radiusKm, // Expand to global (20000km) if using the global search bar
       skillFilter: computedSkills.length > 0 ? computedSkills : undefined,
-      collegeFilter: collegeFilter || undefined,
-      nameSearch: nameSearchFilter,
+      collegeFilter: undefined,
+      nameSearch: debouncedSearchQuery || nameSearchFilter || undefined,
     };
-  }, [activeLat, activeLng, radiusKm, selectedSkills, collegeFilter, globalQuery, allSkills]);
+  }, [activeLat, activeLng, radiusKm, selectedSkills, debouncedSearchQuery, globalQuery, allSkills]);
 
   const { users, loading: usersLoading } = useNearbyUsers(params);
 
@@ -186,9 +194,9 @@ function MapPageContent() {
                 <Search size={16} className="text-muted" />
                 <input
                   style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '100%', fontSize: 14 }}
-                  placeholder="Filter by college..."
-                  value={collegeFilter}
-                  onChange={(e) => setCollegeFilter(e.target.value)}
+                  placeholder="Search name, skills, college..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
             </div>

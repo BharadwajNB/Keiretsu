@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, MapPin, Check, Sparkles, SkipForward, User, GraduationCap, Code2 } from 'lucide-react';
@@ -75,6 +75,21 @@ function OnboardingContent() {
       setSuggestedSkills(detected);
     }
   }, [gh.topLanguages]);
+
+  // Sync GitHub bio on onboarding page if currently empty
+  const hasSyncedGitHub = useRef(false);
+  useEffect(() => {
+    hasSyncedGitHub.current = false;
+  }, [githubUrl]);
+
+  useEffect(() => {
+    if (githubUrl && !gh.loading && !gh.error && !hasSyncedGitHub.current) {
+      if (gh.bio && !bio) {
+        setBio(gh.bio);
+      }
+      hasSyncedGitHub.current = true;
+    }
+  }, [gh.bio, gh.loading, gh.error, githubUrl, bio]);
 
   // Auto-sync location when granted
   useEffect(() => {

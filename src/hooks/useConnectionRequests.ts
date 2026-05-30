@@ -191,7 +191,10 @@ export function useConnectionRequests() {
 
   // Load requests initially when profile changes
   useEffect(() => {
-    loadRequests();
+    const timer = setTimeout(() => {
+      loadRequests();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [loadRequests]);
 
   // Action: Accept Request

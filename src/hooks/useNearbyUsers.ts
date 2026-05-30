@@ -44,6 +44,18 @@ function parseWkbPoint(wkbHex: string): { lat: number; lng: number } | null {
   }
 }
 
+function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export function useNearbyUsers(params: NearbyUserParams | null) {
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,7 +63,11 @@ export function useNearbyUsers(params: NearbyUserParams | null) {
   const supabase = useMemo(() => createClient(), []);
 
   const fetchNearbyUsers = useCallback(async () => {
-    if (!params || !params.lat || !params.lng) return;
+    if (!params || !params.lat || !params.lng) {
+      setUsers([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -60,17 +76,17 @@ export function useNearbyUsers(params: NearbyUserParams | null) {
       user_lat: params.lat,
       user_lng: params.lng,
       radius_km: params.radiusKm,
-      skill_filter: params.skillFilter?.length ? params.skillFilter : null,
-      college_filter: params.collegeFilter || null,
-      name_search: params.nameSearch || null,
+      skill_filter: null,
+      college_filter: null,
+      name_search: null,
     });
 
-    let finalUsers: Profile[] = [];
+    let rawUsers: Profile[] = [];
 
     if (!rpcError && data && data.length > 0) {
-      finalUsers = (data || []).map((u: Record<string, unknown>) => ({
+      rawUsers = (data || []).map((u: Record<string, unknown>) => ({
         id: u.id as string,
-        user_id: '',
+        user_id: (u.user_id as string) || '',
         name: u.name as string,
         college: u.college as string,
         year: u.year as number,
@@ -110,13 +126,9 @@ export function useNearbyUsers(params: NearbyUserParams | null) {
         `);
 
       if (!restError && restData) {
-        // Exclude current user (matching RPC behavior)
-        const { data: authData } = await supabase.auth.getUser();
-        const currentUserId = authData?.user?.id;
-
         const typedData = restData as unknown as PostgrestProfile[];
 
-        const parsed = typedData.map(u => {
+        rawUsers = typedData.map(u => {
           let latVal: number | undefined = undefined;
           let lngVal: number | undefined = undefined;
           if (u.location) {
@@ -127,6 +139,11 @@ export function useNearbyUsers(params: NearbyUserParams | null) {
             }
           }
           const skills = u.profile_skills?.map(ps => ps.skills?.name).filter((name): name is string => !!name) || [];
+
+          let distanceKm: number | undefined = undefined;
+          if (latVal !== undefined && lngVal !== undefined && params.lat !== undefined && params.lng !== undefined) {
+            distanceKm = Number(getDistanceKm(params.lat, params.lng, latVal, lngVal).toFixed(1));
+          }
 
           return {
             id: u.id,
@@ -140,46 +157,76 @@ export function useNearbyUsers(params: NearbyUserParams | null) {
             availability_status: u.availability_status as Profile['availability_status'],
             latitude: latVal,
             longitude: lngVal,
-            distance_km: undefined, // Distance unknown
+            distance_km: distanceKm,
             skills,
             created_at: u.created_at,
             updated_at: u.updated_at,
           };
-        });
-
-        // Apply filters in-memory
-        finalUsers = parsed.filter(u => {
-          // Exclude current user
-          if (currentUserId && u.user_id === currentUserId) return false;
-
-          // Filter by nameSearch
-          if (params.nameSearch) {
-            const q = params.nameSearch.toLowerCase();
-            const nameMatch = u.name?.toLowerCase().includes(q);
-            const bioMatch = u.bio?.toLowerCase().includes(q);
-            if (!nameMatch && !bioMatch) return false;
-          }
-
-          // Filter by collegeFilter
-          if (params.collegeFilter) {
-            const q = params.collegeFilter.toLowerCase();
-            if (!u.college?.toLowerCase().includes(q)) return false;
-          }
-
-          // Filter by skillFilter (at least one matching tag)
-          if (params.skillFilter && params.skillFilter.length > 0) {
-            const hasSkill = u.skills.some(s => params.skillFilter!.includes(s));
-            if (!hasSkill) return false;
-          }
-
-          return true;
         });
       } else if (rpcError) {
         setError(rpcError.message);
       }
     }
 
-    setUsers(finalUsers);
+    // Apply filters in-memory
+    const { data: authData } = await supabase.auth.getUser();
+    const currentUserId = authData?.user?.id;
+
+    let currentProfileId: string | undefined = undefined;
+    if (currentUserId) {
+      try {
+        const { data: currentProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', currentUserId)
+          .single();
+        currentProfileId = currentProfile?.id;
+      } catch (err) {
+        console.warn('Failed to fetch current user profile ID for exclusion:', err);
+      }
+    }
+
+    const filteredUsers = rawUsers.filter(u => {
+      // Exclude current user
+      if (currentProfileId && u.id === currentProfileId) return false;
+      if (currentUserId && u.user_id === currentUserId) return false;
+
+      // Filter by radius (if computed)
+      if (params.radiusKm) {
+        if (u.distance_km !== undefined) {
+          if (u.distance_km > params.radiusKm) return false;
+        } else {
+          // If radius is requested but user location is unknown, exclude them
+          return false;
+        }
+      }
+
+      // Filter by nameSearch (Unified search across name, bio, college, and skills)
+      if (params.nameSearch) {
+        const q = params.nameSearch.toLowerCase();
+        const nameMatch = u.name?.toLowerCase().includes(q);
+        const bioMatch = u.bio?.toLowerCase().includes(q);
+        const collegeMatch = u.college?.toLowerCase().includes(q);
+        const skillMatch = u.skills?.some(s => s.toLowerCase().includes(q));
+        if (!nameMatch && !bioMatch && !collegeMatch && !skillMatch) return false;
+      }
+
+      // Filter by collegeFilter
+      if (params.collegeFilter) {
+        const q = params.collegeFilter.toLowerCase();
+        if (!u.college?.toLowerCase().includes(q)) return false;
+      }
+
+      // Filter by skillFilter (at least one matching tag)
+      if (params.skillFilter && params.skillFilter.length > 0) {
+        const hasSkill = u.skills?.some(s => params.skillFilter!.includes(s)) ?? false;
+        if (!hasSkill) return false;
+      }
+
+      return true;
+    });
+
+    setUsers(filteredUsers);
     setLoading(false);
   }, [params, supabase]);
 

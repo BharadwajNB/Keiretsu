@@ -47,13 +47,31 @@ export default function SearchPage() {
   } = useLocationSync();
   const { skills: allSkills } = useSkills();
   const [nameSearch, setNameSearch] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [debouncedNameSearch, setDebouncedNameSearch] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('');
+  const [debouncedCollegeFilter, setDebouncedCollegeFilter] = useState('');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [radiusKm, setRadiusKm] = useState(10);
   const [skillInput, setSkillInput] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Debouncing effect for search text
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedNameSearch(nameSearch);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [nameSearch]);
+
+  // Debouncing effect for college filter
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedCollegeFilter(collegeFilter);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [collegeFilter]);
 
   // Skill counts for nearby builder badges
   const { skillCounts } = useSkillCounts({ lat: latitude, lng: longitude, radiusKm });
@@ -70,10 +88,10 @@ export default function SearchPage() {
       lng: longitude,
       radiusKm,
       skillFilter: selectedSkills.length > 0 ? selectedSkills : undefined,
-      collegeFilter: collegeFilter || undefined,
-      nameSearch: nameSearch || undefined,
+      collegeFilter: debouncedCollegeFilter || undefined,
+      nameSearch: debouncedNameSearch || undefined,
     };
-  }, [latitude, longitude, radiusKm, selectedSkills, collegeFilter, nameSearch]);
+  }, [latitude, longitude, radiusKm, selectedSkills, debouncedCollegeFilter, debouncedNameSearch]);
 
   const { users, loading } = useNearbyUsers(params);
 
@@ -196,14 +214,14 @@ export default function SearchPage() {
             transition={{ duration: 0.4, delay: 0.1 }}
           >
             <div className={styles.filterRow}>
-              {/* Name search */}
+              {/* General search */}
               <div className={styles.inputGroup}>
-                <label className={styles.filterLabel}>Name</label>
+                <label className={styles.filterLabel}>Search</label>
                 <div className={styles.inputWrapper}>
                   <SearchIcon size={16} className={styles.inputIcon} />
                   <input
                     className={styles.searchInput}
-                    placeholder="Search by name..."
+                    placeholder="Search name, bio, skills, college..."
                     value={nameSearch}
                     onChange={(e) => setNameSearch(e.target.value)}
                   />
@@ -412,7 +430,9 @@ export default function SearchPage() {
                     </div>
 
                     <div className={styles.cardRight}>
-                      <span className={styles.distanceTag}>{user.distance_km} km</span>
+                      <span className={styles.distanceTag}>
+                        {user.distance_km != null ? `${user.distance_km} km` : 'Global'}
+                      </span>
                       <span className={badgeClass(user.availability_status)}>
                         {AVAILABILITY_LABELS[user.availability_status]}
                       </span>

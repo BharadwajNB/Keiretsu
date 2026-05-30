@@ -1,5 +1,5 @@
 .main {
-  padding-top: 84px;
+  padding-top: 40px;
   padding-bottom: 100px;
   min-height: 100vh;
   position: relative;
@@ -36,6 +36,26 @@
   padding: 0 24px;
   position: relative;
   z-index: 1;
+}
+
+.headerContainer {
+  width: 100%;
+  padding: 0 64px;
+  margin-bottom: 32px;
+  position: relative;
+  z-index: 10;
+}
+
+@media (max-width: 1024px) {
+  .headerContainer {
+    padding: 0 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerContainer {
+    padding: 0 16px;
+  }
 }
 
 /* Hero Section */
