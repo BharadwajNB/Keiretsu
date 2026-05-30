@@ -69,6 +69,21 @@ export const SKILL_CATEGORIES: Record<string, string> = {
   general: 'General',
 };
 
+export interface ChatMessage {
+  id: string;
+  sender_profile_id: string;
+  receiver_profile_id: string;
+  content: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface ChatConversation {
+  otherProfile: Profile;
+  lastMessage: ChatMessage | null;
+  unreadCount: number;
+}
+
 export interface ConnectionRequest {
   id: string;
   sender_id: string;

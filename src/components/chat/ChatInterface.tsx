@@ -1,348 +1,151 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Send, Plus, Image as ImageIcon, Paperclip, Smile, 
+import {
+  Send, Plus, Image as ImageIcon, Paperclip, Smile,
   Rocket, Users, Code, Cpu, MoreVertical, Phone, Video,
-  Zap, Shield, Target, Sparkles, MessageCircle
+  Zap, Shield, Target, Sparkles, MessageCircle, Check, CheckCheck, ChevronUp
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useProfile } from '@/hooks/useProfile';
+import { useChat } from '@/hooks/useChat';
+import type { Profile } from '@/lib/types';
 import styles from './ChatInterface.module.css';
 
-interface Message {
-  id: string;
-  text: string;
-  senderId: string;
-  timestamp: string;
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+function getAvatarUrl(p: Profile): string {
+  if (p.avatar_url) return p.avatar_url;
+  if (p.github_url) {
+    const match = p.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+    if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
+  }
+  return `https://i.pravatar.cc/150?u=${p.id}`;
 }
 
-interface Conversation {
-  id: string;
-  name: string;
-  avatar: string;
-  status: 'online' | 'offline';
-  projectType: 'startup' | 'hackathon' | 'opensource' | 'aiml';
-  compatibility: number;
-  lastMessage: string;
-  time: string;
-  role: string;
-  messages: Message[];
+function getRole(p: Profile): string {
+  if (p.bio) return p.bio.length > 50 ? p.bio.slice(0, 47) + '...' : p.bio;
+  if (p.college) return `${p.college} Student`;
+  return 'Collaborator';
 }
 
+function formatTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+function formatMessageTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 export default function ChatInterface() {
   const { profile: myProfile } = useProfile();
   const searchParams = useSearchParams();
   const targetUserId = searchParams.get('userId');
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConvId, setActiveConvId] = useState<string>('');
-  const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const {
+    conversations,
+    messages,
+    activeOtherProfileId,
+    loadingConversations,
+    loadingMessages,
+    hasMoreMessages,
+    typingUsers,
+    openConversation,
+    sendMessage,
+    setTyping,
+    loadMoreMessages,
+    loadConversations,
+  } = useChat();
 
+  const [inputText, setInputText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const activeConv = conversations.find(c => c.id === activeConvId);
-
-  // Load real conversations from localStorage & fetch accepted DB connections
-  useEffect(() => {
-    if (!myProfile) return;
-
-    const loadConversations = async () => {
-      setLoading(true);
-      const storageKey = `keiretsu_chats_${myProfile.id}`;
-      let localConvs: Conversation[] = [];
-      try {
-        const stored = localStorage.getItem(storageKey);
-        if (stored) {
-          localConvs = (JSON.parse(stored) as Conversation[]).filter(c => !c.id.startsWith('conv_'));
-        }
-      } catch (e) {
-        console.warn('Failed to parse chats from localStorage:', e);
-      }
-
-      try {
-        const supabase = createClient();
-        const { data: connRequests } = await supabase
-          .from('connection_requests')
-          .select(`
-            id,
-            status,
-            sender_id,
-            receiver_id,
-            intent,
-            sender_profile:profiles!sender_id(*),
-            receiver_profile:profiles!receiver_id(*)
-          `)
-          .or(`sender_id.eq.${myProfile.id},receiver_id.eq.${myProfile.id}`)
-          .eq('status', 'accepted');
-
-        if (connRequests) {
-          const dbConvs: Conversation[] = [];
-          for (const req of connRequests) {
-            const otherProfile = req.sender_id === myProfile.id ? req.receiver_profile : req.sender_profile;
-            if (!otherProfile) continue;
-
-            // Avoid duplicating if already in localConvs
-            if (localConvs.some(c => c.id === otherProfile.id)) {
-              continue;
-            }
-
-            const getAvatarUrl = (p: any) => {
-              if (p.avatar_url) return p.avatar_url;
-              if (p.github_url) {
-                const match = p.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
-                if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
-              }
-              return 'https://i.pravatar.cc/150?u=' + p.id;
-            };
-
-            const getRole = (p: any) => {
-              if (p.bio) {
-                return p.bio.length > 50 ? p.bio.slice(0, 47) + '...' : p.bio;
-              }
-              if (p.college) {
-                return `${p.college} Student`;
-              }
-              return 'Collaborator';
-            };
-
-            dbConvs.push({
-              id: otherProfile.id,
-              name: otherProfile.name,
-              avatar: getAvatarUrl(otherProfile),
-              status: otherProfile.availability_status === 'open_to_collab' ? 'online' : 'offline',
-              projectType: req.intent || 'startup',
-              compatibility: 90,
-              lastMessage: '',
-              time: 'Just now',
-              role: getRole(otherProfile),
-              messages: []
-            });
-          }
-
-          const combined = [...localConvs, ...dbConvs];
-          setConversations(combined);
-          if (combined.length > 0 && !activeConvId) {
-            setActiveConvId(combined[0].id);
-          }
-        } else {
-          setConversations(localConvs);
-          if (localConvs.length > 0 && !activeConvId) {
-            setActiveConvId(localConvs[0].id);
-          }
-        }
-      } catch (err) {
-        console.warn('Could not load connections from DB:', err);
-        setConversations(localConvs);
-        if (localConvs.length > 0 && !activeConvId) {
-          setActiveConvId(localConvs[0].id);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadConversations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myProfile]);
+  const activeConv = conversations.find(c => c.otherProfile.id === activeOtherProfileId);
+  const isOtherTyping = activeOtherProfileId ? typingUsers.has(activeOtherProfileId) : false;
 
   // Handle URL redirect query param for userId
   useEffect(() => {
-    if (loading || !targetUserId) return;
+    if (loadingConversations || !targetUserId || !myProfile) return;
 
-    const existing = conversations.find(c => c.id === targetUserId);
+    // Check if conversation already exists
+    const existing = conversations.find(c => c.otherProfile.id === targetUserId);
     if (existing) {
-      setActiveConvId(targetUserId);
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 150);
+      openConversation(targetUserId);
+      setTimeout(() => inputRef.current?.focus(), 150);
       return;
     }
 
-    // Otherwise, fetch target user profile from Supabase
-    const fetchTargetProfile = async () => {
+    // Fetch the target profile and open conversation
+    const fetchAndOpen = async () => {
       try {
         const supabase = createClient();
-        const { data: profile, error } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', targetUserId)
           .single();
 
-        if (error || !profile) {
-          throw new Error(error?.message || 'Profile not found');
+        if (profile) {
+          openConversation(targetUserId);
+          setTimeout(() => inputRef.current?.focus(), 150);
         }
-
-        // Fetch skills for overlap compatibility calculation
-        const { data: skillData } = await supabase
-          .from('profile_skills')
-          .select('skills(name)')
-          .eq('profile_id', profile.id);
-        const userSkills = skillData?.map((s: any) => s.skills?.name).filter(Boolean) || [];
-
-        // Fetch connection intent if accepted
-        let intent: 'startup' | 'hackathon' | 'opensource' | 'aiml' = 'startup';
-        if (myProfile) {
-          const { data: connData } = await supabase
-            .from('connection_requests')
-            .select('intent')
-            .or(`and(sender_id.eq.${myProfile.id},receiver_id.eq.${profile.id}),and(sender_id.eq.${profile.id},receiver_id.eq.${myProfile.id})`)
-            .eq('status', 'accepted')
-            .maybeSingle();
-          if (connData?.intent) {
-            intent = connData.intent as any;
-          }
-        }
-
-        const getAvatarUrl = (p: any) => {
-          if (p.avatar_url) return p.avatar_url;
-          if (p.github_url) {
-            const match = p.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
-            if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
-          }
-          return 'https://i.pravatar.cc/150?u=' + p.id;
-        };
-
-        const calculateCompatibility = (myS: string[] = [], userS: string[] = []) => {
-          if (!myS.length || !userS.length) return 85;
-          const overlap = myS.filter(s => userS.includes(s)).length;
-          const union = new Set([...myS, ...userS]).size;
-          if (union === 0) return 85;
-          const jaccard = overlap / union;
-          return Math.min(99, Math.max(80, Math.round(80 + jaccard * 20)));
-        };
-
-        const getRole = (p: any) => {
-          if (p.bio) {
-            return p.bio.length > 50 ? p.bio.slice(0, 47) + '...' : p.bio;
-          }
-          if (p.college) {
-            return `${p.college} Student`;
-          }
-          return 'Collaborator';
-        };
-
-        const newConv: Conversation = {
-          id: profile.id,
-          name: profile.name,
-          avatar: getAvatarUrl(profile),
-          status: profile.availability_status === 'open_to_collab' ? 'online' : 'offline',
-          projectType: intent,
-          compatibility: calculateCompatibility(myProfile?.skills || [], userSkills),
-          lastMessage: '',
-          time: 'Just now',
-          role: getRole(profile),
-          messages: []
-        };
-
-        setConversations(prev => {
-          const updated = [newConv, ...prev.filter(c => c.id !== profile.id)];
-          const storageKey = myProfile ? `keiretsu_chats_${myProfile.id}` : 'keiretsu_chats_guest';
-          try {
-            localStorage.setItem(storageKey, JSON.stringify(updated));
-          } catch (e) {
-            console.warn('Failed to write chats to localStorage:', e);
-          }
-          return updated;
-        });
-
-        setActiveConvId(profile.id);
-        
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 150);
-
       } catch (err) {
         console.warn('Could not load profile for chat:', err);
       }
     };
 
-    fetchTargetProfile();
+    fetchAndOpen();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, targetUserId, myProfile]);
+  }, [loadingConversations, targetUserId, myProfile]);
 
-  // Scroll to bottom when active conversation changes or new messages are appended/typing state changes
+  // Scroll to bottom when messages change or typing state changes
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [activeConvId, activeConv?.messages, isTyping]);
+  }, [messages, isOtherTyping]);
 
-  const handleSend = () => {
-    if (!inputText.trim() || !activeConv) return;
-    
-    const newMsg: Message = {
-      id: `msg_${Date.now()}`,
-      text: inputText,
-      senderId: 'me',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
+  const handleSend = useCallback(async () => {
+    if (!inputText.trim() || !activeOtherProfileId) return;
 
-    setConversations(prev => {
-      const updated = prev.map(c => {
-        if (c.id === activeConv.id) {
-          return {
-            ...c,
-            lastMessage: newMsg.text,
-            time: 'Just now',
-            messages: [...c.messages, newMsg]
-          };
-        }
-        return c;
-      });
-
-      const storageKey = myProfile ? `keiretsu_chats_${myProfile.id}` : 'keiretsu_chats_guest';
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(updated));
-      } catch (e) {
-        console.warn('Failed to write chats to localStorage:', e);
-      }
-      return updated;
-    });
-
+    const text = inputText;
     setInputText('');
+    await sendMessage(activeOtherProfileId, text);
+  }, [inputText, activeOtherProfileId, sendMessage]);
 
-    // Trigger mock auto-reply if chatting with dynamically added users
-    if (activeConv.id.match(/^[0-9a-fA-F-]+$/)) {
-      setIsTyping(true);
-      setTimeout(() => {
-        const responseMsg: Message = {
-          id: `msg_${Date.now() + 1}`,
-          text: `Hey! Thanks for messaging. Let's review the project details and sync up on the next steps. I'm excited to collaborate!`,
-          senderId: activeConv.id,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-
-        setIsTyping(false);
-        setConversations(prev => {
-          const updated = prev.map(c => {
-            if (c.id === activeConv.id) {
-              return {
-                ...c,
-                lastMessage: responseMsg.text,
-                time: 'Just now',
-                messages: [...c.messages, responseMsg]
-              };
-            }
-            return c;
-          });
-
-          const storageKey = myProfile ? `keiretsu_chats_${myProfile.id}` : 'keiretsu_chats_guest';
-          try {
-            localStorage.setItem(storageKey, JSON.stringify(updated));
-          } catch (e) {
-            console.warn('Failed to write chats to localStorage:', e);
-          }
-          return updated;
-        });
-      }, 1500);
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(e.target.value);
+    if (activeOtherProfileId && e.target.value.trim()) {
+      setTyping(activeOtherProfileId);
     }
-  };
+  }, [activeOtherProfileId, setTyping]);
+
+  const handleConvClick = useCallback((profileId: string) => {
+    openConversation(profileId);
+    setInputText('');
+    setTimeout(() => inputRef.current?.focus(), 150);
+  }, [openConversation]);
 
   const getProjectIcon = (type: string) => {
     switch (type) {
@@ -364,9 +167,13 @@ export default function ChatInterface() {
             <Plus size={20} />
           </button>
         </div>
-        
+
         <div className={styles.conversationList}>
-          {conversations.length === 0 ? (
+          {loadingConversations ? (
+            <div style={{ padding: '40px 16px', textAlign: 'center' }}>
+              <div className="spinner" />
+            </div>
+          ) : conversations.length === 0 ? (
             <div style={{ padding: '40px 16px', textAlign: 'center', opacity: 0.6 }}>
               <Users size={24} style={{ color: 'var(--text-muted)', marginBottom: 12, display: 'inline-block' }} />
               <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, fontWeight: 500 }}>No active chats</p>
@@ -376,25 +183,36 @@ export default function ChatInterface() {
             </div>
           ) : (
             conversations.map((conv, idx) => (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                key={conv.id}
-                className={`${styles.conversationItem} ${activeConvId === conv.id ? styles.conversationItemActive : ''}`}
-                onClick={() => setActiveConvId(conv.id)}
+                key={conv.otherProfile.id}
+                className={`${styles.conversationItem} ${activeOtherProfileId === conv.otherProfile.id ? styles.conversationItemActive : ''}`}
+                onClick={() => handleConvClick(conv.otherProfile.id)}
               >
                 <div className={styles.avatarWrapper}>
-                  <img src={conv.avatar} alt={conv.name} className={styles.avatar} />
-                  <span className={`${styles.statusIndicator} ${conv.status === 'online' ? styles.statusOnline : styles.statusOffline}`} />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={getAvatarUrl(conv.otherProfile)} alt={conv.otherProfile.name} className={styles.avatar} />
+                  <span className={`${styles.statusIndicator} ${conv.otherProfile.availability_status === 'open_to_collab' ? styles.statusOnline : styles.statusOffline}`} />
                 </div>
                 <div className={styles.convMeta}>
                   <div className={styles.convHeader}>
-                    <span className={styles.convName}>{conv.name}</span>
-                    <span className={styles.convTime}>{conv.time}</span>
+                    <span className={styles.convName}>{conv.otherProfile.name}</span>
+                    <span className={styles.convTime}>
+                      {conv.lastMessage ? formatTime(conv.lastMessage.created_at) : ''}
+                    </span>
                   </div>
-                  <div className={styles.lastMessage}>{conv.lastMessage || 'No messages yet'}</div>
+                  <div className={styles.lastMessage}>
+                    {conv.lastMessage
+                      ? (conv.lastMessage.sender_profile_id === myProfile?.id ? 'You: ' : '') + conv.lastMessage.content
+                      : 'No messages yet'
+                    }
+                  </div>
                 </div>
+                {conv.unreadCount > 0 && (
+                  <span className={styles.unreadBadge}>{conv.unreadCount}</span>
+                )}
               </motion.div>
             ))
           )}
@@ -402,7 +220,7 @@ export default function ChatInterface() {
       </aside>
 
       {/* Main Chat Area */}
-      {conversations.length === 0 || !activeConv ? (
+      {!activeConv ? (
         <main className={styles.chatArea} style={{ justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: 40 }}>
           <div className={styles.systemMessage} style={{ position: 'absolute', top: 24 }}>
             <Shield size={12} />
@@ -411,7 +229,10 @@ export default function ChatInterface() {
           <MessageCircle size={48} style={{ color: 'var(--accent-primary)', marginBottom: 16, opacity: 0.8 }} />
           <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text-primary)', fontFamily: 'var(--font-playmegames)' }}>Secure Comms Portal</h3>
           <p style={{ margin: '8px 0 0 0', fontSize: 14, color: 'var(--text-secondary)', maxWidth: 360, lineHeight: 1.5 }}>
-            No active conversations. View a user profile from the Skill Map and click "Message" to start a chat.
+            {conversations.length === 0
+              ? 'No active conversations. View a user profile from the Skill Map and click "Message" to start a chat.'
+              : 'Select a conversation from the sidebar to start messaging.'
+            }
           </p>
         </main>
       ) : (
@@ -420,24 +241,18 @@ export default function ChatInterface() {
           <header className={styles.chatHeader}>
             <div className={styles.headerInfo}>
               <div className={styles.headerAvatarWrapper}>
-                <img src={activeConv.avatar} alt={activeConv.name} className={styles.headerAvatar} />
-                <span className={`${styles.statusIndicator} ${activeConv.status === 'online' ? styles.statusOnline : styles.statusOffline}`} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={getAvatarUrl(activeConv.otherProfile)} alt={activeConv.otherProfile.name} className={styles.headerAvatar} />
+                <span className={`${styles.statusIndicator} ${activeConv.otherProfile.availability_status === 'open_to_collab' ? styles.statusOnline : styles.statusOffline}`} />
               </div>
               <div className={styles.headerMeta}>
-                <h3>{activeConv.name}</h3>
-                <p className={styles.userRole}>{activeConv.role}</p>
-              </div>
-              <div className={styles.compatibilityBadge}>
-                <div className={styles.badgeGlow} />
-                <Sparkles size={12} className={styles.badgeIcon} />
-                <span>{activeConv.compatibility}% Match</span>
+                <h3>{activeConv.otherProfile.name}</h3>
+                <p className={styles.userRole}>
+                  {isOtherTyping ? 'typing...' : getRole(activeConv.otherProfile)}
+                </p>
               </div>
             </div>
             <div className={styles.headerActions}>
-              <div className={styles.projectTypeTag}>
-                {getProjectIcon(activeConv.projectType)}
-                <span>{activeConv.projectType}</span>
-              </div>
               <div className={styles.actionDivider} />
               <button className={styles.iconBtn} title="Video Call"><Video size={20} /></button>
               <button className={styles.iconBtn} title="Voice Call"><Phone size={20} /></button>
@@ -452,33 +267,73 @@ export default function ChatInterface() {
               <span>End-to-end encrypted collaboration</span>
             </div>
 
-            {activeConv.messages.length === 0 && (
+            {/* Load More Button */}
+            {hasMoreMessages && (
+              <button
+                onClick={loadMoreMessages}
+                disabled={loadingMessages}
+                className={styles.loadMoreBtn}
+                style={{
+                  alignSelf: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 16px',
+                  background: '#181822',
+                  border: '1px solid #282836',
+                  borderRadius: 12,
+                  color: 'var(--text-secondary)',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  marginBottom: 16,
+                }}
+              >
+                <ChevronUp size={14} />
+                {loadingMessages ? 'Loading...' : 'Load earlier messages'}
+              </button>
+            )}
+
+            {messages.length === 0 && !loadingMessages && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, opacity: 0.6, padding: '40px 20px', textAlign: 'center' }}>
                 <Sparkles size={32} style={{ color: 'var(--accent-primary)', marginBottom: 16 }} />
-                <h4 style={{ margin: 0, fontSize: 16, color: 'var(--text-primary)', fontFamily: 'var(--font-playmegames)' }}>Beginning of secure chat with {activeConv.name}</h4>
-                <p style={{ margin: '8px 0 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>Send a message to initiate your collaboration request</p>
+                <h4 style={{ margin: 0, fontSize: 16, color: 'var(--text-primary)', fontFamily: 'var(--font-playmegames)' }}>Beginning of secure chat with {activeConv.otherProfile.name}</h4>
+                <p style={{ margin: '8px 0 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>Send a message to start collaborating</p>
               </div>
             )}
-            
+
             <AnimatePresence mode="popLayout">
-              {activeConv.messages.map((msg, idx) => (
-                <motion.div 
-                  key={msg.id}
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.2, delay: idx * 0.05 }}
-                  className={`${styles.messageRow} ${msg.senderId === 'me' ? styles.messageRowSent : styles.messageRowReceived}`}
-                >
-                  <div className={`${styles.bubble} ${msg.senderId === 'me' ? styles.bubbleSent : styles.bubbleReceived}`}>
-                    {msg.text}
-                    <span className={styles.messageTime}>{msg.timestamp}</span>
-                  </div>
-                </motion.div>
-              ))}
+              {messages.map((msg) => {
+                const isMine = msg.sender_profile_id === myProfile?.id;
+                return (
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className={`${styles.messageRow} ${isMine ? styles.messageRowSent : styles.messageRowReceived}`}
+                  >
+                    <div className={`${styles.bubble} ${isMine ? styles.bubbleSent : styles.bubbleReceived}`}>
+                      {msg.content}
+                      <span className={styles.messageTime}>
+                        {formatMessageTime(msg.created_at)}
+                        {isMine && (
+                          <span style={{ marginLeft: 4, display: 'inline-flex', verticalAlign: 'middle' }}>
+                            {msg.read_at ? (
+                              <CheckCheck size={13} style={{ color: '#34d399' }} />
+                            ) : (
+                              <Check size={13} style={{ opacity: 0.5 }} />
+                            )}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
-            
-            {isTyping && (
-              <motion.div 
+
+            {isOtherTyping && (
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className={styles.typingIndicator}
@@ -494,14 +349,14 @@ export default function ChatInterface() {
           <div className={styles.inputArea}>
             <div className={styles.inputWrapper}>
               <button className={styles.attachBtn}><Plus size={20} /></button>
-              <input 
+              <input
                 ref={inputRef}
-                type="text" 
-                className={styles.chatInput} 
+                type="text"
+                className={styles.chatInput}
                 placeholder="Send a secure message..."
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                onChange={handleInputChange}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               />
               <div className={styles.inputActions}>
                 <button className={styles.iconBtn}><ImageIcon size={18} /></button>
