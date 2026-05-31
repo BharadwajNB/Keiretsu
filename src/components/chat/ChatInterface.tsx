@@ -88,36 +88,9 @@ export default function ChatInterface() {
   useEffect(() => {
     if (loadingConversations || !targetUserId || !myProfile) return;
 
-    // Check if conversation already exists
-    const existing = conversations.find(c => c.otherProfile.id === targetUserId);
-    if (existing) {
-      openConversation(targetUserId);
-      setTimeout(() => inputRef.current?.focus(), 150);
-      return;
-    }
-
-    // Fetch the target profile and open conversation
-    const fetchAndOpen = async () => {
-      try {
-        const supabase = createClient();
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', targetUserId)
-          .single();
-
-        if (profile) {
-          openConversation(targetUserId);
-          setTimeout(() => inputRef.current?.focus(), 150);
-        }
-      } catch (err) {
-        console.warn('Could not load profile for chat:', err);
-      }
-    };
-
-    fetchAndOpen();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadingConversations, targetUserId, myProfile]);
+    openConversation(targetUserId);
+    setTimeout(() => inputRef.current?.focus(), 150);
+  }, [loadingConversations, targetUserId, myProfile, openConversation]);
 
   // Scroll to bottom when messages change or typing state changes
   useEffect(() => {

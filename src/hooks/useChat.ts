@@ -329,6 +329,45 @@ export function useChat() {
     // Mark as read
     markAsRead(otherProfileId);
 
+    // Check and fetch profile if not already in conversation list
+    setConversations(prev => {
+      const exists = prev.some(c => c.otherProfile.id === otherProfileId);
+      if (!exists) {
+        setTimeout(async () => {
+          try {
+            const { data: p } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', otherProfileId)
+              .single();
+
+            if (p) {
+              const { data: skillData } = await supabase
+                .from('profile_skills')
+                .select('skills(name)')
+                .eq('profile_id', p.id);
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const skills = skillData?.map((s: any) => s.skills?.name).filter(Boolean) || [];
+
+              const tempConv: ChatConversation = {
+                otherProfile: { ...p, skills },
+                lastMessage: null as any,
+                unreadCount: 0,
+              };
+
+              setConversations(current => {
+                if (current.some(c => c.otherProfile.id === otherProfileId)) return current;
+                return [tempConv, ...current];
+              });
+            }
+          } catch (err) {
+            console.error('Failed to fetch profile for new conversation:', err);
+          }
+        }, 0);
+      }
+      return prev;
+    });
+
     // Subscribe to typing broadcasts for this conversation
     const key = conversationKey(myProfile.id, otherProfileId);
     const typingChannel = supabase
