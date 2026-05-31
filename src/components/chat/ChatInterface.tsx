@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send, Plus, Image as ImageIcon, Paperclip, Smile,
   Rocket, Users, Code, Cpu, MoreVertical, Phone, Video,
-  Zap, Shield, Target, Sparkles, MessageCircle, Check, CheckCheck, ChevronUp
+  Zap, Shield, Target, Sparkles, MessageCircle, Check, CheckCheck, ChevronUp, ArrowLeft
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useProfile } from '@/hooks/useProfile';
 import { useChat } from '@/hooks/useChat';
@@ -52,6 +53,12 @@ function formatTime(dateStr: string): string {
 
 function formatMessageTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function getStatusClass(status?: string): string {
+  if (status === 'open_to_collab') return styles.statusOnline;
+  if (status === 'looking_for_cofounder') return styles.statusLooking;
+  return styles.statusBusy;
 }
 
 // ---------------------------------------------------------------------------
@@ -135,7 +142,12 @@ export default function ChatInterface() {
       {/* Sidebar */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
-          <h2 className={styles.sidebarTitle}>Messages</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Link href="/map" className={styles.backToMapBtn} title="Back to Map">
+              <ArrowLeft size={18} />
+            </Link>
+            <h2 className={styles.sidebarTitle}>Messages</h2>
+          </div>
           <button className={styles.newChatBtn}>
             <Plus size={20} />
           </button>
@@ -167,7 +179,7 @@ export default function ChatInterface() {
                 <div className={styles.avatarWrapper}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={getAvatarUrl(conv.otherProfile)} alt={conv.otherProfile.name} className={styles.avatar} />
-                  <span className={`${styles.statusIndicator} ${conv.otherProfile.availability_status === 'open_to_collab' ? styles.statusOnline : styles.statusOffline}`} />
+                  <span className={`${styles.statusIndicator} ${getStatusClass(conv.otherProfile.availability_status)}`} />
                 </div>
                 <div className={styles.convMeta}>
                   <div className={styles.convHeader}>
@@ -213,10 +225,13 @@ export default function ChatInterface() {
           {/* Header */}
           <header className={styles.chatHeader}>
             <div className={styles.headerInfo}>
+              <Link href="/map" className={styles.headerBackBtn} title="Back to Map">
+                <ArrowLeft size={18} />
+              </Link>
               <div className={styles.headerAvatarWrapper}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={getAvatarUrl(activeConv.otherProfile)} alt={activeConv.otherProfile.name} className={styles.headerAvatar} />
-                <span className={`${styles.statusIndicator} ${activeConv.otherProfile.availability_status === 'open_to_collab' ? styles.statusOnline : styles.statusOffline}`} />
+                <span className={`${styles.statusIndicator} ${getStatusClass(activeConv.otherProfile.availability_status)}`} />
               </div>
               <div className={styles.headerMeta}>
                 <h3>{activeConv.otherProfile.name}</h3>

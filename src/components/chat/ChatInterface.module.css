@@ -129,7 +129,9 @@
   border: 3px solid #111;
 }
 
-.statusOnline { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+.statusOnline { background: #22c55e; }
+.statusLooking { background: #f59e0b; }
+.statusBusy { background: #ef4444; }
 .statusOffline { background: var(--text-muted); }
 
 .convMeta {
@@ -546,4 +548,42 @@
   .inputArea {
     padding: 16px 20px 24px;
   }
+}
+
+.backToMapBtn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.backToMapBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+  transform: translateX(-2px);
+}
+
+.headerBackBtn {
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  margin-right: 4px;
+}
+
+.headerBackBtn:hover {
+  color: var(--text-primary);
+  transform: translateX(-2px);
 }
