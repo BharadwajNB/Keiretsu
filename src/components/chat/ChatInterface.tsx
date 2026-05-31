@@ -23,7 +23,7 @@ function getAvatarUrl(p: Profile): string {
     const match = p.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
     if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
   }
-  return `https://i.pravatar.cc/150?u=${p.id}`;
+  return '/default-avatar.svg';
 }
 
 function getRole(p: Profile): string {

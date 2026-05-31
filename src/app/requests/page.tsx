@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Inbox, ArrowLeft, Check, Rocket, Users, Code, Cpu, Loader2 } from 'lucide-react';
+import { Inbox, ArrowLeft, Check, Rocket, Users, Code, Cpu, Loader2, MessageSquare } from 'lucide-react';
 import { useConnectionRequests } from '@/hooks/useConnectionRequests';
 import Navbar from '@/components/layout/Navbar';
 import type { ConnectionRequest } from '@/lib/types';
@@ -165,6 +165,21 @@ export default function RequestsPage() {
           <Link href="/map" className={styles.backBtn}>
             <ArrowLeft size={16} />
             Back to Map
+          </Link>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className={styles.tabsContainer}>
+          <button className={`${styles.tab} ${styles.activeTab}`}>
+            <Inbox size={16} />
+            <span>Connection Requests</span>
+            {!loading && requests.length > 0 && (
+              <span className={styles.tabBadge}>{requests.length}</span>
+            )}
+          </button>
+          <Link href="/chat" className={styles.tab}>
+            <MessageSquare size={16} />
+            <span>Direct Messages</span>
           </Link>
         </div>
 

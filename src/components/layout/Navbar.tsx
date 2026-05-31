@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useEffect, useState, Suspense, useMemo } from 'react';
 
-import { LogOut, Loader2, User, Inbox } from 'lucide-react';
+import { LogOut, Loader2, User, Inbox, MessageSquare } from 'lucide-react';
 import { getProfileCompletion } from '@/lib/profileCompletion';
 import type { Profile } from '@/lib/types';
 import { useConnectionRequests } from '@/hooks/useConnectionRequests';
@@ -68,12 +68,17 @@ function NavbarContent({ onSignInClick }: NavbarProps) {
           ) : user ? (
             <div className={styles.userControls}>
               {!isOnboardingPage && (
-                <Link href="/requests" className={styles.iconBtn} title="Collaboration Requests" style={{ position: 'relative' }}>
-                  <Inbox size={18} />
-                  {pendingCount > 0 && (
-                    <span className={styles.badge}>{pendingCount}</span>
-                  )}
-                </Link>
+                <>
+                  <Link href="/chat" className={styles.iconBtn} title="Direct Messages">
+                    <MessageSquare size={18} />
+                  </Link>
+                  <Link href="/requests" className={styles.iconBtn} title="Collaboration Requests" style={{ position: 'relative' }}>
+                    <Inbox size={18} />
+                    {pendingCount > 0 && (
+                      <span className={styles.badge}>{pendingCount}</span>
+                    )}
+                  </Link>
+                </>
               )}
               {profile ? (
                 <Link href={`/profile/${profile.id}`} className={styles.avatarBtn} title="Profile">
