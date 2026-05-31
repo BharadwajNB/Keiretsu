@@ -89,7 +89,8 @@
   font-size: clamp(36px, 4.5vw, 64px);
   font-weight: 700; /* Play font works beautifully at 700 bold */
   line-height: 1.08;
-  letter-spacing: 0.04em; /* Positive letter-spacing for retro pixel font legibility */
+  letter-spacing: 0.06em;
+  word-spacing: 0.15em;
   margin-bottom: 20px;
   color: var(--text-primary);
 }
@@ -115,7 +116,8 @@
   color: var(--text-secondary);
   max-width: 460px;
   line-height: 1.7;
-  letter-spacing: 0.03em; /* Clean, spaced layout for pixel readability */
+  letter-spacing: 0.06em;
+  word-spacing: 0.15em;
   margin-bottom: 36px;
 }
 
@@ -257,7 +259,8 @@
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 16px;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
+  word-spacing: 0.15em;
 }
 
 .sectionSubtitle {
@@ -266,7 +269,8 @@
   color: var(--text-secondary);
   max-width: 500px;
   line-height: 1.6;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  word-spacing: 0.15em;
 }
 
 .stepsGrid {
@@ -312,6 +316,7 @@
   font-size: 20px;
   font-weight: 600;
   letter-spacing: 0.06em;
+  word-spacing: 0.15em;
   margin-bottom: 16px;
   color: var(--text-primary);
 }
@@ -321,7 +326,8 @@
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.6;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  word-spacing: 0.15em;
 }
 
 /* ---- Feature Cards ---- */
@@ -374,6 +380,7 @@
   font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.06em;
+  word-spacing: 0.15em;
   margin-bottom: 12px;
   color: var(--text-primary);
 }
@@ -383,7 +390,8 @@
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.6;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  word-spacing: 0.15em;
 }
 
 /* ---- Responsive ---- */

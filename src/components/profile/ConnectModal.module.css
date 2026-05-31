@@ -214,6 +214,8 @@
   font-size: 24px;
   color: var(--text-primary);
   margin-bottom: 12px;
+  letter-spacing: 0.06em;
+  word-spacing: 0.15em;
   background: linear-gradient(to bottom, #fff 0%, var(--accent-green) 150%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

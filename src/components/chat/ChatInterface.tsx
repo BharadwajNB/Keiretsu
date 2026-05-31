@@ -212,7 +212,7 @@ export default function ChatInterface() {
             <span>End-to-end encrypted collaboration</span>
           </div>
           <MessageCircle size={48} style={{ color: 'var(--accent-primary)', marginBottom: 16, opacity: 0.8 }} />
-          <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text-primary)', fontFamily: 'var(--font-playmegames)' }}>Secure Comms Portal</h3>
+          <h3 style={{ margin: 0, fontSize: 18, color: 'var(--text-primary)', fontFamily: 'var(--font-playmegames)', letterSpacing: '0.06em', wordSpacing: '0.15em' }}>Secure Comms Portal</h3>
           <p style={{ margin: '8px 0 0 0', fontSize: 14, color: 'var(--text-secondary)', maxWidth: 360, lineHeight: 1.5 }}>
             {conversations.length === 0
               ? 'No active conversations. View a user profile from the Skill Map and click "Message" to start a chat.'
@@ -284,7 +284,7 @@ export default function ChatInterface() {
             {messages.length === 0 && !loadingMessages && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, opacity: 0.6, padding: '40px 20px', textAlign: 'center' }}>
                 <Sparkles size={32} style={{ color: 'var(--accent-primary)', marginBottom: 16 }} />
-                <h4 style={{ margin: 0, fontSize: 16, color: 'var(--text-primary)', fontFamily: 'var(--font-playmegames)' }}>Beginning of secure chat with {activeConv.otherProfile.name}</h4>
+                <h4 style={{ margin: 0, fontSize: 16, color: 'var(--text-primary)', fontFamily: 'var(--font-playmegames)', letterSpacing: '0.06em', wordSpacing: '0.15em' }}>Beginning of secure chat with {activeConv.otherProfile.name}</h4>
                 <p style={{ margin: '8px 0 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>Send a message to start collaborating</p>
               </div>
             )}

@@ -22,7 +22,8 @@
   font-family: var(--font-playmegames);
   font-size: 24px;
   color: var(--text-primary);
-  letter-spacing: -0.01em;
+  letter-spacing: 0.06em;
+  word-spacing: 0.15em;
 }
 
 .countBadge {

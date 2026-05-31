@@ -40,7 +40,8 @@
   font-size: 22px;
   color: var(--text-primary);
   margin: 0;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
+  word-spacing: 0.15em;
 }
 
 .newChatBtn {
