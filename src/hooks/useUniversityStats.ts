@@ -14,7 +14,9 @@ import {
  * Universities with 0 users get dimmed markers.
  */
 export function useUniversityStats() {
-  const [universities, setUniversities] = useState<UniversityNode[]>([]);
+  // Initialize with all known universities (dimmed) so the globe is populated
+  // immediately while the async query fetches real data
+  const [universities, setUniversities] = useState<UniversityNode[]>(() => buildDefaultNodes());
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -33,63 +35,56 @@ export function useUniversityStats() {
         return;
       }
 
-      // 2. Group profiles by college
-      const collegeGroups = new Map<string, string[]>(); // college -> profile_ids[]
+      // 2. Group profiles by resolved university coord ID
+      // (e.g. "IIT Bombay" and "iit b" both resolve to coord.id = 'iitb')
+      const coordGroups = new Map<string, string[]>(); // coordId -> profile_ids[]
+      const profileToCoordId = new Map<string, string>();
+
       for (const p of profiles || []) {
         if (!p.college) continue;
-        const existing = collegeGroups.get(p.college) || [];
+        const coord = findUniversityCoord(p.college);
+        if (!coord) continue; // College not in our known list — skip
+        const existing = coordGroups.get(coord.id) || [];
         existing.push(p.id);
-        collegeGroups.set(p.college, existing);
+        coordGroups.set(coord.id, existing);
+        profileToCoordId.set(p.id, coord.id);
       }
 
-      // 3. Fetch skills for all profile IDs that have a matching university
-      const matchedProfileIds: string[] = [];
-      const profileToCollege = new Map<string, string>();
+      // 3. Fetch skills for all matched profile IDs
+      const allMatchedIds = [...profileToCoordId.keys()];
+      const coordSkillCounts = new Map<string, Map<string, number>>();
 
-      for (const [college, ids] of collegeGroups) {
-        const coord = findUniversityCoord(college);
-        if (coord) {
-          matchedProfileIds.push(...ids);
-          for (const id of ids) {
-            profileToCollege.set(id, college);
-          }
-        }
-      }
-
-      // Build skills map: college -> skill counts
-      const collegeSkillCounts = new Map<string, Map<string, number>>();
-
-      if (matchedProfileIds.length > 0) {
+      if (allMatchedIds.length > 0) {
         const { data: skillData } = await supabase
           .from('profile_skills')
           .select('profile_id, skills(name)')
-          .in('profile_id', matchedProfileIds);
+          .in('profile_id', allMatchedIds);
 
         for (const row of skillData || []) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const skillName = (row as any).skills?.name;
-          const college = profileToCollege.get(row.profile_id);
-          if (!skillName || !college) continue;
+          const coordId = profileToCoordId.get(row.profile_id);
+          if (!skillName || !coordId) continue;
 
-          if (!collegeSkillCounts.has(college)) {
-            collegeSkillCounts.set(college, new Map());
+          if (!coordSkillCounts.has(coordId)) {
+            coordSkillCounts.set(coordId, new Map());
           }
-          const skillMap = collegeSkillCounts.get(college)!;
+          const skillMap = coordSkillCounts.get(coordId)!;
           skillMap.set(skillName, (skillMap.get(skillName) || 0) + 1);
         }
       }
 
-      // 4. Build UniversityNode array
+      // 4. Build UniversityNode array from resolved groups
       const nodes: UniversityNode[] = [];
       const usedCoordIds = new Set<string>();
 
-      for (const [college, ids] of collegeGroups) {
-        const coord = findUniversityCoord(college);
-        if (!coord) continue; // College not in our known list
+      for (const [coordId, ids] of coordGroups) {
+        const coord = UNIVERSITY_COORDS.find(c => c.id === coordId);
+        if (!coord) continue;
         usedCoordIds.add(coord.id);
 
         // Top 3 skills by frequency
-        const skillMap = collegeSkillCounts.get(college);
+        const skillMap = coordSkillCounts.get(coordId);
         const topSkills = skillMap
           ? [...skillMap.entries()]
               .sort((a, b) => b[1] - a[1])
@@ -106,7 +101,7 @@ export function useUniversityStats() {
           lng: coord.lng,
           builderCount: ids.length,
           topSkills,
-          color: ids.length > 0 ? '#818cf8' : '#555555',
+          color: '#818cf8',
         });
       }
 

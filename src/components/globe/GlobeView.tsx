@@ -127,9 +127,9 @@ export default function GlobeView({ onNodeClick, universities }: GlobeViewProps)
             width: 8px;
             height: 8px;
             background-color: transparent;
-            border: 1.5px solid #555555;
+            border: 1.5px solid rgba(129, 140, 248, 0.45);
             border-radius: 50%;
-            box-shadow: 0 0 4px rgba(85,85,85,0.4);
+            box-shadow: 0 0 6px rgba(129, 140, 248, 0.2);
             z-index: 2;
           }
           .globe-marker-ring--dimmed {
