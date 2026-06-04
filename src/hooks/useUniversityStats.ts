@@ -9,12 +9,36 @@ import {
 } from '@/lib/universityData';
 
 /**
+ * Decodes PostGIS geometry point hex string into lat/lng coordinates.
+ */
+function parseWkbPoint(wkbHex: string): { lat: number; lng: number } | null {
+  if (!wkbHex || wkbHex.length < 50) return null;
+  const xHex = wkbHex.slice(18, 34);
+  const yHex = wkbHex.slice(34, 50);
+
+  const hexToDouble = (hex: string) => {
+    const bytes = new Uint8Array(hex.match(/[\da-f]{2}/gi)!.map(h => parseInt(h, 16)));
+    const view = new DataView(bytes.buffer);
+    return view.getFloat64(0, true);
+  };
+
+  try {
+    const lng = hexToDouble(xHex);
+    const lat = hexToDouble(yHex);
+    return { lat, lng };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Queries the profiles table grouped by `college` to produce
  * real builder counts and top skills for each university.
- * Universities with 0 users get dimmed markers.
+ * Predefined universities with 0 users get dimmed markers.
+ * Registered universities not in our static list are dynamically placed using profile location.
  */
 export function useUniversityStats() {
-  // Initialize with all known universities (dimmed) so the globe is populated
+  // Initialize with all known static universities (dimmed) so the globe is populated
   // immediately while the async query fetches real data
   const [universities, setUniversities] = useState<UniversityNode[]>(() => buildDefaultNodes());
   const [loading, setLoading] = useState(true);
@@ -23,31 +47,62 @@ export function useUniversityStats() {
     const supabase = createClient();
 
     try {
-      // 1. Fetch all profiles with their college and skills
+      // 1. Fetch all profiles with their college and location
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, college');
+        .select('id, college, location');
 
       if (error) {
         console.warn('Failed to fetch profiles for university stats:', error.message);
-        // Fall back to empty counts for all known universities
         setUniversities(buildDefaultNodes());
         return;
       }
 
-      // 2. Group profiles by resolved university coord ID
-      // (e.g. "IIT Bombay" and "iit b" both resolve to coord.id = 'iitb')
-      const coordGroups = new Map<string, string[]>(); // coordId -> profile_ids[]
+      // 2. Group profiles by resolved university ID
+      // If college is static: group by static university ID
+      // If college is custom/unknown: dynamic resolved coordinates from profiles
+      const coordGroups = new Map<string, string[]>(); // ID -> profile_ids[]
       const profileToCoordId = new Map<string, string>();
+      const dynamicColleges = new Map<string, { id: string; name: string; shortName: string; city: string; lat: number; lng: number }>();
 
       for (const p of profiles || []) {
         if (!p.college) continue;
+        
         const coord = findUniversityCoord(p.college);
-        if (!coord) continue; // College not in our known list — skip
-        const existing = coordGroups.get(coord.id) || [];
-        existing.push(p.id);
-        coordGroups.set(coord.id, existing);
-        profileToCoordId.set(p.id, coord.id);
+        if (coord) {
+          const existing = coordGroups.get(coord.id) || [];
+          existing.push(p.id);
+          coordGroups.set(coord.id, existing);
+          profileToCoordId.set(p.id, coord.id);
+        } else if (p.location) {
+          const parsedCoords = parseWkbPoint(p.location);
+          if (parsedCoords) {
+            const normalizedCollege = p.college.trim();
+            const collegeKey = normalizedCollege.toLowerCase();
+            const dynamicId = `dynamic_${collegeKey.replace(/[^a-z0-9]/g, '_')}`;
+
+            if (!dynamicColleges.has(collegeKey)) {
+              const displayName = normalizedCollege
+                .split(/\s+/)
+                .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+
+              dynamicColleges.set(collegeKey, {
+                id: dynamicId,
+                name: displayName,
+                shortName: displayName,
+                city: 'India',
+                lat: parsedCoords.lat,
+                lng: parsedCoords.lng,
+              });
+            }
+
+            const existing = coordGroups.get(dynamicId) || [];
+            existing.push(p.id);
+            coordGroups.set(dynamicId, existing);
+            profileToCoordId.set(p.id, dynamicId);
+          }
+        }
       }
 
       // 3. Fetch skills for all matched profile IDs
@@ -79,7 +134,24 @@ export function useUniversityStats() {
       const usedCoordIds = new Set<string>();
 
       for (const [coordId, ids] of coordGroups) {
-        const coord = UNIVERSITY_COORDS.find(c => c.id === coordId);
+        let coord = UNIVERSITY_COORDS.find(c => c.id === coordId);
+        
+        // If not predefined, find it in dynamic colleges map
+        if (!coord) {
+          const dynamicMatch = [...dynamicColleges.values()].find(c => c.id === coordId);
+          if (dynamicMatch) {
+            coord = {
+              id: dynamicMatch.id,
+              name: dynamicMatch.name,
+              shortName: dynamicMatch.shortName,
+              city: dynamicMatch.city,
+              lat: dynamicMatch.lat,
+              lng: dynamicMatch.lng,
+              aliases: [],
+            };
+          }
+        }
+
         if (!coord) continue;
         usedCoordIds.add(coord.id);
 
@@ -105,7 +177,7 @@ export function useUniversityStats() {
         });
       }
 
-      // 5. Add remaining universities with 0 builders (dimmed)
+      // 5. Add remaining predefined universities with 0 builders (dimmed)
       for (const coord of UNIVERSITY_COORDS) {
         if (usedCoordIds.has(coord.id)) continue;
         nodes.push({
@@ -151,3 +223,4 @@ function buildDefaultNodes(): UniversityNode[] {
     color: '#555555',
   }));
 }
+
