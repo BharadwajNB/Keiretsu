@@ -5,6 +5,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { Maximize2 } from 'lucide-react';
+import { useUniversityStats } from '@/hooks/useUniversityStats';
 import styles from './AuthenticatedHub.module.css';
 
 // Reusing the same GlobeView for consistency, no SSR
@@ -19,6 +20,7 @@ const GlobeView = dynamic(() => import('@/components/globe/GlobeView'), {
 
 export default function AuthenticatedHub() {
   const [isGlobeReady, setIsGlobeReady] = useState(false);
+  const { universities } = useUniversityStats();
 
   useEffect(() => {
     // Delay globe to ensure smooth entry animation
@@ -64,7 +66,7 @@ export default function AuthenticatedHub() {
         {/* Right Globe Area */}
         <div className={styles.cardRight}>
           <div className={styles.globeWrapper}>
-            {isGlobeReady && <GlobeView onNodeClick={() => {}} />}
+            {isGlobeReady && <GlobeView onNodeClick={() => {}} universities={universities} />}
           </div>
         </div>
 

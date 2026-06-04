@@ -13,6 +13,9 @@ interface UniversityPopupProps {
 }
 
 export default function UniversityPopup({ university, position, onClose }: UniversityPopupProps) {
+  const hasBuilders = university.builderCount > 0;
+  const hasSkills = university.topSkills.length > 0;
+
   return (
     <motion.div
       className={styles.popup}
@@ -41,23 +44,29 @@ export default function UniversityPopup({ university, position, onClose }: Unive
       <div className={styles.stats}>
         <Users size={15} className={styles.statIcon} />
         <span className={styles.statText}>
-          {university.builderCount} builder{university.builderCount !== 1 ? 's' : ''} active
+          {hasBuilders
+            ? `${university.builderCount} builder${university.builderCount !== 1 ? 's' : ''} active`
+            : 'No builders yet — Be the first!'}
         </span>
       </div>
 
-      <div className={styles.stats}>
-        <Wrench size={15} className={styles.statIcon} />
-        <span className={styles.statText}>Top skills</span>
-      </div>
+      {hasSkills && (
+        <>
+          <div className={styles.stats}>
+            <Wrench size={15} className={styles.statIcon} />
+            <span className={styles.statText}>Top skills</span>
+          </div>
 
-      <div className={styles.skillsRow}>
-        {university.topSkills.map((skill) => (
-          <span key={skill} className={styles.skillTag}>{skill}</span>
-        ))}
-      </div>
+          <div className={styles.skillsRow}>
+            {university.topSkills.map((skill) => (
+              <span key={skill} className={styles.skillTag}>{skill}</span>
+            ))}
+          </div>
+        </>
+      )}
 
       <Link href="/login" className={styles.cta}>
-        Join to Connect
+        {hasBuilders ? 'Join to Connect' : 'Be the First Builder'}
         <ArrowRight size={14} />
       </Link>
     </motion.div>

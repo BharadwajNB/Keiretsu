@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { UniversityNode } from '@/lib/universityData';
-import { UNIVERSITIES } from '@/lib/universityData';
 
 // Dynamically import react-globe.gl to prevent SSR issues with Three.js
 const Globe = dynamic(() => import('react-globe.gl'), { ssr: false });
 
 interface GlobeViewProps {
   onNodeClick: (node: UniversityNode, position: { x: number; y: number }) => void;
+  universities: UniversityNode[];
 }
 
 const COUNTRY_LABELS = [
@@ -39,11 +39,13 @@ const COUNTRY_LABELS = [
   { lat: 15.5527, lng: 48.5164, label: 'YEMEN' },
 ];
 
-export default function GlobeView({ onNodeClick }: GlobeViewProps) {
+export default function GlobeView({ onNodeClick, universities }: GlobeViewProps) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const globeRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [countries, setCountries] = useState({ features: [] });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [countries, setCountries] = useState<any>({ features: [] });
 
   useEffect(() => {
     const el = containerRef.current;
@@ -101,11 +103,12 @@ export default function GlobeView({ onNodeClick }: GlobeViewProps) {
             cursor: pointer;
             pointer-events: auto;
           }
+          /* Active university marker — emerald pulsing */
           .globe-marker-core {
             width: 10px;
             height: 10px;
             background-color: transparent;
-            border: 2px solid #34d399; /* Emerald 400 */
+            border: 2px solid #34d399;
             border-radius: 50%;
             box-shadow: 0 0 10px #34d399, inset 0 0 4px #34d399;
             z-index: 2;
@@ -118,6 +121,19 @@ export default function GlobeView({ onNodeClick }: GlobeViewProps) {
             border-radius: 50%;
             animation: pulseRing 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
             z-index: 1;
+          }
+          /* Dimmed university marker — no builders yet */
+          .globe-marker-core--dimmed {
+            width: 8px;
+            height: 8px;
+            background-color: transparent;
+            border: 1.5px solid #555555;
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(85,85,85,0.4);
+            z-index: 2;
+          }
+          .globe-marker-ring--dimmed {
+            display: none;
           }
         `
       }} />
@@ -146,24 +162,25 @@ export default function GlobeView({ onNodeClick }: GlobeViewProps) {
           labelText={d => (d as any).label}
           labelSize={1.2}
           labelDotRadius={0.1}
-          labelAltitude={0.015} // Elevate above polygons so they don't clip
-          labelColor={() => 'rgba(255, 255, 255, 0.8)'} // Brighter text
+          labelAltitude={0.015}
+          labelColor={() => 'rgba(255, 255, 255, 0.8)'}
           labelResolution={2}
 
-          // HTML Markers for Universities
-          htmlElementsData={UNIVERSITIES}
-          htmlTransitionDuration={0} // Drastically improves performance by skipping marker CSS transitions during drag
+          // HTML Markers for Universities — now from live data
+          htmlElementsData={universities}
+          htmlTransitionDuration={0}
           htmlElement={(d: object) => {
             const uni = d as UniversityNode;
+            const isActive = uni.builderCount > 0;
             
             const wrapper = document.createElement('div');
             wrapper.className = 'globe-marker-wrapper';
 
             const core = document.createElement('div');
-            core.className = 'globe-marker-core';
+            core.className = isActive ? 'globe-marker-core' : 'globe-marker-core--dimmed';
 
             const ring = document.createElement('div');
-            ring.className = 'globe-marker-ring';
+            ring.className = isActive ? 'globe-marker-ring' : 'globe-marker-ring--dimmed';
 
             wrapper.appendChild(core);
             wrapper.appendChild(ring);

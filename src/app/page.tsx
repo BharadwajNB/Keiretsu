@@ -8,8 +8,8 @@ import { MapPin, Code2, Users2, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import StarField from '@/components/globe/StarField';
 import UniversityPopup from '@/components/globe/UniversityPopup';
-import { UNIVERSITIES } from '@/lib/universityData';
 import type { UniversityNode } from '@/lib/universityData';
+import { useUniversityStats } from '@/hooks/useUniversityStats';
 import { useAuth } from '@/hooks/useAuth';
 import AuthenticatedHub from '@/components/home/AuthenticatedHub';
 import { usePathname, useRouter } from 'next/navigation';
@@ -42,6 +42,7 @@ const stagger: Variants = {
 
 export default function Home({ defaultShowLogin = false }: { defaultShowLogin?: boolean }) {
   const { user, loading } = useAuth();
+  const { universities } = useUniversityStats();
   const [selectedUniversity, setSelectedUniversity] = useState<UniversityNode | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [showDetailedMap, setShowDetailedMap] = useState(false);
@@ -198,7 +199,7 @@ export default function Home({ defaultShowLogin = false }: { defaultShowLogin?: 
             
             <div className={styles.globeContainer} style={{ display: fullyHideGlobe ? 'none' : 'block' }}>
               {isGlobeReady ? (
-                <GlobeView onNodeClick={handleNodeClick} />
+                <GlobeView onNodeClick={handleNodeClick} universities={universities} />
               ) : (
                 <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div className="spinner" />
@@ -209,7 +210,8 @@ export default function Home({ defaultShowLogin = false }: { defaultShowLogin?: 
             {/* Detailed Leaflet Overlay */}
             {showDetailedMap && selectedUniversity && (
               <DetailedMapView 
-                university={selectedUniversity} 
+                university={selectedUniversity}
+                universities={universities}
                 onClose={handleClosePopup} 
                 onMarkerClick={handleDetailedMarkerClick}
               />

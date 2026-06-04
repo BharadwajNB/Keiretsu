@@ -1,11 +1,10 @@
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { UniversityNode } from '@/lib/universityData';
-import { UNIVERSITIES } from '@/lib/universityData';
 import { useEffect } from 'react';
 
 // Define the custom green pulsing dot icon for Leaflet
-const customIcon = L.divIcon({
+const activeIcon = L.divIcon({
   className: 'custom-leaflet-icon',
   html: `
     <div style="
@@ -33,8 +32,26 @@ const customIcon = L.divIcon({
   iconAnchor: [5, 5],
 });
 
+// Dimmed icon for universities with 0 builders
+const dimmedIcon = L.divIcon({
+  className: 'custom-leaflet-icon',
+  html: `
+    <div style="
+      width: 8px;
+      height: 8px;
+      background-color: transparent;
+      border: 1.5px solid #555555;
+      border-radius: 50%;
+      box-shadow: 0 0 4px rgba(85,85,85,0.4);
+    "></div>
+  `,
+  iconSize: [8, 8],
+  iconAnchor: [4, 4],
+});
+
 interface DetailedMapViewProps {
   university: UniversityNode;
+  universities: UniversityNode[];
   onClose: () => void;
   onMarkerClick: (uni: UniversityNode) => void;
 }
@@ -48,7 +65,7 @@ function MapRecenter({ lat, lng }: { lat: number; lng: number }) {
   return null;
 }
 
-export default function DetailedMapView({ university, onClose, onMarkerClick }: DetailedMapViewProps) {
+export default function DetailedMapView({ university, universities, onClose, onMarkerClick }: DetailedMapViewProps) {
   return (
     <div style={{
       position: 'fixed',
@@ -121,12 +138,12 @@ export default function DetailedMapView({ university, onClose, onMarkerClick }: 
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
         
-        {/* Render ALL universities on the detailed map */}
-        {UNIVERSITIES.map((uni) => (
+        {/* Render ALL universities on the detailed map — live data */}
+        {universities.map((uni) => (
           <Marker 
             key={uni.id}
             position={[uni.lat, uni.lng]} 
-            icon={customIcon}
+            icon={uni.builderCount > 0 ? activeIcon : dimmedIcon}
             eventHandlers={{
               click: () => onMarkerClick(uni),
             }}
