@@ -44,15 +44,6 @@ export function useAuth() {
     };
   }, [supabase]);
 
-  const signInWithGoogle = useCallback(async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-  }, [supabase]);
-
   const signInWithGithub = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'github',
@@ -87,5 +78,5 @@ export function useAuth() {
     window.location.href = '/';
   }, [supabase]);
 
-  return { user, loading, signInWithGoogle, signInWithGithub, signUpWithEmail, signInWithEmail, signOut };
+  return { user, loading, signInWithGithub, signUpWithEmail, signInWithEmail, signOut };
 }
