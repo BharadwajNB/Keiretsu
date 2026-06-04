@@ -195,8 +195,8 @@
   border-radius: var(--radius-full);
 }
 
-/* ---- College Search ---- */
-.collegeSearchWrapper {
+/* ---- Unified Search ---- */
+.searchWrapper {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -207,12 +207,12 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.collegeSearchWrapper:focus-within {
+.searchWrapper:focus-within {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.08);
 }
 
-.collegeSearchInput {
+.searchInput {
   background: transparent;
   border: none;
   color: var(--text-primary);
@@ -222,11 +222,11 @@
   font-family: var(--font-sans);
 }
 
-.collegeSearchInput::placeholder {
+.searchInput::placeholder {
   color: var(--text-muted);
 }
 
-.collegeSearchClear {
+.searchClear {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -241,13 +241,13 @@
   transition: all var(--transition-fast);
 }
 
-.collegeSearchClear:hover {
+.searchClear:hover {
   background: rgba(255, 255, 255, 0.15);
   color: var(--text-primary);
 }
 
-/* ---- Autocomplete Suggestions ---- */
-.collegeSuggestions {
+/* ---- Unified Autocomplete Dropdown ---- */
+.suggestionsDropdown {
   position: absolute;
   left: 0;
   right: 0;
@@ -260,16 +260,35 @@
   border-radius: var(--radius-lg);
   padding: 6px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-  max-height: 280px;
+  max-height: 320px;
   overflow-y: auto;
 }
 
-.collegeSuggestionItem {
+.suggestionGroup {
+  margin-bottom: 8px;
+}
+
+.suggestionGroup:last-child {
+  margin-bottom: 0;
+}
+
+.suggestionHeader {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 6px 12px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 4px;
+}
+
+.suggestionItem {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 12px;
   background: transparent;
   border: none;
   border-radius: var(--radius-md);
@@ -281,25 +300,52 @@
   text-align: left;
 }
 
-.collegeSuggestionItem:hover {
+.suggestionItem:hover {
   background: rgba(129, 140, 248, 0.1);
 }
 
-.collegeSuggestionItem svg {
+.suggestionItem svg {
   color: var(--accent-primary);
   flex-shrink: 0;
 }
 
-.collegeSuggestionName {
+.suggestionName {
   display: block;
   font-weight: 600;
   font-size: 14px;
 }
 
-.collegeSuggestionCity {
+.suggestionSub {
   display: block;
   font-size: 12px;
   color: var(--text-muted);
+}
+
+.suggestionAvatarWrapper {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.suggestionAvatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.suggestionAvatarFallback {
+  width: 100%;
+  height: 100%;
+  background: rgba(129, 140, 248, 0.15);
+  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 /* ---- College Info Card ---- */

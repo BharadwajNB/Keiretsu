@@ -18,6 +18,12 @@ import styles from './page.module.css';
 
 const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false });
 
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 function MapPageContent() {
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, permissionState, isWatching, isSyncing, lastSyncedAt } = useLocationSync();
   const [sandboxCoords, setSandboxCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -26,29 +32,27 @@ function MapPageContent() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const router = useRouter();
 
-  // College search state
-  const [collegeSearchQuery, setCollegeSearchQuery] = useState('');
-  const [showCollegeSuggestions, setShowCollegeSuggestions] = useState(false);
   const [communityCircle, setCommunityCircle] = useState<CommunityCircle | null>(null);
-  const collegeSuggestionsRef = useRef<HTMLDivElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const { collegeData, collegeLoading, fetchCollegeUsers, clearCollege } = useCollegeUsers();
 
   // Autocomplete suggestions
   const collegeSuggestions = useMemo(() => {
-    if (collegeSearchQuery.length < 2) return [];
-    return searchUniversities(collegeSearchQuery);
-  }, [collegeSearchQuery]);
+    if (searchQuery.length < 2) return [];
+    return searchUniversities(searchQuery);
+  }, [searchQuery]);
 
   // Close suggestions on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (collegeSuggestionsRef.current && !collegeSuggestionsRef.current.contains(e.target as Node)) {
-        setShowCollegeSuggestions(false);
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -136,14 +140,33 @@ function MapPageContent() {
     return groups;
   }, [allSkills]);
 
+  // Autocomplete suggestions for users (match by name)
+  const userSuggestions = useMemo(() => {
+    if (searchQuery.length < 2) return [];
+    const q = searchQuery.toLowerCase();
+    return users.filter((u) => u.name.toLowerCase().includes(q));
+  }, [searchQuery, users]);
+
   const handleCollegeSelect = (coord: typeof collegeSuggestions[0]) => {
-    setCollegeSearchQuery(coord.name);
-    setShowCollegeSuggestions(false);
+    setSearchQuery(coord.name);
+    setShowSuggestions(false);
+    setSelectedUserId(null);
     fetchCollegeUsers(coord.name, coord);
   };
 
-  const handleClearCollege = () => {
-    setCollegeSearchQuery('');
+  const handleUserSelect = (u: typeof users[0]) => {
+    setSearchQuery(u.name);
+    setShowSuggestions(false);
+    if (u.latitude && u.longitude) {
+      setSelectedUserId(u.id);
+    } else {
+      router.push(`/profile/${u.id}`);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSelectedUserId(null);
     setCommunityCircle(null);
     clearCollege();
   };
@@ -233,53 +256,103 @@ function MapPageContent() {
               lastSyncedAt={lastSyncedAt}
             />
 
-            {/* College Search */}
-            <div className={styles.filterSection} ref={collegeSuggestionsRef}>
+            {/* Unified Search */}
+            <div className={styles.filterSection} ref={suggestionsRef}>
               <label className={styles.filterLabel}>
-                <GraduationCap size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                Search College Community
+                <Search size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                Search College or Builder
               </label>
-              <div className={styles.collegeSearchWrapper}>
+              <div className={styles.searchWrapper}>
                 <Search size={16} className="text-muted" />
                 <input
-                  className={styles.collegeSearchInput}
-                  placeholder="Search college name..."
-                  value={collegeSearchQuery}
+                  className={styles.searchInput}
+                  placeholder="Search college, builder name..."
+                  value={searchQuery}
                   onChange={(e) => {
-                    setCollegeSearchQuery(e.target.value);
-                    setShowCollegeSuggestions(true);
+                    setSearchQuery(e.target.value);
+                    setShowSuggestions(true);
                   }}
-                  onFocus={() => setShowCollegeSuggestions(true)}
+                  onFocus={() => setShowSuggestions(true)}
                 />
-                {collegeSearchQuery && (
-                  <button className={styles.collegeSearchClear} onClick={handleClearCollege}>
+                {searchQuery && (
+                  <button className={styles.searchClear} onClick={handleClearSearch}>
                     <X size={14} />
                   </button>
                 )}
               </div>
 
-              {/* Autocomplete dropdown */}
+              {/* Unified Autocomplete dropdown */}
               <AnimatePresence>
-                {showCollegeSuggestions && collegeSuggestions.length > 0 && (
+                {showSuggestions && (collegeSuggestions.length > 0 || userSuggestions.length > 0) && (
                   <motion.div
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
-                    className={styles.collegeSuggestions}
+                    className={styles.suggestionsDropdown}
                   >
-                    {collegeSuggestions.map((s) => (
-                      <button
-                        key={s.id}
-                        className={styles.collegeSuggestionItem}
-                        onClick={() => handleCollegeSelect(s)}
-                      >
-                        <GraduationCap size={14} />
-                        <div>
-                          <span className={styles.collegeSuggestionName}>{s.name}</span>
-                          <span className={styles.collegeSuggestionCity}>{s.city}</span>
-                        </div>
-                      </button>
-                    ))}
+                    {collegeSuggestions.length > 0 && (
+                      <div className={styles.suggestionGroup}>
+                        <div className={styles.suggestionHeader}>Colleges</div>
+                        {collegeSuggestions.map((s) => (
+                          <button
+                            key={s.id}
+                            className={styles.suggestionItem}
+                            onClick={() => handleCollegeSelect(s)}
+                          >
+                            <GraduationCap size={14} />
+                            <div>
+                              <span className={styles.suggestionName}>{s.name}</span>
+                              <span className={styles.suggestionSub}>{s.city}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {userSuggestions.length > 0 && (
+                      <div className={styles.suggestionGroup}>
+                        <div className={styles.suggestionHeader}>Builders</div>
+                        {userSuggestions.map((u) => {
+                          const initials = getInitials(u.name);
+                          const avatarUrl = (() => {
+                            if (u.avatar_url) return u.avatar_url;
+                            if (u.github_url) {
+                              const match = u.github_url.match(/(?:github\.com\/)?([a-zA-Z0-9\-]+)\/?$/);
+                              if (match) return `https://avatars.githubusercontent.com/${match[1]}`;
+                            }
+                            return null;
+                          })();
+
+                          return (
+                            <button
+                              key={u.id}
+                              className={styles.suggestionItem}
+                              onClick={() => handleUserSelect(u)}
+                            >
+                              <div className={styles.suggestionAvatarWrapper}>
+                                {avatarUrl ? (
+                                  <img
+                                    src={avatarUrl}
+                                    alt={initials}
+                                    className={styles.suggestionAvatar}
+                                  />
+                                ) : (
+                                  <div className={styles.suggestionAvatarFallback}>
+                                    {initials}
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <span className={styles.suggestionName}>{u.name}</span>
+                                <span className={styles.suggestionSub}>
+                                  {u.college} · Year {u.year}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -299,7 +372,7 @@ function MapPageContent() {
                       <h3 className={styles.collegeInfoName}>{collegeData.coord.name}</h3>
                       <p className={styles.collegeInfoCity}>{collegeData.coord.city}</p>
                     </div>
-                    <button className={styles.collegeInfoClose} onClick={handleClearCollege}>
+                    <button className={styles.collegeInfoClose} onClick={handleClearSearch}>
                       <X size={16} />
                     </button>
                   </div>
@@ -341,18 +414,6 @@ function MapPageContent() {
                     onChange={(e) => setRadiusKm(Number(e.target.value))}
                     className={styles.slider}
                   />
-                </div>
-
-                <div className={styles.filterSection}>
-                  <div className="input" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px' }}>
-                    <Search size={16} className="text-muted" />
-                    <input
-                      style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '100%', fontSize: 14 }}
-                      placeholder="Search name, skills, college..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
                 </div>
 
                 <button
