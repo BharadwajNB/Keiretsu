@@ -195,6 +195,195 @@
   border-radius: var(--radius-full);
 }
 
+/* ---- College Search ---- */
+.collegeSearchWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.collegeSearchWrapper:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.08);
+}
+
+.collegeSearchInput {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  font-family: var(--font-sans);
+}
+
+.collegeSearchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.collegeSearchClear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.collegeSearchClear:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+/* ---- Autocomplete Suggestions ---- */
+.collegeSuggestions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin-top: 4px;
+  background: rgba(17, 17, 20, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.collegeSuggestionItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.collegeSuggestionItem:hover {
+  background: rgba(129, 140, 248, 0.1);
+}
+
+.collegeSuggestionItem svg {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.collegeSuggestionName {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.collegeSuggestionCity {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ---- College Info Card ---- */
+.collegeInfoCard {
+  background: rgba(129, 140, 248, 0.06);
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.collegeInfoHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.collegeInfoName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.collegeInfoCity {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 2px 0 0 0;
+}
+
+.collegeInfoClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.collegeInfoClose:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+
+.collegeInfoStats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.collegeInfoStat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+.collegeInfoSkills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.collegeInfoSkillTag {
+  display: inline-block;
+  padding: 3px 10px;
+  background: rgba(129, 140, 248, 0.12);
+  color: #818cf8;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* Mobile Adjustments */
 @media (max-width: 768px) {
   .mapLayout {

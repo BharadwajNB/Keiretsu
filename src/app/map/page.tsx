@@ -1,16 +1,19 @@
 'use client';
 
-import { useState, useMemo, Suspense, useEffect } from 'react';
+import { useState, useMemo, Suspense, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, Users, MapPin, Search } from 'lucide-react';
+import { Filter, Users, MapPin, Search, X, GraduationCap } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import LocationIndicator from '@/components/ui/LocationIndicator';
 import { useLocationSync } from '@/hooks/useLocationSync';
 import { useNearbyUsers } from '@/hooks/useNearbyUsers';
 import { useSkills } from '@/hooks/useSkills';
+import { useCollegeUsers } from '@/hooks/useCollegeUsers';
+import { searchUniversities } from '@/lib/universityData';
 import { SKILL_CATEGORIES } from '@/lib/types';
+import type { CommunityCircle } from '@/components/map/MapView';
 import styles from './page.module.css';
 
 const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false });
@@ -26,6 +29,46 @@ function MapPageContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const router = useRouter();
+
+  // College search state
+  const [collegeSearchQuery, setCollegeSearchQuery] = useState('');
+  const [showCollegeSuggestions, setShowCollegeSuggestions] = useState(false);
+  const [communityCircle, setCommunityCircle] = useState<CommunityCircle | null>(null);
+  const collegeSuggestionsRef = useRef<HTMLDivElement>(null);
+
+  const { collegeData, collegeLoading, fetchCollegeUsers, clearCollege } = useCollegeUsers();
+
+  // Autocomplete suggestions
+  const collegeSuggestions = useMemo(() => {
+    if (collegeSearchQuery.length < 2) return [];
+    return searchUniversities(collegeSearchQuery);
+  }, [collegeSearchQuery]);
+
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (collegeSuggestionsRef.current && !collegeSuggestionsRef.current.contains(e.target as Node)) {
+        setShowCollegeSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // When college data is fetched, build the community circle
+  useEffect(() => {
+    if (collegeData) {
+      setCommunityCircle({
+        center: [collegeData.coord.lat, collegeData.coord.lng],
+        radiusKm: 5,
+        name: collegeData.coord.name,
+        shortName: collegeData.coord.shortName,
+        builderCount: collegeData.users.length,
+      });
+    } else {
+      setCommunityCircle(null);
+    }
+  }, [collegeData]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -74,6 +117,9 @@ function MapPageContent() {
 
   const { users, loading: usersLoading } = useNearbyUsers(params);
 
+  // Determine which users to show in sidebar and on map
+  const displayUsers = collegeData ? collegeData.users : users;
+
   const toggleSkill = (name: string) => {
     setSelectedSkills((prev) =>
       prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name]
@@ -89,6 +135,18 @@ function MapPageContent() {
     });
     return groups;
   }, [allSkills]);
+
+  const handleCollegeSelect = (coord: typeof collegeSuggestions[0]) => {
+    setCollegeSearchQuery(coord.name);
+    setShowCollegeSuggestions(false);
+    fetchCollegeUsers(coord.name, coord);
+  };
+
+  const handleClearCollege = () => {
+    setCollegeSearchQuery('');
+    setCommunityCircle(null);
+    clearCollege();
+  };
 
   // Location permission not yet granted
   if (!geoLoading && !activeLat && permissionState !== 'granted') {
@@ -145,8 +203,9 @@ function MapPageContent() {
             <MapView
               center={[activeLat, activeLng]}
               radiusKm={radiusKm}
-              users={users}
+              users={displayUsers}
               selectedUserId={selectedUserId}
+              communityCircle={communityCircle}
             />
           )}
         </div>
@@ -163,7 +222,7 @@ function MapPageContent() {
               <h2>Discover</h2>
               <div className={styles.userCount}>
                 <Users size={14} />
-                <span>{users.length} builder{users.length !== 1 ? 's' : ''} nearby</span>
+                <span>{displayUsers.length} builder{displayUsers.length !== 1 ? 's' : ''}{collegeData ? ` at ${collegeData.coord.shortName}` : ' nearby'}</span>
               </div>
             </div>
 
@@ -174,90 +233,186 @@ function MapPageContent() {
               lastSyncedAt={lastSyncedAt}
             />
 
-            <div className={styles.filterSection}>
+            {/* College Search */}
+            <div className={styles.filterSection} ref={collegeSuggestionsRef}>
               <label className={styles.filterLabel}>
-                Search Radius: <strong>{radiusKm} km</strong>
+                <GraduationCap size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                Search College Community
               </label>
-              <input
-                type="range"
-                min="10"
-                max="1000"
-                step="10"
-                value={radiusKm}
-                onChange={(e) => setRadiusKm(Number(e.target.value))}
-                className={styles.slider}
-              />
-            </div>
-
-            <div className={styles.filterSection}>
-              <div className="input" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px' }}>
+              <div className={styles.collegeSearchWrapper}>
                 <Search size={16} className="text-muted" />
                 <input
-                  style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '100%', fontSize: 14 }}
-                  placeholder="Search name, skills, college..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={styles.collegeSearchInput}
+                  placeholder="Search college name..."
+                  value={collegeSearchQuery}
+                  onChange={(e) => {
+                    setCollegeSearchQuery(e.target.value);
+                    setShowCollegeSuggestions(true);
+                  }}
+                  onFocus={() => setShowCollegeSuggestions(true)}
                 />
+                {collegeSearchQuery && (
+                  <button className={styles.collegeSearchClear} onClick={handleClearCollege}>
+                    <X size={14} />
+                  </button>
+                )}
               </div>
+
+              {/* Autocomplete dropdown */}
+              <AnimatePresence>
+                {showCollegeSuggestions && collegeSuggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className={styles.collegeSuggestions}
+                  >
+                    {collegeSuggestions.map((s) => (
+                      <button
+                        key={s.id}
+                        className={styles.collegeSuggestionItem}
+                        onClick={() => handleCollegeSelect(s)}
+                      >
+                        <GraduationCap size={14} />
+                        <div>
+                          <span className={styles.collegeSuggestionName}>{s.name}</span>
+                          <span className={styles.collegeSuggestionCity}>{s.city}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            <button
-              className={styles.filterToggle}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Filter size={16} />
-                <span>Filter by Skills</span>
-              </div>
-              {selectedSkills.length > 0 && (
-                <span className="badge badge-amber">{selectedSkills.length}</span>
-              )}
-            </button>
-
+            {/* Active college info card */}
             <AnimatePresence>
-              {showFilters && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  style={{ overflow: 'hidden' }}
+              {collegeData && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className={styles.collegeInfoCard}
                 >
-                  <div className={styles.skillFilters}>
-                    {/* Simplified for brevity, similar to old one but nicer tags */}
-                    {Object.entries(groupedSkills).map(([category, skills]) => (
-                      <div key={category} style={{ marginBottom: 12 }}>
-                        <span style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                          {SKILL_CATEGORIES[category] || category}
-                        </span>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                          {skills.map((skill) => (
-                            <button
-                              key={skill.id}
-                              onClick={() => toggleSkill(skill.name)}
-                              className={`tag ${selectedSkills.includes(skill.name) ? 'badge-amber' : ''}`}
-                              style={{ cursor: 'pointer', border: 'none' }}
-                            >
-                              {skill.name}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                  <div className={styles.collegeInfoHeader}>
+                    <div>
+                      <h3 className={styles.collegeInfoName}>{collegeData.coord.name}</h3>
+                      <p className={styles.collegeInfoCity}>{collegeData.coord.city}</p>
+                    </div>
+                    <button className={styles.collegeInfoClose} onClick={handleClearCollege}>
+                      <X size={16} />
+                    </button>
                   </div>
+                  <div className={styles.collegeInfoStats}>
+                    <div className={styles.collegeInfoStat}>
+                      <Users size={14} />
+                      <span>{collegeData.users.length} builder{collegeData.users.length !== 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+                  {collegeData.topSkills.length > 0 && (
+                    <div className={styles.collegeInfoSkills}>
+                      {collegeData.topSkills.map((skill) => (
+                        <span key={skill} className={styles.collegeInfoSkillTag}>{skill}</span>
+                      ))}
+                    </div>
+                  )}
+                  {collegeLoading && (
+                    <div style={{ textAlign: 'center', padding: 8 }}>
+                      <div className="spinner" style={{ margin: '0 auto', width: 16, height: 16 }} />
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
 
+            {/* Regular search & filters — hidden when college is active */}
+            {!collegeData && (
+              <>
+                <div className={styles.filterSection}>
+                  <label className={styles.filterLabel}>
+                    Search Radius: <strong>{radiusKm} km</strong>
+                  </label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="1000"
+                    step="10"
+                    value={radiusKm}
+                    onChange={(e) => setRadiusKm(Number(e.target.value))}
+                    className={styles.slider}
+                  />
+                </div>
+
+                <div className={styles.filterSection}>
+                  <div className="input" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px' }}>
+                    <Search size={16} className="text-muted" />
+                    <input
+                      style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '100%', fontSize: 14 }}
+                      placeholder="Search name, skills, college..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  className={styles.filterToggle}
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Filter size={16} />
+                    <span>Filter by Skills</span>
+                  </div>
+                  {selectedSkills.length > 0 && (
+                    <span className="badge badge-amber">{selectedSkills.length}</span>
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {showFilters && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      style={{ overflow: 'hidden' }}
+                    >
+                      <div className={styles.skillFilters}>
+                        {Object.entries(groupedSkills).map(([category, skills]) => (
+                          <div key={category} style={{ marginBottom: 12 }}>
+                            <span style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                              {SKILL_CATEGORIES[category] || category}
+                            </span>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                              {skills.map((skill) => (
+                                <button
+                                  key={skill.id}
+                                  onClick={() => toggleSkill(skill.name)}
+                                  className={`tag ${selectedSkills.includes(skill.name) ? 'badge-amber' : ''}`}
+                                  style={{ cursor: 'pointer', border: 'none' }}
+                                >
+                                  {skill.name}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            )}
+
             <div className={styles.userList}>
-              {usersLoading ? (
+              {(usersLoading || collegeLoading) ? (
                 <div style={{ textAlign: 'center', padding: 20 }}><div className="spinner" style={{ margin: '0 auto' }}/></div>
-              ) : users.length === 0 ? (
+              ) : displayUsers.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                   <MapPin size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
-                  <p>No builders found in this area.</p>
+                  <p>{collegeData ? 'No builders registered from this college yet.' : 'No builders found in this area.'}</p>
                 </div>
               ) : (
-                users.map((user, i) => {
+                displayUsers.map((user, i) => {
                   const hasLocation = user.latitude && user.longitude;
                   return (
                     <motion.div
@@ -294,7 +449,7 @@ function MapPageContent() {
                           <p className={styles.userMeta}>Year {user.year} · {user.college}</p>
                         </div>
                         <span className={styles.userDistance}>
-                          {user.distance_km != null ? `${user.distance_km}km` : 'Global'}
+                          {user.distance_km != null ? `${user.distance_km}km` : collegeData ? collegeData.coord.shortName : 'Global'}
                         </span>
                       </div>
                     </motion.div>

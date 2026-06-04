@@ -125,6 +125,48 @@ export function findUniversityCoord(collegeName: string): UniversityCoord | unde
   });
 }
 
+/**
+ * Returns universities matching a partial search query (for autocomplete).
+ * Matches against name, shortName, city, and aliases. Case-insensitive.
+ * Returns up to `limit` results (default 8).
+ */
+export function searchUniversities(query: string, limit = 8): UniversityCoord[] {
+  const q = query.toLowerCase().trim();
+  if (!q || q.length < 2) return [];
+
+  const results: UniversityCoord[] = [];
+  const seen = new Set<string>();
+
+  // 1. Exact name/shortName starts-with (highest relevance)
+  for (const u of UNIVERSITY_COORDS) {
+    if (results.length >= limit) break;
+    if (u.name.toLowerCase().startsWith(q) || u.shortName.toLowerCase().startsWith(q)) {
+      if (!seen.has(u.id)) { results.push(u); seen.add(u.id); }
+    }
+  }
+
+  // 2. Alias exact match or starts-with
+  for (const u of UNIVERSITY_COORDS) {
+    if (results.length >= limit) break;
+    if (seen.has(u.id)) continue;
+    if (u.aliases.some(a => a.startsWith(q) || a === q)) {
+      results.push(u); seen.add(u.id);
+    }
+  }
+
+  // 3. Contains match (name, shortName, city, aliases)
+  for (const u of UNIVERSITY_COORDS) {
+    if (results.length >= limit) break;
+    if (seen.has(u.id)) continue;
+    const haystack = [u.name, u.shortName, u.city, ...u.aliases].join(' ').toLowerCase();
+    if (haystack.includes(q)) {
+      results.push(u); seen.add(u.id);
+    }
+  }
+
+  return results;
+}
+
 // Network arcs connecting universities — visual flair showing collaboration
 export interface NetworkArc {
   startLat: number;

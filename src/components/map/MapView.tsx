@@ -6,11 +6,20 @@ import 'leaflet/dist/leaflet.css';
 import type { Profile } from '@/lib/types';
 import { AVAILABILITY_LABELS, AVAILABILITY_COLORS } from '@/lib/types';
 
+export interface CommunityCircle {
+  center: [number, number];
+  radiusKm: number;
+  name: string;
+  shortName: string;
+  builderCount: number;
+}
+
 interface MapViewProps {
   center: [number, number];
   radiusKm: number;
   users: Profile[];
   selectedUserId?: string | null;
+  communityCircle?: CommunityCircle | null;
 }
 
 // Returns initials (up to 2 chars) from a display name
@@ -74,7 +83,7 @@ function createAvatarMarkerIcon(user: Profile): L.DivIcon {
   });
 }
 
-export default function MapView({ center, radiusKm, users, selectedUserId }: MapViewProps) {
+export default function MapView({ center, radiusKm, users, selectedUserId, communityCircle }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
   const markerMapRef = useRef<Record<string, L.Marker>>({});
@@ -82,6 +91,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
   const containerRef = useRef<HTMLDivElement>(null);
   const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
   const lastFlownUserIdRef = useRef<string | null>(null);
+  const communityCircleLayerRef = useRef<L.LayerGroup | null>(null);
   const activeMoveEndListenerRef = useRef<(() => void) | null>(null);
 
   // Initialize map
@@ -297,6 +307,67 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
     };
   }, [selectedUserId, users]);
 
+  // Community circle rendering
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Clear previous community circle layers
+    if (communityCircleLayerRef.current) {
+      communityCircleLayerRef.current.clearLayers();
+      mapRef.current.removeLayer(communityCircleLayerRef.current);
+      communityCircleLayerRef.current = null;
+    }
+
+    if (!communityCircle) return;
+
+    const group = L.layerGroup().addTo(mapRef.current);
+    communityCircleLayerRef.current = group;
+
+    // Outer pulsing ring
+    const outerCircle = L.circle(communityCircle.center, {
+      radius: communityCircle.radiusKm * 1000,
+      color: '#818cf8',
+      fillColor: '#818cf8',
+      fillOpacity: 0.04,
+      weight: 2,
+      opacity: 0.6,
+      className: 'community-circle-outer',
+    });
+    group.addLayer(outerCircle);
+
+    // Inner glow circle
+    const innerCircle = L.circle(communityCircle.center, {
+      radius: communityCircle.radiusKm * 1000 * 0.7,
+      color: 'transparent',
+      fillColor: '#818cf8',
+      fillOpacity: 0.06,
+      weight: 0,
+    });
+    group.addLayer(innerCircle);
+
+    // Center label
+    const labelIcon = L.divIcon({
+      html: `
+        <div class="community-circle-label">
+          <span class="community-circle-label-name">${communityCircle.shortName}</span>
+          <span class="community-circle-label-count">${communityCircle.builderCount} builder${communityCircle.builderCount !== 1 ? 's' : ''}</span>
+        </div>
+      `,
+      className: 'community-circle-label-host',
+      iconSize: [160, 50],
+      iconAnchor: [80, 25],
+    });
+    const labelMarker = L.marker(communityCircle.center, { icon: labelIcon, interactive: false });
+    group.addLayer(labelMarker);
+
+    // Fly to the college location
+    const zoomForRadius = communityCircle.radiusKm <= 2 ? 15 :
+      communityCircle.radiusKm <= 5 ? 14 :
+      communityCircle.radiusKm <= 10 ? 13 : 12;
+    mapRef.current.flyTo(communityCircle.center, zoomForRadius, { animate: true, duration: 1.2 });
+
+  }, [communityCircle]);
+
   return (
     <>
       <style>{`
@@ -385,6 +456,49 @@ export default function MapView({ center, radiusKm, users, selectedUserId }: Map
           border-color: rgba(255,255,255,0.06) !important;
         }
         .leaflet-control-zoom a:hover { background: #252540 !important; }
+
+        /* ---- Community Circle ---- */
+        .community-circle-outer {
+          animation: communityPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes communityPulse {
+          0%, 100% { stroke-opacity: 0.4; stroke-width: 2; }
+          50% { stroke-opacity: 0.9; stroke-width: 3; }
+        }
+
+        .community-circle-label-host {
+          background: none !important;
+          border: none !important;
+        }
+
+        .community-circle-label {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+          background: rgba(17, 17, 30, 0.85);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(129, 140, 248, 0.3);
+          border-radius: 12px;
+          padding: 8px 16px;
+          box-shadow: 0 4px 20px rgba(129, 140, 248, 0.15), 0 0 40px rgba(129, 140, 248, 0.05);
+        }
+
+        .community-circle-label-name {
+          font-family: Inter, sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          color: #f0f0f5;
+          letter-spacing: 0.02em;
+        }
+
+        .community-circle-label-count {
+          font-family: Inter, sans-serif;
+          font-size: 11px;
+          color: #818cf8;
+          font-weight: 600;
+        }
       `}</style>
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
     </>
