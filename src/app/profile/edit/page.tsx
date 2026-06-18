@@ -7,7 +7,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSkills } from '@/hooks/useSkills';
 import { AVAILABILITY_LABELS } from '@/lib/types';
 import type { AvailabilityStatus } from '@/lib/types';
-import { Globe, Save, Briefcase, Code, MapPin, X, User, Activity, Zap } from 'lucide-react';
+import { Globe, Save, Briefcase, Code, MapPin, X, User, Activity, Zap, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './page.module.css';
 
@@ -18,6 +18,19 @@ function ProfileEditContent() {
   const { profile, loading, updateProfile, updateLocation, updateSkills } = useProfile();
   const { latitude, longitude, requestLocation, permissionState } = useGeolocation();
   const { skills: allSkills } = useSkills();
+
+  const handleBack = () => {
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      if (document.referrer && document.referrer.startsWith(origin)) {
+        router.back();
+      } else {
+        router.push('/map');
+      }
+    } else {
+      router.push('/map');
+    }
+  };
 
   const [name, setName] = useState('');
   const [college, setCollege] = useState('');
@@ -115,6 +128,13 @@ function ProfileEditContent() {
         <div className={styles.bgGlow2} />
 
         <div className={styles.headerContainer}>
+          <div className={styles.backHeader}>
+            <button onClick={handleBack} className={styles.backBtn}>
+              <ArrowLeft size={16} />
+              <span>Back to Map</span>
+            </button>
+          </div>
+
           <div className={styles.header}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <h1 style={{ margin: 0 }}>Edit Profile</h1>
