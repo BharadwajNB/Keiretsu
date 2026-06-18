@@ -355,10 +355,47 @@
   color: var(--accent-primary);
 }
 
+/* ---- Back Header ---- */
+.backHeader {
+  width: 100%;
+  max-width: 760px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: flex-start;
+  flex-shrink: 0;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.backBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  transform: translateX(-2px);
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 640px) {
   .main {
     padding: 72px 0 60px;
+  }
+
+  .backHeader {
+    padding: 0 20px;
+    margin-bottom: 12px;
   }
 
   .heroBanner {

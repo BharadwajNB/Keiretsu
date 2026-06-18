@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import Navbar from '@/components/layout/Navbar';
 import { AVAILABILITY_LABELS } from '@/lib/types';
 import type { Profile } from '@/lib/types';
-import { MapPin, ExternalLink, Building2, Calendar, MessageCircle, Map, Edit3, Clock } from 'lucide-react';
+import { MapPin, ExternalLink, Building2, Calendar, MessageCircle, Map, Edit3, Clock, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import GitHubCard from '@/components/profile/GitHubCard';
@@ -38,7 +38,22 @@ function ProfileSkeleton() {
 export default function ProfilePage() {
   const params = useParams();
   const id = params?.id as string;
+  const router = useRouter();
   const { user: currentUser } = useAuth();
+
+  const handleBack = () => {
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      if (document.referrer && document.referrer.startsWith(origin)) {
+        router.back();
+      } else {
+        router.push('/map');
+      }
+    } else {
+      router.push('/map');
+    }
+  };
+
   const { profile: myProfile } = useProfile();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -167,6 +182,12 @@ export default function ProfilePage() {
       <div className="page">
         <Navbar />
         <main className={styles.main}>
+          <div className={styles.backHeader}>
+            <button onClick={handleBack} className={styles.backBtn}>
+              <ArrowLeft size={16} />
+              <span>Back to Map</span>
+            </button>
+          </div>
           <ProfileSkeleton />
         </main>
       </div>
@@ -179,9 +200,13 @@ export default function ProfilePage() {
       <div className="page">
         <Navbar />
         <div className="page-center">
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <h2 style={{ fontSize: 24, fontWeight: 700 }}>Profile not found</h2>
             <p className="text-muted mt-2">This user may have been removed.</p>
+            <button onClick={handleBack} className={styles.backBtn} style={{ marginTop: 24 }}>
+              <ArrowLeft size={16} />
+              <span>Back to Map</span>
+            </button>
           </div>
         </div>
       </div>
@@ -204,6 +229,14 @@ export default function ProfilePage() {
     <div className="page">
       <Navbar />
       <main className={styles.main}>
+        {/* ---- Back Button ---- */}
+        <div className={styles.backHeader}>
+          <button onClick={handleBack} className={styles.backBtn}>
+            <ArrowLeft size={16} />
+            <span>Back to Map</span>
+          </button>
+        </div>
+
         {/* ---- Hero Banner ---- */}
         <motion.div
           className={styles.heroBanner}
