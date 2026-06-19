@@ -43,6 +43,12 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
 
   const watchIdRef = useRef<number | null>(null);
   const lastEmitRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
+  const handleErrorRef = useRef<((error: GeolocationPositionError) => void) | null>(null);
+  const geoOptionsRef = useRef<PositionOptions>({
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: watch ? 60000 : 300000,
+  });
 
   const handleSuccess = useCallback(
     (position: GeolocationPosition) => {
@@ -75,6 +81,40 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
   );
 
   const handleError = useCallback((error: GeolocationPositionError) => {
+    // If high accuracy failed/timed out, try falling back to low accuracy
+    if (geoOptionsRef.current.enableHighAccuracy) {
+      console.warn('[useGeolocation] High accuracy failed, retrying with low accuracy...');
+      geoOptionsRef.current = {
+        ...geoOptionsRef.current,
+        enableHighAccuracy: false,
+        timeout: 15000,
+      };
+
+      const fallbackHandler = (err: GeolocationPositionError) => {
+        if (handleErrorRef.current) {
+          handleErrorRef.current(err);
+        }
+      };
+
+      if (watch) {
+        if (watchIdRef.current !== null) {
+          navigator.geolocation.clearWatch(watchIdRef.current);
+        }
+        watchIdRef.current = navigator.geolocation.watchPosition(
+          handleSuccess,
+          fallbackHandler,
+          geoOptionsRef.current
+        );
+      } else {
+        navigator.geolocation.getCurrentPosition(
+          handleSuccess,
+          fallbackHandler,
+          geoOptionsRef.current
+        );
+      }
+      return;
+    }
+
     let errorMessage = 'Unable to get your location';
     switch (error.code) {
       case error.PERMISSION_DENIED:
@@ -94,27 +134,54 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
       loading: false,
       permissionState: error.code === error.PERMISSION_DENIED ? 'denied' : 'prompt',
     });
-  }, []);
+  }, [handleSuccess, watch]);
 
-  const geoOptions: PositionOptions = {
-    enableHighAccuracy: true,
-    timeout: 10000,
-    maximumAge: watch ? 60000 : 300000, // Shorter cache for watch mode
-  };
+  // Update the ref inside an effect to comply with rules of React refs
+  useEffect(() => {
+    handleErrorRef.current = handleError;
+  }, [handleError]);
 
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setState((prev) => ({
-        ...prev,
-        error: 'Geolocation is not supported by your browser',
-        loading: false,
-      }));
+      // Defer state update to avoid cascading render warning in React effects
+      Promise.resolve().then(() => {
+        setState((prev) => ({
+          ...prev,
+          error: 'Geolocation is not supported by your browser',
+          loading: false,
+        }));
+      });
       return;
     }
 
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-    navigator.geolocation.getCurrentPosition(handleSuccess, handleError, geoOptions);
-  }, [handleSuccess, handleError]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Defer state update to avoid cascading render warning in React effects
+    Promise.resolve().then(() => {
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+    });
+
+    const handler = (err: GeolocationPositionError) => {
+      if (handleErrorRef.current) {
+        handleErrorRef.current(err);
+      }
+    };
+
+    if (watch) {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        handleSuccess,
+        handler,
+        geoOptionsRef.current
+      );
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        handleSuccess,
+        handler,
+        geoOptionsRef.current
+      );
+    }
+  }, [handleSuccess, watch]);
 
   const stopWatching = useCallback(() => {
     if (watchIdRef.current !== null) {
@@ -124,42 +191,82 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
   }, []);
 
   useEffect(() => {
-    // Check permission state first
+    let permissionStatus: PermissionStatus | null = null;
+    let active = true;
+
+    const handler = (err: GeolocationPositionError) => {
+      if (handleErrorRef.current) {
+        handleErrorRef.current(err);
+      }
+    };
+
+    const handlePermissionChange = () => {
+      if (!active || !permissionStatus) return;
+      const state = permissionStatus.state;
+      setState((prev) => ({ ...prev, permissionState: state }));
+      if (state === 'granted') {
+        if (watch && watchIdRef.current === null) {
+          watchIdRef.current = navigator.geolocation.watchPosition(
+            handleSuccess,
+            handler,
+            geoOptionsRef.current
+          );
+        }
+      } else {
+        stopWatching();
+        setState((prev) => ({
+          ...prev,
+          latitude: null,
+          longitude: null,
+          permissionState: state,
+        }));
+      }
+    };
+
     if (navigator.permissions) {
       navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        if (!active) return;
+        permissionStatus = result;
         setState((prev) => ({ ...prev, permissionState: result.state }));
+        result.addEventListener('change', handlePermissionChange);
+
         if (result.state === 'granted') {
-          if (watch) {
-            // Start continuous watching
+          if (watch && watchIdRef.current === null) {
             watchIdRef.current = navigator.geolocation.watchPosition(
               handleSuccess,
-              handleError,
-              geoOptions
+              handler,
+              geoOptionsRef.current
             );
-          } else {
+          } else if (!watch) {
             requestLocation();
           }
         } else {
-          setState((prev) => ({ ...prev, loading: false }));
+          // Defer state update to avoid cascading render warning in React effects
+          Promise.resolve().then(() => {
+            setState((prev) => ({ ...prev, loading: false }));
+          });
         }
       });
     } else {
       if (watch) {
         watchIdRef.current = navigator.geolocation.watchPosition(
           handleSuccess,
-          handleError,
-          geoOptions
+          handler,
+          geoOptionsRef.current
         );
       } else {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         requestLocation();
       }
     }
 
     return () => {
+      active = false;
       stopWatching();
+      if (permissionStatus) {
+        permissionStatus.removeEventListener('change', handlePermissionChange);
+      }
     };
-  }, [watch]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [watch, handleSuccess, requestLocation, stopWatching]);
 
   return { ...state, requestLocation, stopWatching };
 }
