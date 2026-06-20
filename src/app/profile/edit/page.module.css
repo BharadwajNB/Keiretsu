@@ -294,6 +294,7 @@
 .backBtn:hover {
   background: #1e1e33;
   border-color: rgba(157, 123, 255, 0.3);
+  transform: translateX(-3px);
 }
 
 /* Profile Section (Avatar) */
@@ -945,6 +946,48 @@
   .viewGithubLink {
     width: 100%;
     justify-content: center;
+  }
+}
+
+.backHeader {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.headerSaveBtn {
+  background: linear-gradient(135deg, #9D7BFF, #7B54F4);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(157, 123, 255, 0.25);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: fit-content;
+}
+
+.headerSaveBtn:hover:not(:disabled) {
+  box-shadow: 0 6px 24px rgba(157, 123, 255, 0.45);
+  transform: translateY(-2px);
+}
+
+.headerSaveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .headerSaveBtn {
+    width: 100%;
   }
 }
 

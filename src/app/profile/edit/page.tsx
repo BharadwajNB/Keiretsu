@@ -54,13 +54,13 @@ function ProfileEditContent() {
   const handleBack = () => {
     if (typeof window !== 'undefined') {
       const origin = window.location.origin;
-      if (document.referrer && document.referrer.startsWith(origin)) {
+      if (document.referrer && document.referrer.startsWith(origin) && !document.referrer.endsWith('/profile/edit')) {
         router.back();
       } else {
-        router.push('/map');
+        router.push(profile ? `/profile/${profile.id}` : '/map');
       }
     } else {
-      router.push('/map');
+      router.push(profile ? `/profile/${profile.id}` : '/map');
     }
   };
 
@@ -187,11 +187,11 @@ function ProfileEditContent() {
         <div className={styles.bgGlow1} />
         <div className={styles.bgGlow2} />
 
-        <div className={styles.headerContainer}>
+        <div className={styles.container}>
           <div className={styles.backHeader}>
             <button onClick={handleBack} className={styles.backBtn}>
               <ArrowLeft size={16} />
-              <span>Back to Map</span>
+              <span>Back</span>
             </button>
           </div>
 
@@ -276,14 +276,16 @@ function ProfileEditContent() {
                     <h1 className={styles.panelTitle}>Edit Profile</h1>
                     <p className={styles.panelSubtitle}>Keep your profile updated to attract the right collaborators.</p>
                   </div>
-                  <button
-                    onClick={() => router.push(profile ? `/profile/${profile.id}` : '/map')}
-                    className={styles.backBtn}
-                    title="Back"
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSave}
+                    disabled={saving || !name || !college || !githubUrl}
+                    className={styles.headerSaveBtn}
                   >
-                    <ArrowLeft size={16} />
-                    <span>Back</span>
-                  </button>
+                    <Save size={16} />
+                    {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
+                  </motion.button>
                 </div>
               </div>
 
