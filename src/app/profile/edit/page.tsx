@@ -198,28 +198,30 @@ function ProfileEditContent() {
                 </button>
               </div>
 
-              {/* Navigation Tabs Menu */}
-              <div className={styles.menuList}>
-                {TABS.map((tab) => {
-                  const TabIcon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <motion.div
-                      key={tab.id}
-                      whileHover={{ scale: 1.02, x: 4 }}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`${styles.menuCard} ${isActive ? styles.menuCardActive : ''}`}
-                    >
-                      <div className={styles.menuCardIconWrapper}>
-                        <TabIcon size={18} className={isActive ? styles.activeIcon : styles.inactiveIcon} />
-                      </div>
-                      <div className={styles.menuCardContent}>
-                        <h4>{tab.label}</h4>
-                        <p>{tab.desc}</p>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+              {/* Navigation Tabs Menu Container */}
+              <div className={styles.menuListCard}>
+                <div className={styles.menuList}>
+                  {TABS.map((tab) => {
+                    const TabIcon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <motion.div
+                        key={tab.id}
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`${styles.menuCard} ${isActive ? styles.menuCardActive : ''}`}
+                      >
+                        <div className={styles.menuCardIconWrapper}>
+                          <TabIcon size={18} className={isActive ? styles.activeIcon : styles.inactiveIcon} />
+                        </div>
+                        <div className={styles.menuCardContent}>
+                          <h4>{tab.label}</h4>
+                          <p>{tab.desc}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
