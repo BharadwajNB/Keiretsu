@@ -188,14 +188,19 @@ function ProfileEditContent() {
         <div className={styles.bgGlow2} />
 
         <div className={styles.container}>
+          <div className={styles.backHeader}>
+            <button onClick={handleBack} className={styles.backBtn}>
+              <ArrowLeft size={16} />
+              <span>Back</span>
+            </button>
+          </div>
+
           <div className={styles.layoutGrid}>
             {/* LEFT PANEL */}
             <div className={styles.leftPanel}>
-              <div className={styles.sidebarHeader}>
-                <button onClick={handleBack} className={styles.backBtn}>
-                  <ArrowLeft size={16} />
-                  <span>Back</span>
-                </button>
+              <div className={styles.pageHeader}>
+                <h1 className={styles.panelTitle}>Edit Profile</h1>
+                <p className={styles.panelSubtitle}>Keep your profile updated to attract the right collaborators.</p>
               </div>
 
               {/* Navigation Tabs Menu Container */}
@@ -229,11 +234,7 @@ function ProfileEditContent() {
             <div className={styles.rightPanel}>
               {/* Header */}
               <div className={styles.panelHeader}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 16 }}>
-                  <div>
-                    <h1 className={styles.panelTitle}>Edit Profile</h1>
-                    <p className={styles.panelSubtitle}>Keep your profile updated to attract the right collaborators.</p>
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%', gap: 16 }}>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
