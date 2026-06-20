@@ -188,58 +188,14 @@ function ProfileEditContent() {
         <div className={styles.bgGlow2} />
 
         <div className={styles.container}>
-          <div className={styles.backHeader}>
-            <button onClick={handleBack} className={styles.backBtn}>
-              <ArrowLeft size={16} />
-              <span>Back</span>
-            </button>
-          </div>
-
           <div className={styles.layoutGrid}>
             {/* LEFT PANEL */}
             <div className={styles.leftPanel}>
-              {/* Top Card: Progress Circle & Save Changes */}
-              <div className={styles.dashboardCard}>
-                <div className={styles.progressRingContainer}>
-                  <svg width="120" height="120" viewBox="0 0 120 120" className={styles.progressRing}>
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="50"
-                      className={styles.progressRingBg}
-                      strokeWidth="8"
-                      fill="transparent"
-                    />
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="50"
-                      className={styles.progressRingIndicator}
-                      strokeWidth="8"
-                      fill="transparent"
-                      strokeDasharray={2 * Math.PI * 50}
-                      strokeDashoffset={2 * Math.PI * 50 * (1 - progress / 100)}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className={styles.progressRingText}>{progress}%</div>
-                </div>
-
-                <div className={styles.progressInfo}>
-                  <h3>Complete your profile</h3>
-                  <p>Unlock better collaboration opportunities.</p>
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSave}
-                  disabled={saving || !name || !college || !githubUrl}
-                  className={styles.saveBtn}
-                >
-                  <Save size={16} />
-                  {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
-                </motion.button>
+              <div className={styles.sidebarHeader}>
+                <button onClick={handleBack} className={styles.backBtn}>
+                  <ArrowLeft size={16} />
+                  <span>Back</span>
+                </button>
               </div>
 
               {/* Navigation Tabs Menu */}
