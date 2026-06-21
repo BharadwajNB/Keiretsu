@@ -18,11 +18,11 @@ export async function GET(request: Request) {
         
         const { data: profile } = await supabase
           .from('profiles')
-          .select('college, github_url, avatar_url')
+          .select('name, college, latitude')
           .eq('user_id', user.id)
           .single();
 
-        if (profile && (!profile.college || !profile.github_url)) {
+        if (profile && (!profile.college || !profile.name || !profile.latitude)) {
           return NextResponse.redirect(`${origin}/onboarding`);
         }
       }

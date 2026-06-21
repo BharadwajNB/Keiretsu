@@ -12,23 +12,17 @@ interface ProfileCompletionResult {
  * Computes profile completion percentage from a Profile object.
  *
  * Weights:
- *   Name:     20%
- *   College:  20%
- *   GitHub:   15%
- *   Bio:      10%
- *   Skills:   20%
- *   Location: 15%
+ *   Name:     35%
+ *   College:  35%
+ *   Location: 30%
  */
 export function getProfileCompletion(profile: Profile | null): ProfileCompletionResult {
   if (!profile) return { percentage: 0, missingFields: ['all'], isComplete: false };
 
   const checks: Array<{ field: string; weight: number; filled: boolean }> = [
-    { field: 'Name', weight: 20, filled: !!profile.name?.trim() },
-    { field: 'College', weight: 20, filled: !!profile.college?.trim() },
-    { field: 'GitHub', weight: 15, filled: !!profile.github_url?.trim() },
-    { field: 'Bio', weight: 10, filled: !!profile.bio?.trim() },
-    { field: 'Skills', weight: 20, filled: (profile.skills?.length || 0) > 0 },
-    { field: 'Location', weight: 15, filled: !!profile.latitude },
+    { field: 'Name', weight: 35, filled: !!profile.name?.trim() },
+    { field: 'College', weight: 35, filled: !!profile.college?.trim() },
+    { field: 'Location', weight: 30, filled: !!profile.latitude },
   ];
 
   let earned = 0;

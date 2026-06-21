@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense, useRef, useMemo } from 'rea
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, MapPin, Check, Sparkles, User, GraduationCap, Code2 } from 'lucide-react';
+import Navbar from '@/components/layout/Navbar';
 import { useProfile } from '@/hooks/useProfile';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSkills } from '@/hooks/useSkills';
@@ -142,6 +143,13 @@ function OnboardingContent() {
   const [direction, setDirection] = useState(1);
   const [saving, setSaving] = useState(false);
 
+  // Redirect to map if already onboarded (fully populated name, college, and location)
+  useEffect(() => {
+    if (step === 0 && profile && profile.name?.trim() && profile.college?.trim() && profile.latitude) {
+      router.push('/map');
+    }
+  }, [profile, step, router]);
+
   // Form state
   const [name, setName] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
@@ -253,7 +261,8 @@ function OnboardingContent() {
   const canContinue = () => {
     if (step === 0) return !!name.trim();
     if (step === 1) return !!college.trim();
-    return true; // Skills and location are optional
+    if (step === 3) return permissionState === 'granted' && !!latitude;
+    return true; // Skills are optional
   };
 
   // Ring fill calculation for step 0
@@ -288,35 +297,21 @@ function OnboardingContent() {
 
   return (
     <div style={{ background: 'var(--ob-bg)', minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
+      <Navbar />
       <AmbientNetwork />
 
       <main className={styles.main}>
-        {/* ---- Header ---- */}
-        <header className={styles.header}>
-          <div className={styles.brand}>
-            <svg className={styles.brandIcon} viewBox="0 0 24 24" fill="none">
-              <circle cx="5" cy="12" r="2.4" fill="#F2A33C" />
-              <circle cx="19" cy="6" r="2.4" fill="#4FD6E8" />
-              <circle cx="19" cy="18" r="2.4" fill="#4FD6E8" />
-              <path d="M7.2 11 16.8 6.6M7.2 13 16.8 17.4" stroke="#3A4250" strokeWidth="1.2" />
-            </svg>
-            <span className={styles.brandName}>Keiretsu</span>
-          </div>
-          <div className={styles.headerRight}>
-            <button onClick={skip} className={styles.skip}>
-              Skip for now
-              <svg className={styles.skipIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 4l8 8-8 8M14 4l8 8-8 8" />
-              </svg>
-            </button>
-          </div>
-        </header>
-
-        {/* ---- Progress: Eyebrow + Node Chain ---- */}
+        {/* ---- Progress: Eyebrow + Skip ---- */}
         <div className={styles.progressRow}>
           <div className={styles.eyebrow}>
             Step {step + 1} / {STEPS.length} · <span className={styles.eyebrowAccent}>{STEPS[step]}</span>
           </div>
+          <button onClick={skip} className={styles.skip}>
+            Skip for now
+            <svg className={styles.skipIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M5 4l8 8-8 8M14 4l8 8-8 8" />
+            </svg>
+          </button>
         </div>
         <NodeChain currentStep={step} />
 
