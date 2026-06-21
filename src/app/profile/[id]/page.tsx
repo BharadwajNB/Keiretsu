@@ -34,6 +34,26 @@ function ProfileSkeleton() {
   );
 }
 
+function parseWkbPoint(wkbHex: string): { lat: number; lng: number } | null {
+  if (!wkbHex || wkbHex.length < 50) return null;
+  const xHex = wkbHex.slice(18, 34);
+  const yHex = wkbHex.slice(34, 50);
+
+  const hexToDouble = (hex: string) => {
+    const bytes = new Uint8Array(hex.match(/[\da-f]{2}/gi)!.map(h => parseInt(h, 16)));
+    const view = new DataView(bytes.buffer);
+    return view.getFloat64(0, true);
+  };
+
+  try {
+    const lng = hexToDouble(xHex);
+    const lat = hexToDouble(yHex);
+    return { lat, lng };
+  } catch {
+    return null;
+  }
+}
+
 // ---- Main Page ---------------------------------------------------------------
 export default function ProfilePage() {
   const params = useParams();
@@ -94,7 +114,18 @@ export default function ProfilePage() {
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const skills = skillData?.map((s: any) => s.skills?.name).filter(Boolean) || [];
-          if (!cancelled) setProfile({ ...data, skills });
+
+          let latitude: number | undefined = undefined;
+          let longitude: number | undefined = undefined;
+          if (data.location) {
+            const coords = parseWkbPoint(data.location);
+            if (coords) {
+              latitude = coords.lat;
+              longitude = coords.lng;
+            }
+          }
+
+          if (!cancelled) setProfile({ ...data, latitude, longitude, skills });
         }
       } catch (err) {
         console.warn('Failed to fetch profile:', err);
