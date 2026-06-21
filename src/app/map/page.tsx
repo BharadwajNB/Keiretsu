@@ -258,10 +258,6 @@ function MapPageContent() {
 
             {/* Unified Search */}
             <div className={styles.filterSection} ref={suggestionsRef}>
-              <label className={styles.filterLabel}>
-                <Search size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                Search College or Builder
-              </label>
               <div className={styles.searchWrapper}>
                 <Search size={16} className="text-muted" />
                 <input
