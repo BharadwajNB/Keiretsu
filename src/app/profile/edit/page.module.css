@@ -163,11 +163,6 @@
   gap: 8px;
 }
 
-.saveBtn:hover:not(:disabled) {
-  box-shadow: 0 6px 24px rgba(157, 123, 255, 0.45);
-  transform: translateY(-2px);
-}
-
 .saveBtn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -205,12 +200,6 @@
   gap: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
-}
-
-.menuCard:hover {
-  border-color: rgba(157, 123, 255, 0.3);
-  background: #1c1c2e;
-  box-shadow: 0 0 20px rgba(157, 123, 255, 0.05);
 }
 
 .menuCardActive {
@@ -998,13 +987,6 @@
   transition: all 0.2s ease;
 }
 
-.backBtn:hover {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(157, 123, 255, 0.3);
-  color: white;
-  transform: translateX(-2px);
-}
-
 .headerSaveBtn {
   background: linear-gradient(135deg, #9D7BFF, #7B54F4);
   color: white;
@@ -1021,11 +1003,6 @@
   justify-content: center;
   gap: 8px;
   height: fit-content;
-}
-
-.headerSaveBtn:hover:not(:disabled) {
-  box-shadow: 0 6px 24px rgba(157, 123, 255, 0.45);
-  transform: translateY(-2px);
 }
 
 .headerSaveBtn:disabled {

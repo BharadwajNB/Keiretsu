@@ -350,7 +350,7 @@ export default function ProfilePage() {
           {/* Footer Actions */}
           <div className={styles.footerActions}>
             {isOwner ? (
-              <Link href="/profile/edit" className={styles.connectBtn} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
+              <Link href="/profile/edit" className={styles.githubBtn}>
                 <Edit3 size={16} />
                 Edit Profile
               </Link>

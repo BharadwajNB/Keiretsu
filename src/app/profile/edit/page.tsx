@@ -210,9 +210,8 @@ function ProfileEditContent() {
                     const TabIcon = tab.icon;
                     const isActive = activeTab === tab.id;
                     return (
-                      <motion.div
+                      <div
                         key={tab.id}
-                        whileHover={{ scale: 1.02, x: 4 }}
                         onClick={() => setActiveTab(tab.id)}
                         className={`${styles.menuCard} ${isActive ? styles.menuCardActive : ''}`}
                       >
@@ -223,7 +222,7 @@ function ProfileEditContent() {
                           <h4>{tab.label}</h4>
                           <p>{tab.desc}</p>
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>
@@ -235,16 +234,14 @@ function ProfileEditContent() {
               {/* Header */}
               <div className={styles.panelHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%', gap: 16 }}>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <button
                     onClick={handleSave}
                     disabled={saving || !name || !college || !githubUrl}
                     className={styles.headerSaveBtn}
                   >
                     <Save size={16} />
                     {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
-                  </motion.button>
+                  </button>
                 </div>
               </div>
 
