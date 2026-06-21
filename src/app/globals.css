@@ -49,6 +49,20 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-glow: 0 0 15px rgba(129, 140, 248, 0.15);
+
+  /* Onboarding palette */
+  --ob-bg: #0A0C0F;
+  --ob-surface: #12161D;
+  --ob-surface-2: #1B212C;
+  --ob-border: #242C38;
+  --ob-border-soft: #1B212C;
+  --ob-text: #ECEFF3;
+  --ob-text-dim: #828B99;
+  --ob-text-faint: #545D6B;
+  --ob-accent: #F2A33C;
+  --ob-accent-soft: rgba(242, 163, 60, 0.12);
+  --ob-cyan: #4FD6E8;
+  --ob-cyan-soft: rgba(79, 214, 232, 0.10);
 }
 
 * {

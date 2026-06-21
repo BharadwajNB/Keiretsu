@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keiretsu — Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0A0C0F;
+    --surface: #12161D;
+    --surface-2: #1B212C;
+    --border: #242C38;
+    --border-soft: #1B212C;
+    --text: #ECEFF3;
+    --text-dim: #828B99;
+    --text-faint: #545D6B;
+    --accent: #F2A33C;
+    --accent-soft: rgba(242,163,60,0.12);
+    --cyan: #4FD6E8;
+    --cyan-soft: rgba(79,214,232,0.10);
+    --radius: 14px;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--body); -webkit-font-smoothing:antialiased; }
+  body{ min-height:100vh; position:relative; overflow-x:hidden; }
+
+  /* ambient network backdrop */
+  #ambient{ position:fixed; inset:0; z-index:0; opacity:0.35; pointer-events:none; }
+
+  .wrap{ position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:28px 32px 60px; }
+
+  /* header */
+  header{ display:flex; align-items:center; justify-content:space-between; padding-bottom:36px; }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand svg{ width:22px; height:22px; }
+  .brand span{ font-family:var(--display); font-weight:600; font-size:17px; letter-spacing:-0.01em; }
+  .header-right{ display:flex; align-items:center; gap:18px; }
+  .skip{ display:flex; align-items:center; gap:6px; color:var(--text-dim); font-size:13px; font-family:var(--mono); text-decoration:none; cursor:pointer; transition:color .15s ease; }
+  .skip:hover{ color:var(--text); }
+  .skip svg{ width:13px; height:13px; }
+  .avatar-chip{ width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#3a2f1a,#1a2530); border:1px solid var(--border); }
+  .logout{ width:18px; height:18px; color:var(--text-faint); cursor:pointer; }
+
+  /* progress: node chain */
+  .progress-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .eyebrow{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; color:var(--text-faint); text-transform:uppercase; }
+  .eyebrow b{ color:var(--cyan); font-weight:500; }
+  .nodes{ display:flex; align-items:center; gap:0; margin:18px 0 44px; }
+  .node-wrap{ display:flex; align-items:center; }
+  .node{ width:11px; height:11px; border-radius:50%; background:var(--surface-2); border:1.5px solid var(--border); position:relative; flex:none; transition:all .3s ease; }
+  .node.active{ background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); }
+  .node.active::after{ content:''; position:absolute; inset:-5px; border-radius:50%; border:1px solid var(--accent); opacity:.5; animation:pulse 2.2s ease-out infinite; }
+  .node.done{ background:var(--cyan); border-color:var(--cyan); }
+  .link{ width:64px; height:1.5px; background:var(--border); position:relative; overflow:hidden; }
+  .link::after{ content:''; position:absolute; inset:0; background:var(--cyan); width:var(--fill,0%); transition:width .5s ease; }
+  @keyframes pulse{ 0%{ transform:scale(.8); opacity:.6 } 100%{ transform:scale(1.8); opacity:0 } }
+
+  /* layout */
+  .stage{ display:flex; justify-content:center; }
+  .card{ width:100%; max-width:520px; background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:44px 44px 38px; position:relative; }
+  .card::before{ content:''; position:absolute; top:0; left:24px; right:24px; height:1px; background:linear-gradient(90deg,transparent,rgba(242,163,60,.5),transparent); }
+
+  /* avatar / identity node */
+  .id-node{ display:flex; flex-direction:column; align-items:center; margin-bottom:26px; }
+  .ring-wrap{ position:relative; width:74px; height:74px; margin-bottom:18px; }
+  .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-bg{ fill:none; stroke:var(--border); stroke-width:3; }
+  .ring-fg{ fill:none; stroke:var(--accent); stroke-width:3; stroke-linecap:round; stroke-dasharray:201; stroke-dashoffset:201; transition:stroke-dashoffset .5s ease; }
+  .ring-center{ position:absolute; inset:6px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; border:1px solid var(--border); }
+  .ring-center svg{ width:22px; height:22px; color:var(--text-dim); transform:none; }
+
+  h1{ font-family:var(--display); font-size:25px; font-weight:600; letter-spacing:-0.01em; margin:0 0 8px; text-align:center; }
+  .sub{ color:var(--text-dim); font-size:14px; text-align:center; margin:0 0 32px; }
+
+  .field{ margin-bottom:22px; }
+  .field label{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-dim); margin-bottom:9px; font-family:var(--mono); letter-spacing:.02em; }
+  .field label .req{ color:var(--accent); }
+  .field input, .field textarea{
+    width:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:10px;
+    color:var(--text); font-family:var(--body); font-size:14.5px; padding:13px 15px; outline:none;
+    transition:border-color .15s ease, background .15s ease; resize:none;
+  }
+  .field input::placeholder, .field textarea::placeholder{ color:var(--text-faint); }
+  .field input:focus, .field textarea:focus{ border-color:var(--accent); background:#1d2330; }
+  .field.mono input{ font-family:var(--mono); font-size:13.5px; }
+  .field textarea{ min-height:78px; line-height:1.5; }
+
+  .detect{ display:flex; align-items:center; gap:8px; margin-top:11px; flex-wrap:wrap; opacity:0; transform:translateY(-4px); transition:all .4s ease; }
+  .detect.show{ opacity:1; transform:translateY(0); }
+  .detect-label{ display:flex; align-items:center; gap:5px; font-family:var(--mono); font-size:11.5px; color:var(--cyan); }
+  .detect-label svg{ width:12px; height:12px; }
+  .chip{ font-family:var(--mono); font-size:11.5px; color:var(--cyan); background:var(--cyan-soft); border:1px solid rgba(79,214,232,.25); padding:3px 9px; border-radius:6px; opacity:0; transform:scale(.9); transition:all .3s ease; }
+  .detect.show .chip{ opacity:1; transform:scale(1); }
+  .detect.show .chip:nth-child(2){ transition-delay:.05s; }
+  .detect.show .chip:nth-child(3){ transition-delay:.1s; }
+  .detect.show .chip:nth-child(4){ transition-delay:.15s; }
+  .detect.show .chip:nth-child(5){ transition-delay:.2s; }
+
+  .actions{ display:flex; justify-content:flex-end; margin-top:30px; }
+  .btn{
+    display:flex; align-items:center; gap:8px; background:var(--accent); color:#181206;
+    font-family:var(--body); font-weight:600; font-size:14.5px; border:none; border-radius:10px;
+    padding:13px 22px; cursor:pointer; transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  }
+  .btn svg{ width:15px; height:15px; transition:transform .15s ease; }
+  .btn:hover{ filter:brightness(1.08); box-shadow:0 8px 22px rgba(242,163,60,.25); transform:translateY(-1px); }
+  .btn:hover svg{ transform:translateX(3px); }
+  .btn:active{ transform:translateY(0); }
+
+  .foot-hint{ text-align:center; margin-top:18px; font-size:12px; color:var(--text-faint); }
+
+  @media (max-width:560px){
+    .wrap{ padding:20px 18px 40px; }
+    .card{ padding:32px 22px 28px; }
+    .nodes{ overflow-x:hidden; }
+    .link{ width:34px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg id="ambient"></svg>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="2.4" fill="#F2A33C"/><circle cx="19" cy="6" r="2.4" fill="#4FD6E8"/><circle cx="19" cy="18" r="2.4" fill="#4FD6E8"/><path d="M7.2 11 16.8 6.6M7.2 13 16.8 17.4" stroke="#3A4250" stroke-width="1.2"/></svg>
+      <span>Keiretsu</span>
+    </div>
+    <div class="header-right">
+      <a class="skip">Skip for now <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4l8 8-8 8M14 4l8 8-8 8"/></svg></a>
+      <div class="avatar-chip"></div>
+      <svg class="logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+    </div>
+  </header>
+
+  <div class="progress-row">
+    <div class="eyebrow">Step 1 / 4 · <b>Identify</b></div>
+  </div>
+  <div class="nodes">
+    <div class="node-wrap"><div class="node active"></div></div>
+    <div class="link" style="--fill:35%"></div>
+    <div class="node-wrap"><div class="node"></div></div>
+    <div class="link"></div>
+    <div class="node-wrap"><div class="node"></div></div>
+    <div class="link"></div>
+    <div class="node-wrap"><div class="node"></div></div>
+  </div>
+
+  <div class="stage">
+    <div class="card">
+      <div class="id-node">
+        <div class="ring-wrap">
+          <svg viewBox="0 0 32 32">
+            <circle class="ring-bg" cx="16" cy="16" r="14"></circle>
+            <circle class="ring-fg" id="ringFg" cx="16" cy="16" r="14"></circle>
+          </svg>
+          <div class="ring-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg>
+          </div>
+        </div>
+        <h1>Let's get you discovered</h1>
+        <p class="sub">Start with the basics so builders can find you.</p>
+      </div>
+
+      <div class="field">
+        <label>Full name <span class="req">*</span></label>
+        <input id="fName" type="text" value="Bharadwaj Madem" placeholder="Jane Builder">
+      </div>
+
+      <div class="field mono">
+        <label>GitHub URL</label>
+        <input id="fGit" type="text" value="https://github.com/BharadwajNB" placeholder="https://github.com/yourhandle">
+        <div class="detect show" id="detectRow">
+          <span class="detect-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>Detected</span>
+          <span class="chip">JavaScript</span>
+          <span class="chip">Node.js</span>
+          <span class="chip">TypeScript</span>
+          <span class="chip">Java</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Short bio</label>
+        <textarea id="fBio" placeholder="What are you building?">Building MerlynMind and scalable, production-ready systems.</textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn">Continue <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+      <p class="foot-hint">Your profile becomes a node the moment you publish it.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ambient network backdrop — sparse, deterministic, low-opacity
+  (function(){
+    const svg = document.getElementById('ambient');
+    const W = window.innerWidth, H = window.innerHeight;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    let seed = 7;
+    function rand(){ seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    const pts = [];
+    const count = Math.min(22, Math.floor(W/70));
+    for(let i=0;i<count;i++){ pts.push({x: rand()*W, y: rand()*H}); }
+    let edges = '';
+    for(let i=0;i<pts.length;i++){
+      for(let j=i+1;j<pts.length;j++){
+        const d = Math.hypot(pts[i].x-pts[j].x, pts[i].y-pts[j].y);
+        if(d < 180 && rand() > 0.6){
+          edges += `<line x1="${pts[i].x}" y1="${pts[i].y}" x2="${pts[j].x}" y2="${pts[j].y}" stroke="#2A3340" stroke-width="1"/>`;
+        }
+      }
+    }
+    let nodes = '';
+    pts.forEach(p=>{ nodes += `<circle cx="${p.x}" cy="${p.y}" r="2" fill="#3A4250"/>`; });
+    svg.innerHTML = edges + nodes;
+  })();
+
+  // identity ring progress based on filled fields
+  const ring = document.getElementById('ringFg');
+  const CIRC = 2 * Math.PI * 14; // ~87.96
+  ring.style.strokeDasharray = CIRC;
+  function updateRing(){
+    const vals = [document.getElementById('fName').value, document.getElementById('fGit').value, document.getElementById('fBio').value];
+    const filled = vals.filter(v => v && v.trim().length > 0).length;
+    const pct = filled / vals.length;
+    ring.style.strokeDashoffset = CIRC * (1 - pct);
+  }
+  ['fName','fGit','fBio'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', updateRing);
+  });
+  updateRing();
+</script>
+
+</body>
+</html>

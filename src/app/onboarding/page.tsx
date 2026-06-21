@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
+import { useState, useEffect, useCallback, Suspense, useRef, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, MapPin, Check, Sparkles, SkipForward, User, GraduationCap, Code2 } from 'lucide-react';
-import Navbar from '@/components/layout/Navbar';
+import { ArrowRight, ArrowLeft, MapPin, Check, Sparkles, User, GraduationCap, Code2 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSkills } from '@/hooks/useSkills';
@@ -16,16 +15,118 @@ const STEPS = ['Identity', 'College', 'Skills', 'Location'];
 const STEP_META = [
   { icon: User, heading: "Let\u2019s get you discovered", sub: 'Start with the basics so builders can find you.' },
   { icon: GraduationCap, heading: 'Where do you build?', sub: 'Your college helps match you with nearby collaborators.' },
-  { icon: Code2, heading: 'What do you build?', sub: 'Select your tech stack — this powers skill-based search.' },
+  { icon: Code2, heading: 'What do you build?', sub: 'Select your tech stack \u2014 this powers skill-based search.' },
   { icon: MapPin, heading: 'Show up on the map', sub: 'Share your location so others nearby can discover you.' },
+];
+
+const FOOT_HINTS = [
+  'Your profile becomes a node the moment you publish it.',
+  'This connects you to builders at your institution.',
+  'Skills power the map\u2019s search engine.',
+  'Location makes you discoverable to nearby builders.',
 ];
 
 // ---- Slide animation variants -----------------------------------------------
 const slideVariants = {
-  enter: (dir: number) => ({ x: dir > 0 ? 50 : -50, opacity: 0, scale: 0.98 }),
+  enter: (dir: number) => ({ x: dir > 0 ? 40 : -40, opacity: 0, scale: 0.98 }),
   center: { x: 0, opacity: 1, scale: 1 },
-  exit: (dir: number) => ({ x: dir > 0 ? -50 : 50, opacity: 0, scale: 0.98 }),
+  exit: (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0, scale: 0.98 }),
 };
+
+// ---- Ambient Network SVG (deterministic, no randomness) ---------------------
+function AmbientNetwork() {
+  const svgContent = useMemo(() => {
+    let seed = 7;
+    function rand() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+
+    const W = 1920;
+    const H = 1080;
+    const pts: { x: number; y: number }[] = [];
+    const count = Math.min(22, Math.floor(W / 70));
+
+    for (let i = 0; i < count; i++) {
+      pts.push({ x: rand() * W, y: rand() * H });
+    }
+
+    let edges = '';
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const d = Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y);
+        if (d < 180 && rand() > 0.6) {
+          edges += `<line x1="${pts[i].x}" y1="${pts[i].y}" x2="${pts[j].x}" y2="${pts[j].y}" stroke="#2A3340" stroke-width="1"/>`;
+        }
+      }
+    }
+
+    let nodes = '';
+    pts.forEach(p => {
+      nodes += `<circle cx="${p.x}" cy="${p.y}" r="2" fill="#3A4250"/>`;
+    });
+
+    return edges + nodes;
+  }, []);
+
+  return (
+    <svg
+      className={styles.ambient}
+      viewBox="0 0 1920 1080"
+      preserveAspectRatio="xMidYMid slice"
+      dangerouslySetInnerHTML={{ __html: svgContent }}
+    />
+  );
+}
+
+// ---- Ring Progress SVG ------------------------------------------------------
+function RingProgress({ filled, total, Icon }: { filled: number; total: number; Icon: React.ElementType }) {
+  const CIRC = 2 * Math.PI * 14; // ~87.96
+  const pct = total > 0 ? filled / total : 0;
+  const offset = CIRC * (1 - pct);
+
+  return (
+    <div className={styles.ringWrap}>
+      <svg className={styles.ringSvg} viewBox="0 0 32 32">
+        <circle className={styles.ringBg} cx="16" cy="16" r="14" />
+        <circle
+          className={styles.ringFg}
+          cx="16"
+          cy="16"
+          r="14"
+          style={{ strokeDasharray: CIRC, strokeDashoffset: offset }}
+        />
+      </svg>
+      <div className={styles.ringCenter}>
+        <Icon className={styles.ringCenterIcon} size={22} />
+      </div>
+    </div>
+  );
+}
+
+// ---- Node Chain Progress ----------------------------------------------------
+function NodeChain({ currentStep }: { currentStep: number }) {
+  return (
+    <div className={styles.nodes}>
+      {STEPS.map((_, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
+          <div className={styles.nodeWrap}>
+            <div
+              className={`${styles.node} ${i === currentStep ? styles.nodeActive : ''} ${i < currentStep ? styles.nodeDone : ''}`}
+            />
+          </div>
+          {i < STEPS.length - 1 && (
+            <div className={styles.link}>
+              <div
+                className={styles.linkFill}
+                style={{
+                  width: i < currentStep ? '100%' : i === currentStep ? '35%' : '0%',
+                }}
+              />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // ---- Main Content (wrapped in Suspense boundary) ----------------------------
 function OnboardingContent() {
@@ -155,11 +256,27 @@ function OnboardingContent() {
     return true; // Skills and location are optional
   };
 
+  // Ring fill calculation for step 0
+  const ringFilled = (() => {
+    if (step === 0) {
+      return [name, githubUrl, bio].filter(v => v && v.trim().length > 0).length;
+    }
+    if (step === 1) {
+      return [college].filter(v => v && v.trim().length > 0).length;
+    }
+    if (step === 2) {
+      return selectedSkills.length > 0 ? 1 : 0;
+    }
+    // step 3
+    return (permissionState === 'granted' && !!latitude) ? 1 : 0;
+  })();
+
+  const ringTotal = step === 0 ? 3 : 1;
+
   if (loading) {
     return (
-      <div className="page">
-        <Navbar />
-        <div className="page-center"><div className="spinner" /></div>
+      <div style={{ background: 'var(--ob-bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="spinner" />
       </div>
     );
   }
@@ -170,244 +287,269 @@ function OnboardingContent() {
   const locationGranted = permissionState === 'granted' && !!latitude;
 
   return (
-    <div className="page">
-      <Navbar />
+    <div style={{ background: 'var(--ob-bg)', minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
+      <AmbientNetwork />
+
       <main className={styles.main}>
-        <div className={styles.container}>
-          {/* Progress Header */}
-          <div className={styles.progressHeader}>
-            <span className={styles.stepTitle}>Step {step + 1} of {STEPS.length}</span>
-            <button onClick={skip} className={styles.skipBtnInline}>
-              Skip for now <SkipForward size={14} />
+        {/* ---- Header ---- */}
+        <header className={styles.header}>
+          <div className={styles.brand}>
+            <svg className={styles.brandIcon} viewBox="0 0 24 24" fill="none">
+              <circle cx="5" cy="12" r="2.4" fill="#F2A33C" />
+              <circle cx="19" cy="6" r="2.4" fill="#4FD6E8" />
+              <circle cx="19" cy="18" r="2.4" fill="#4FD6E8" />
+              <path d="M7.2 11 16.8 6.6M7.2 13 16.8 17.4" stroke="#3A4250" strokeWidth="1.2" />
+            </svg>
+            <span className={styles.brandName}>Keiretsu</span>
+          </div>
+          <div className={styles.headerRight}>
+            <button onClick={skip} className={styles.skip}>
+              Skip for now
+              <svg className={styles.skipIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 4l8 8-8 8M14 4l8 8-8 8" />
+              </svg>
             </button>
           </div>
+        </header>
 
-          {/* Progress Bar */}
-          <div className={styles.progressBar}>
-            <motion.div
-              className={styles.progressFill}
-              animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            />
+        {/* ---- Progress: Eyebrow + Node Chain ---- */}
+        <div className={styles.progressRow}>
+          <div className={styles.eyebrow}>
+            Step {step + 1} / {STEPS.length} · <span className={styles.eyebrowAccent}>{STEPS[step]}</span>
           </div>
+        </div>
+        <NodeChain currentStep={step} />
 
-          {/* Step Card */}
-          <div className={styles.cardWrapper}>
-            <AnimatePresence mode="wait" custom={direction}>
-              <motion.div
-                key={step}
-                className={styles.stepCard}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className={styles.stepHeader}>
-                  <div className={styles.stepIconContainer}>
-                    <StepIcon className={styles.stepIcon} size={24} />
+        {/* ---- Card ---- */}
+        <div className={styles.stage}>
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.div
+              key={step}
+              className={styles.card}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {/* Step Icon Ring + Heading */}
+              <div className={styles.idNode}>
+                <RingProgress filled={ringFilled} total={ringTotal} Icon={StepIcon} />
+                <h1 className={styles.heading}>{meta.heading}</h1>
+                <p className={styles.sub}>{meta.sub}</p>
+              </div>
+
+              {/* ---- Step 0: Identity ---- */}
+              {step === 0 && (
+                <div>
+                  <div className={styles.field}>
+                    <label className={styles.fieldLabel}>
+                      Full name <span className={styles.req}>*</span>
+                    </label>
+                    <input
+                      className={styles.fieldInput}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="What should we call you?"
+                      autoFocus
+                    />
                   </div>
-                  <h1 className={styles.stepHeading}>{meta.heading}</h1>
-                  <p className={styles.stepSub}>{meta.sub}</p>
-                </div>
-
-                {/* ---- Step 0: Identity ---- */}
-                {step === 0 && (
-                  <div className={styles.stepBody}>
-                    <div className="input-group">
-                      <label className="label">Full Name *</label>
-                      <input
-                        className="input"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="What should we call you?"
-                        autoFocus
-                      />
-                    </div>
-                    <div className="input-group">
-                      <label className="label">GitHub URL</label>
-                      <input
-                        className="input"
-                        value={githubUrl}
-                        onChange={(e) => setGithubUrl(e.target.value)}
-                        placeholder="https://github.com/username"
-                      />
-                      {gh.loading && githubUrl && (
-                        <span className={styles.detecting}>Detecting skills from GitHub...</span>
-                      )}
-                      {suggestedSkills.length > 0 && (
-                        <span className={styles.detected}>
-                          <Sparkles size={13} />
-                          Detected: {suggestedSkills.slice(0, 4).join(', ')}
-                        </span>
-                      )}
-                    </div>
-                    <div className="input-group">
-                      <label className="label">Short Bio</label>
-                      <textarea
-                        className="input"
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        placeholder="What are you building? What excites you?"
-                        rows={3}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* ---- Step 1: College ---- */}
-                {step === 1 && (
-                  <div className={styles.stepBody}>
-                    <div className="input-group">
-                      <label className="label">College / Institution *</label>
-                      <input
-                        className="input"
-                        value={college}
-                        onChange={(e) => setCollege(e.target.value)}
-                        placeholder="e.g. JNTU Hyderabad"
-                        autoFocus
-                      />
-                    </div>
-                    <div className="input-group">
-                      <label className="label">Year</label>
-                      <select
-                        className="input"
-                        value={year}
-                        onChange={(e) => setYear(Number(e.target.value))}
-                      >
-                        <option value={1}>1st Year</option>
-                        <option value={2}>2nd Year</option>
-                        <option value={3}>3rd Year</option>
-                        <option value={4}>4th Year</option>
-                        <option value={5}>5th Year</option>
-                        <option value={6}>Graduate</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-
-                {/* ---- Step 2: Skills ---- */}
-                {step === 2 && (
-                  <div className={styles.stepBody}>
-                    {/* Auto-suggested from GitHub */}
-                    {suggestedSkills.length > 0 && (
-                      <div className={styles.suggestedSection}>
-                        <p className={styles.suggestedLabel}>
-                          <Sparkles size={13} /> Detected from your GitHub
-                        </p>
-                        <div className={styles.chipGrid}>
-                          {suggestedSkills.map((skill) => (
-                            <button
-                              key={skill}
-                              className={`${styles.chip} ${selectedSkills.includes(skill) ? styles.chipActive : ''}`}
-                              onClick={() => toggleSkill(skill)}
-                            >
-                              {selectedSkills.includes(skill) ? '✓ ' : '+ '}{skill}
-                            </button>
-                          ))}
-                        </div>
+                  <div className={styles.field}>
+                    <label className={styles.fieldLabel}>GitHub URL</label>
+                    <input
+                      className={`${styles.fieldInput} ${styles.fieldMono}`}
+                      value={githubUrl}
+                      onChange={(e) => setGithubUrl(e.target.value)}
+                      placeholder="https://github.com/yourhandle"
+                    />
+                    {gh.loading && githubUrl && (
+                      <div className={`${styles.detect} ${styles.detectShow}`}>
+                        <span className={styles.detectLoading}>Detecting skills from GitHub...</span>
                       </div>
                     )}
-
-                    {/* Selected */}
-                    {selectedSkills.length > 0 && (
-                      <div className={styles.selectedRow}>
-                        {selectedSkills.map((skill) => (
-                          <span
-                            key={skill}
-                            className="tag tag-removable"
-                            onClick={() => toggleSkill(skill)}
-                          >
-                            {skill} ✕
-                          </span>
+                    {suggestedSkills.length > 0 && (
+                      <div className={`${styles.detect} ${styles.detectShow}`}>
+                        <span className={styles.detectLabel}>
+                          <svg className={styles.detectLabelIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                            <path d="M20 6L9 17l-5-5" />
+                          </svg>
+                          Detected
+                        </span>
+                        {suggestedSkills.slice(0, 4).map((skill) => (
+                          <span key={skill} className={styles.chip}>{skill}</span>
                         ))}
                       </div>
                     )}
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.fieldLabel}>Short bio</label>
+                    <textarea
+                      className={styles.fieldTextarea}
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="What are you building? What excites you?"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              )}
 
-                    {/* Search + Add */}
-                    <div className="input-group">
-                      <input
-                        className="input"
-                        value={skillSearch}
-                        onChange={(e) => setSkillSearch(e.target.value)}
-                        placeholder="Search skills to add..."
-                        autoFocus
-                      />
+              {/* ---- Step 1: College ---- */}
+              {step === 1 && (
+                <div>
+                  <div className={styles.field}>
+                    <label className={styles.fieldLabel}>
+                      College / Institution <span className={styles.req}>*</span>
+                    </label>
+                    <input
+                      className={styles.fieldInput}
+                      value={college}
+                      onChange={(e) => setCollege(e.target.value)}
+                      placeholder="e.g. JNTU Hyderabad"
+                      autoFocus
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.fieldLabel}>Year</label>
+                    <select
+                      className={styles.fieldSelect}
+                      value={year}
+                      onChange={(e) => setYear(Number(e.target.value))}
+                    >
+                      <option value={1}>1st Year</option>
+                      <option value={2}>2nd Year</option>
+                      <option value={3}>3rd Year</option>
+                      <option value={4}>4th Year</option>
+                      <option value={5}>5th Year</option>
+                      <option value={6}>Graduate</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* ---- Step 2: Skills ---- */}
+              {step === 2 && (
+                <div>
+                  {/* Auto-suggested from GitHub */}
+                  {suggestedSkills.length > 0 && (
+                    <div className={styles.suggestedSection}>
+                      <p className={styles.suggestedLabel}>
+                        <Sparkles size={13} /> Detected from your GitHub
+                      </p>
+                      <div className={styles.chipGrid}>
+                        {suggestedSkills.map((skill) => (
+                          <button
+                            key={skill}
+                            className={`${styles.skillChip} ${selectedSkills.includes(skill) ? styles.skillChipActive : ''}`}
+                            onClick={() => toggleSkill(skill)}
+                          >
+                            {selectedSkills.includes(skill) ? '✓ ' : '+ '}{skill}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className={styles.chipGrid}>
-                      {filteredSkills.slice(0, 15).map((skill) => (
-                        <button
-                          key={skill.id}
-                          className={styles.chip}
-                          onClick={() => toggleSkill(skill.name)}
+                  )}
+
+                  {/* Selected Tags */}
+                  {selectedSkills.length > 0 && (
+                    <div className={styles.selectedRow}>
+                      {selectedSkills.map((skill) => (
+                        <span
+                          key={skill}
+                          className={styles.selectedTag}
+                          onClick={() => toggleSkill(skill)}
                         >
-                          + {skill.name}
-                        </button>
+                          {skill} ✕
+                        </span>
                       ))}
                     </div>
-                  </div>
-                )}
-
-                {/* ---- Step 3: Location ---- */}
-                {step === 3 && (
-                  <div className={styles.stepBody}>
-                    <div className={styles.locationCard}>
-                      {locationGranted ? (
-                        <div className={styles.locationGranted}>
-                          <div className={styles.locationCheck}>
-                            <Check size={24} />
-                          </div>
-                          <p className={styles.locationTitle}>Location active</p>
-                          <p className={styles.locationSub}>
-                            You&apos;re now visible on the skill map. Nearby builders can discover you.
-                          </p>
-                        </div>
-                      ) : permissionState === 'denied' ? (
-                        <div className={styles.locationDenied}>
-                          <MapPin size={24} />
-                          <p className={styles.locationTitle}>Location blocked</p>
-                          <p className={styles.locationSub}>
-                            Enable location in your browser settings to appear on the map.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className={styles.locationPrompt}>
-                          <MapPin size={32} className={styles.locationIcon} />
-                          <p className={styles.locationTitle}>Share your location</p>
-                          <p className={styles.locationSub}>
-                            This lets other builders discover you on the proximity map.
-                          </p>
-                          <button onClick={requestLocation} className="btn btn-primary">
-                            <MapPin size={16} /> Enable Location
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Navigation inside Card */}
-                <div className={styles.navRow}>
-                  {step > 0 ? (
-                    <button onClick={goBack} className={styles.backBtn}>
-                      <ArrowLeft size={16} /> Back
-                    </button>
-                  ) : (
-                    <div />
                   )}
-                  <button
-                    onClick={goNext}
-                    disabled={!canContinue() || saving}
-                    className={styles.continueBtn}
-                  >
-                    {saving ? 'Saving...' : isLastStep ? "Let\u2019s Go!" : 'Continue'}
-                    {!isLastStep && <ArrowRight size={16} />}
-                  </button>
+
+                  {/* Search + Add */}
+                  <div className={styles.field}>
+                    <input
+                      className={styles.fieldInput}
+                      value={skillSearch}
+                      onChange={(e) => setSkillSearch(e.target.value)}
+                      placeholder="Search skills to add..."
+                      autoFocus
+                    />
+                  </div>
+                  <div className={styles.chipGrid}>
+                    {filteredSkills.slice(0, 15).map((skill) => (
+                      <button
+                        key={skill.id}
+                        className={styles.skillChip}
+                        onClick={() => toggleSkill(skill.name)}
+                      >
+                        + {skill.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
+              )}
+
+              {/* ---- Step 3: Location ---- */}
+              {step === 3 && (
+                <div>
+                  <div className={styles.locationCard}>
+                    {locationGranted ? (
+                      <div className={styles.locationGranted}>
+                        <div className={styles.locationCheck}>
+                          <Check size={24} />
+                        </div>
+                        <p className={styles.locationTitle}>Location active</p>
+                        <p className={styles.locationSub}>
+                          You&apos;re now visible on the skill map. Nearby builders can discover you.
+                        </p>
+                      </div>
+                    ) : permissionState === 'denied' ? (
+                      <div className={styles.locationDenied}>
+                        <MapPin size={24} />
+                        <p className={styles.locationTitle}>Location blocked</p>
+                        <p className={styles.locationSub}>
+                          Enable location in your browser settings to appear on the map.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className={styles.locationPrompt}>
+                        <MapPin size={32} className={styles.locationIcon} />
+                        <p className={styles.locationTitle}>Share your location</p>
+                        <p className={styles.locationSub}>
+                          This lets other builders discover you on the proximity map.
+                        </p>
+                        <button onClick={requestLocation} className={styles.locationBtn}>
+                          <MapPin size={16} /> Enable Location
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ---- Actions ---- */}
+              <div className={styles.actions}>
+                {step > 0 ? (
+                  <button onClick={goBack} className={styles.backBtn}>
+                    <ArrowLeft className={styles.backBtnIcon} size={15} /> Back
+                  </button>
+                ) : (
+                  <div />
+                )}
+                <button
+                  onClick={goNext}
+                  disabled={!canContinue() || saving}
+                  className={styles.continueBtn}
+                >
+                  {saving ? 'Saving...' : isLastStep ? "Let\u2019s Go!" : 'Continue'}
+                  {!isLastStep && <ArrowRight className={styles.continueBtnIcon} size={15} />}
+                </button>
+              </div>
+
+              <p className={styles.footHint}>{FOOT_HINTS[step]}</p>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
     </div>
@@ -417,7 +559,7 @@ function OnboardingContent() {
 // ---- Page Export (with Suspense for useSearchParams) -------------------------
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={<div className="page-center"><div className="spinner" /></div>}>
+    <Suspense fallback={<div style={{ background: 'var(--ob-bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="spinner" /></div>}>
       <OnboardingContent />
     </Suspense>
   );
