@@ -402,15 +402,7 @@ export default function ProfilePage() {
               </button>
             )}
 
-            {profile.latitude && profile.longitude && (
-              <a
-                href={`/map?lat=${profile.latitude}&lng=${profile.longitude}`}
-                className={styles.mapBtn}
-              >
-                <Map size={16} />
-                View on Map
-              </a>
-            )}
+
 
             {profile.github_url && (
               <a
