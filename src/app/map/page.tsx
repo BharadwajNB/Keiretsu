@@ -124,6 +124,10 @@ function MapPageContent() {
   // Determine which users to show in sidebar and on map
   const displayUsers = collegeData ? collegeData.users : users;
 
+  const isSearching = useMemo(() => {
+    return !!(searchQuery.trim() || collegeData || selectedSkills.length > 0 || globalQuery);
+  }, [searchQuery, collegeData, selectedSkills, globalQuery]);
+
   const toggleSkill = (name: string) => {
     setSelectedSkills((prev) =>
       prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name]
@@ -461,7 +465,14 @@ function MapPageContent() {
             )}
 
             <div className={styles.userList}>
-              {(usersLoading || collegeLoading) ? (
+              {!isSearching ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                  <Search size={32} style={{ margin: '0 auto 12px', opacity: 0.5, color: 'var(--text-secondary)' }} />
+                  <p style={{ fontSize: '14px', lineHeight: '1.5' }}>
+                    Search for a college, builder name, or filter by skills to see results here.
+                  </p>
+                </div>
+              ) : (usersLoading || collegeLoading) ? (
                 <div style={{ textAlign: 'center', padding: 20 }}><div className="spinner" style={{ margin: '0 auto' }}/></div>
               ) : displayUsers.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
