@@ -144,11 +144,14 @@ function OnboardingContent() {
   const [saving, setSaving] = useState(false);
 
   // Redirect to map if already onboarded (fully populated name, college, and location)
+  // Can be bypassed by appending ?preview=true to the URL
   useEffect(() => {
+    if (searchParams.get('preview') === 'true') return;
+
     if (step === 0 && profile && profile.name?.trim() && profile.college?.trim() && profile.latitude) {
       router.push('/map');
     }
-  }, [profile, step, router]);
+  }, [profile, step, router, searchParams]);
 
   // Form state
   const [name, setName] = useState('');
@@ -194,6 +197,7 @@ function OnboardingContent() {
   useEffect(() => {
     if (githubUrl && !gh.loading && !gh.error && !hasSyncedGitHub.current) {
       if (gh.bio && !bio) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setBio(gh.bio);
       }
       hasSyncedGitHub.current = true;
@@ -301,11 +305,16 @@ function OnboardingContent() {
       <AmbientNetwork />
 
       <main className={styles.main}>
-        {/* ---- Progress: Eyebrow + Skip ---- */}
-        <div className={styles.progressRow}>
+        {/* ---- Left Sidebar: Steps Counter ---- */}
+        <div className={styles.leftSidebar}>
           <div className={styles.eyebrow}>
             Step {step + 1} / {STEPS.length} · <span className={styles.eyebrowAccent}>{STEPS[step]}</span>
           </div>
+          <NodeChain currentStep={step} />
+        </div>
+
+        {/* ---- Right Sidebar: Skip for now ---- */}
+        <div className={styles.rightSidebar}>
           <button onClick={skip} className={styles.skip}>
             Skip for now
             <svg className={styles.skipIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -313,7 +322,6 @@ function OnboardingContent() {
             </svg>
           </button>
         </div>
-        <NodeChain currentStep={step} />
 
         {/* ---- Card ---- */}
         <div className={styles.stage}>
@@ -425,7 +433,7 @@ function OnboardingContent() {
 
               {/* ---- Step 2: Skills ---- */}
               {step === 2 && (
-                <div>
+                <div className={styles.skillsScrollContainer}>
                   {/* Auto-suggested from GitHub */}
                   {suggestedSkills.length > 0 && (
                     <div className={styles.suggestedSection}>

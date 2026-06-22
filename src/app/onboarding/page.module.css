@@ -90,12 +90,50 @@
   object-fit: cover;
 }
 
-/* ---- Progress: Node Chain ---- */
-.progressRow {
+/* ---- Progress: Node Chain & Sidebars ---- */
+.leftSidebar {
+  position: absolute;
+  top: 140px;
+  left: 32px;
+  z-index: 2;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.leftSidebar .nodes {
+  margin: 14px 0 0 0;
+}
+
+.rightSidebar {
+  position: absolute;
+  top: 420px;
+  right: 32px;
+  z-index: 2;
+}
+
+.skillsScrollContainer {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-bottom: 8px;
+}
+
+.skillsScrollContainer::-webkit-scrollbar {
+  width: 5px;
+}
+
+.skillsScrollContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.skillsScrollContainer::-webkit-scrollbar-thumb {
+  background: var(--ob-border);
+  border-radius: 4px;
+}
+
+.skillsScrollContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--ob-text-faint);
 }
 
 .eyebrow {
@@ -657,6 +695,27 @@
 }
 
 /* ---- Responsive ---- */
+@media (max-width: 820px) {
+  .leftSidebar {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 0;
+  }
+
+  .leftSidebar .nodes {
+    margin: 12px 0 24px 0;
+  }
+
+  .rightSidebar {
+    position: absolute;
+    top: 80px; /* aligned with the padding-top of main */
+    right: 32px;
+    z-index: 2;
+  }
+}
+
 @media (max-width: 560px) {
   .main {
     padding: 20px 18px 40px;
@@ -680,6 +739,11 @@
 
   .sub {
     font-size: 13px;
+  }
+
+  .rightSidebar {
+    top: 20px; /* matches mobile main padding-top */
+    right: 18px;
   }
 }
 
