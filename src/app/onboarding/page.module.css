@@ -94,7 +94,7 @@
 .leftSidebar {
   position: absolute;
   right: calc(100% + 48px);
-  top: 90px;
+  top: 20px;
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -109,7 +109,7 @@
 .rightSidebar {
   position: absolute;
   left: calc(100% + 48px);
-  bottom: 80px;
+  top: 20px;
   z-index: 2;
   white-space: nowrap;
 }
