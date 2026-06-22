@@ -305,26 +305,25 @@ function OnboardingContent() {
       <AmbientNetwork />
 
       <main className={styles.main}>
-        {/* ---- Left Sidebar: Steps Counter ---- */}
-        <div className={styles.leftSidebar}>
-          <div className={styles.eyebrow}>
-            Step {step + 1} / {STEPS.length} · <span className={styles.eyebrowAccent}>{STEPS[step]}</span>
-          </div>
-          <NodeChain currentStep={step} />
-        </div>
-
-        {/* ---- Right Sidebar: Skip for now ---- */}
-        <div className={styles.rightSidebar}>
-          <button onClick={skip} className={styles.skip}>
-            Skip for now
-            <svg className={styles.skipIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M5 4l8 8-8 8M14 4l8 8-8 8" />
-            </svg>
-          </button>
-        </div>
-
-        {/* ---- Card ---- */}
+        {/* ---- Card Stage ---- */}
         <div className={styles.stage}>
+          {/* ---- Left Sidebar: Steps Counter ---- */}
+          <div className={styles.leftSidebar}>
+            <div className={styles.eyebrow}>
+              Step {step + 1} / {STEPS.length} · <span className={styles.eyebrowAccent}>{STEPS[step]}</span>
+            </div>
+            <NodeChain currentStep={step} />
+          </div>
+
+          {/* ---- Right Sidebar: Skip for now ---- */}
+          <div className={styles.rightSidebar}>
+            <button onClick={skip} className={styles.skip}>
+              Skip for now
+              <svg className={styles.skipIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 4l8 8-8 8M14 4l8 8-8 8" />
+              </svg>
+            </button>
+          </div>
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={step}

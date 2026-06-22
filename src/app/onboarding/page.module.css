@@ -93,12 +93,13 @@
 /* ---- Progress: Node Chain & Sidebars ---- */
 .leftSidebar {
   position: absolute;
-  top: 140px;
-  left: 32px;
+  right: calc(100% + 48px);
+  top: 90px;
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  white-space: nowrap;
 }
 
 .leftSidebar .nodes {
@@ -107,9 +108,10 @@
 
 .rightSidebar {
   position: absolute;
-  top: 420px;
-  right: 32px;
+  left: calc(100% + 48px);
+  bottom: 80px;
   z-index: 2;
+  white-space: nowrap;
 }
 
 .skillsScrollContainer {
@@ -216,8 +218,9 @@
 
 /* ---- Stage / Card ---- */
 .stage {
-  display: flex;
-  justify-content: center;
+  position: relative;
+  max-width: 520px;
+  margin: 0 auto;
 }
 
 .card {
@@ -710,8 +713,8 @@
 
   .rightSidebar {
     position: absolute;
-    top: 80px; /* aligned with the padding-top of main */
-    right: 32px;
+    top: 0px;
+    right: 0px;
     z-index: 2;
   }
 }
@@ -742,8 +745,10 @@
   }
 
   .rightSidebar {
-    top: 20px; /* matches mobile main padding-top */
-    right: 18px;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    z-index: 2;
   }
 }
 
