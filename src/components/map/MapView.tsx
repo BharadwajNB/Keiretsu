@@ -384,13 +384,11 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     const labelIcon = L.divIcon({
       html: `
         <div class="community-circle-label">
-          <span class="community-circle-label-name">${communityCircle.shortName}</span>
+          <span class="community-circle-label-name">${communityCircle.name}</span>
           <span class="community-circle-label-count">${communityCircle.builderCount} builder${communityCircle.builderCount !== 1 ? 's' : ''}</span>
         </div>
       `,
       className: 'community-circle-label-host',
-      iconSize: [160, 50],
-      iconAnchor: [80, 25],
     });
     const labelMarker = L.marker(communityCircle.center, { icon: labelIcon, interactive: false });
     group.addLayer(labelMarker);
@@ -529,6 +527,8 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
         .community-circle-label-host {
           background: none !important;
           border: none !important;
+          width: auto !important;
+          height: auto !important;
         }
 
         .community-circle-label {
@@ -543,7 +543,9 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
           border-radius: 12px;
           padding: 8px 16px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-          transform: translateY(42px); /* Shift below the center user pin */
+          transform: translate(-50%, 42px); /* Centered horizontally and shifted below the marker */
+          white-space: nowrap;
+          width: max-content;
         }
 
         .community-circle-label-name {

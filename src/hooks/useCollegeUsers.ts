@@ -48,8 +48,8 @@ function parseWkbPoint(wkbHex: string): { lat: number; lng: number } | null {
  * spread out visually inside the community circle.
  */
 function jitterCoord(lat: number, lng: number, index: number): { lat: number; lng: number } {
-  const angle = (index * 137.508) * (Math.PI / 180); // golden angle spread
-  const radius = 0.003 + (index * 0.001); // ~300m base + incremental
+  const angle = (index * 135) * (Math.PI / 180);
+  const radius = 0.005 + (index * 0.002); // ~550m base + 220m incremental
   return {
     lat: lat + radius * Math.cos(angle),
     lng: lng + radius * Math.sin(angle),
@@ -162,16 +162,16 @@ export function useCollegeUsers() {
         let jittered;
         if (needsProjection) {
           const tier = jitterIndex % 3;
-          let minR = 0.002; // ~200m (Primary)
-          let maxR = 0.009;  // ~900m
+          let minR = 0.004; // ~440m (Primary)
+          let maxR = 0.010;  // ~1.1km
           if (tier === 1) {
-            minR = 0.014; // ~1.5km (Secondary)
-            maxR = 0.024; // ~2.5km
+            minR = 0.016; // ~1.7km (Secondary)
+            maxR = 0.026; // ~2.8km
           } else if (tier === 2) {
-            minR = 0.030; // ~3.2km (Tertiary)
-            maxR = 0.042; // ~4.5km
+            minR = 0.032; // ~3.5km (Tertiary)
+            maxR = 0.044; // ~4.8km
           }
-          const angle = (jitterIndex * 137.508) * (Math.PI / 180);
+          const angle = (jitterIndex * 135) * (Math.PI / 180);
           const r = minR + (Math.random() * (maxR - minR));
           jittered = {
             lat: coord.lat + r * Math.cos(angle),
