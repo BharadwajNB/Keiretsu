@@ -38,11 +38,11 @@ function createAvatarMarkerIcon(user: Profile, isCommunityActive: boolean): L.Di
   // Overwrite ring color with concentric zone color if college community is searched
   if (isCommunityActive && user.distance_km != null) {
     if (user.distance_km <= 1.2) {
-      ringColor = '#2d2f36'; // Primary: Dark Slate Grey/Black
+      ringColor = '#1a1a24'; // Primary: Dark Charcoal Slate
     } else if (user.distance_km <= 3.0) {
       ringColor = '#ffd54f'; // Secondary: Yellow
     } else {
-      ringColor = '#b39ddb'; // Tertiary: Light Purple/Lavender
+      ringColor = '#9b92ff'; // Tertiary: Lightish Periwinkle
     }
   }
 
@@ -134,33 +134,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     // Zoom control on the right
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Inject SVG gradients dynamically into Leaflet overlay pane
-    const injectDefs = () => {
-      const svg = containerRef.current?.querySelector('.leaflet-overlay-pane svg');
-      if (svg && !svg.querySelector('defs')) {
-        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-        defs.innerHTML = `
-          <radialGradient id="primaryGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#121214" stop-opacity="0.8" />
-            <stop offset="60%" stop-color="#2d2f36" stop-opacity="0.35" />
-            <stop offset="100%" stop-color="#2d2f36" stop-opacity="0.0" />
-          </radialGradient>
-          <radialGradient id="secondaryGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffd54f" stop-opacity="0.45" />
-            <stop offset="70%" stop-color="#ffd54f" stop-opacity="0.12" />
-            <stop offset="100%" stop-color="#ffd54f" stop-opacity="0.0" />
-          </radialGradient>
-          <radialGradient id="tertiaryGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#b39ddb" stop-opacity="0.35" />
-            <stop offset="85%" stop-color="#b39ddb" stop-opacity="0.06" />
-            <stop offset="100%" stop-color="#b39ddb" stop-opacity="0.0" />
-          </radialGradient>
-        `;
-        svg.insertBefore(defs, svg.firstChild);
-      }
-    };
-    map.on('overlayadd', injectDefs);
-    map.on('layeradd', injectDefs);
+
 
     // User location marker
     const userIcon = L.divIcon({
@@ -368,12 +342,12 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     const group = L.layerGroup().addTo(mapRef.current);
     communityCircleLayerRef.current = group;
 
-    // 1. Tertiary Circle (Outer): 5.0 km radius, Styled in Light Lavender with Radial Gradient
+    // 1. Tertiary Circle (Outer): 5.0 km radius, Styled in Lightish Periwinkle
     const tertiaryCircle = L.circle(communityCircle.center, {
       radius: 5000,
-      color: '#b39ddb',
-      fillColor: 'url(#tertiaryGrad)',
-      fillOpacity: 0.9,
+      color: '#9b92ff',
+      fillColor: '#9b92ff',
+      fillOpacity: 0.08,
       weight: 1.5,
       opacity: 0.6,
       dashArray: '6, 6',
@@ -381,12 +355,12 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     });
     group.addLayer(tertiaryCircle);
 
-    // 2. Secondary Circle (Middle): 3.0 km radius, Styled in Bright Yellow with Radial Gradient
+    // 2. Secondary Circle (Middle): 3.0 km radius, Styled in Yellow
     const secondaryCircle = L.circle(communityCircle.center, {
       radius: 3000,
       color: '#ffd54f',
-      fillColor: 'url(#secondaryGrad)',
-      fillOpacity: 0.9,
+      fillColor: '#ffd54f',
+      fillOpacity: 0.08,
       weight: 1.5,
       opacity: 0.7,
       dashArray: '4, 4',
@@ -394,12 +368,12 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     });
     group.addLayer(secondaryCircle);
 
-    // 3. Primary Circle (Inner): 1.2 km radius, Styled in Dark Slate Grey/Black with Radial Gradient
+    // 3. Primary Circle (Inner): 1.2 km radius, Styled in Dark Charcoal Slate
     const primaryCircle = L.circle(communityCircle.center, {
       radius: 1200,
-      color: '#2d2f36',
-      fillColor: 'url(#primaryGrad)',
-      fillOpacity: 0.9,
+      color: '#1a1a24',
+      fillColor: '#1a1a24',
+      fillOpacity: 0.35,
       weight: 2,
       opacity: 0.8,
       className: 'community-circle-primary',

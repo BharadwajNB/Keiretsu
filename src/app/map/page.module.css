@@ -493,8 +493,8 @@
 }
 
 .primaryDot {
-  background-color: #2d2f36;
-  box-shadow: 0 0 8px rgba(45, 47, 54, 0.8);
+  background-color: #1a1a24;
+  box-shadow: 0 0 8px rgba(26, 26, 36, 0.8);
 }
 
 .secondaryDot {
@@ -503,8 +503,8 @@
 }
 
 .tertiaryDot {
-  background-color: #b39ddb;
-  box-shadow: 0 0 8px rgba(179, 157, 219, 0.8);
+  background-color: #9b92ff;
+  box-shadow: 0 0 8px rgba(155, 146, 255, 0.8);
 }
 
 .concentricLabel {

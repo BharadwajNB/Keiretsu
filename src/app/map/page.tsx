@@ -422,7 +422,7 @@ function MapPageContent() {
 
                   {/* Concentric Zones Distribution */}
                   <div className={styles.concentricStats}>
-                     <div className={styles.concentricStatRow} style={{ '--border-theme': '#2d2f36' } as React.CSSProperties}>
+                     <div className={styles.concentricStatRow} style={{ '--border-theme': '#1a1a24' } as React.CSSProperties}>
                        <div className={`${styles.concentricDot} ${styles.primaryDot}`} />
                        <span className={styles.concentricLabel}>Primary Zone (0 - 1.2km)</span>
                        <span className={styles.concentricCount}>{collegeData.usersByZone.primary.length}</span>
@@ -432,7 +432,7 @@ function MapPageContent() {
                        <span className={styles.concentricLabel}>Secondary Zone (1.2 - 3km)</span>
                        <span className={styles.concentricCount}>{collegeData.usersByZone.secondary.length}</span>
                      </div>
-                     <div className={styles.concentricStatRow} style={{ '--border-theme': '#b39ddb' } as React.CSSProperties}>
+                     <div className={styles.concentricStatRow} style={{ '--border-theme': '#9b92ff' } as React.CSSProperties}>
                        <div className={`${styles.concentricDot} ${styles.tertiaryDot}`} />
                        <span className={styles.concentricLabel}>Tertiary Zone (3 - 5km)</span>
                        <span className={styles.concentricCount}>{collegeData.usersByZone.tertiary.length}</span>
