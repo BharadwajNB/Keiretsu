@@ -159,29 +159,43 @@ export function useCollegeUsers() {
         // we dynamically project them into the community circle so they are scattered across the zones!
         const needsProjection = !hasCustomLoc || distanceKm > 5.0;
 
-        let jittered;
+        let zoneIndex = 0; // 0 = Primary, 1 = Secondary, 2 = Tertiary
         if (needsProjection) {
-          const tier = jitterIndex % 3;
-          let minR = 0.004; // ~440m (Primary)
-          let maxR = 0.010;  // ~1.1km
-          if (tier === 1) {
-            minR = 0.016; // ~1.7km (Secondary)
-            maxR = 0.026; // ~2.8km
-          } else if (tier === 2) {
-            minR = 0.032; // ~3.5km (Tertiary)
-            maxR = 0.044; // ~4.8km
-          }
-          const angle = (jitterIndex * 135) * (Math.PI / 180);
-          const r = minR + (Math.random() * (maxR - minR));
-          jittered = {
-            lat: coord.lat + r * Math.cos(angle),
-            lng: coord.lng + r * Math.sin(angle),
-          };
-          distanceKm = getDistanceKm(coord.lat, coord.lng, jittered.lat, jittered.lng);
+          zoneIndex = jitterIndex % 3;
         } else {
-          jittered = jitterCoord(lat, lng, jitterIndex);
-          distanceKm = getDistanceKm(coord.lat, coord.lng, jittered.lat, jittered.lng);
+          if (distanceKm <= 1.2) {
+            zoneIndex = 0;
+          } else if (distanceKm <= 3.0) {
+            zoneIndex = 1;
+          } else {
+            zoneIndex = 2;
+          }
         }
+
+        // Define clear radial boundaries (in degrees, ~111km per degree)
+        // Ensure Primary zone has a minimum clearance of ~800m (0.0072 deg) to prevent center badge overlap
+        let minR = 0.0075; // ~830m
+        let maxR = 0.0105; // ~1.16km
+        if (zoneIndex === 1) {
+          minR = 0.015; // ~1.66km
+          maxR = 0.025; // ~2.77km
+        } else if (zoneIndex === 2) {
+          minR = 0.032; // ~3.55km
+          maxR = 0.042; // ~4.66km
+        }
+
+        // Golden angle spiral distribution to prevent overlap
+        const angle = (jitterIndex * 137.5) * (Math.PI / 180);
+        // Add a tiny random jitter to radius for natural visual variation
+        const r = minR + (Math.random() * (maxR - minR));
+
+        const jittered = {
+          lat: coord.lat + r * Math.cos(angle),
+          lng: coord.lng + r * Math.sin(angle),
+        };
+
+        // Recalculate distance based on visual map coordinates
+        distanceKm = getDistanceKm(coord.lat, coord.lng, jittered.lat, jittered.lng);
         jitterIndex++;
 
         const skills = p.profile_skills

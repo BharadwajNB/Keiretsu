@@ -110,6 +110,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
   const lastFlownUserIdRef = useRef<string | null>(null);
   const communityCircleLayerRef = useRef<L.LayerGroup | null>(null);
   const activeMoveEndListenerRef = useRef<(() => void) | null>(null);
+  const selectedHighlightLayerRef = useRef<L.Circle | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -249,6 +250,12 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
 
   // Handle selected user
   useEffect(() => {
+    // Clean up any existing highlight circle
+    if (selectedHighlightLayerRef.current && mapRef.current) {
+      mapRef.current.removeLayer(selectedHighlightLayerRef.current);
+      selectedHighlightLayerRef.current = null;
+    }
+
     // Clean up any pending listeners and timers
     if (activeMoveEndListenerRef.current && mapRef.current) {
       mapRef.current.off('moveend', activeMoveEndListenerRef.current);
@@ -272,6 +279,18 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     }
 
     const latLng = marker.getLatLng();
+
+    // Create highlight circle around selected user
+    const highlightCircle = L.circle(latLng, {
+      radius: 350, // 350 meters
+      color: '#9b92ff',
+      fillColor: '#9b92ff',
+      fillOpacity: 0.15,
+      weight: 2,
+      className: 'selected-user-highlight-circle',
+    }).addTo(mapRef.current);
+    selectedHighlightLayerRef.current = highlightCircle;
+
     const currentCenter = mapRef.current.getCenter();
     const currentZoom = mapRef.current.getZoom();
 
@@ -322,6 +341,10 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
       if (timeoutIdRef.current) {
         clearTimeout(timeoutIdRef.current);
         timeoutIdRef.current = null;
+      }
+      if (selectedHighlightLayerRef.current && mapRef.current) {
+        mapRef.current.removeLayer(selectedHighlightLayerRef.current);
+        selectedHighlightLayerRef.current = null;
       }
     };
   }, [selectedUserId, users]);
@@ -529,6 +552,8 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
           border: none !important;
           width: auto !important;
           height: auto !important;
+          z-index: 9999 !important;
+          overflow: visible !important;
         }
 
         .community-circle-label {
@@ -546,6 +571,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
           transform: translate(-50%, 42px); /* Centered horizontally and shifted below the marker */
           white-space: nowrap;
           width: max-content;
+          overflow: visible !important;
         }
 
         .community-circle-label-name {
@@ -561,6 +587,23 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
           font-size: 11px;
           color: #b39ddb;
           font-weight: 600;
+        }
+
+        /* Pulsing animation for selected user's highlight circle */
+        .selected-user-highlight-circle {
+          animation: pulseHighlight 2s ease-in-out infinite;
+        }
+        @keyframes pulseHighlight {
+          0%, 100% {
+            stroke-opacity: 0.4;
+            fill-opacity: 0.1;
+            stroke-width: 1.5;
+          }
+          50% {
+            stroke-opacity: 0.85;
+            fill-opacity: 0.25;
+            stroke-width: 2.5;
+          }
         }
       `}</style>
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
