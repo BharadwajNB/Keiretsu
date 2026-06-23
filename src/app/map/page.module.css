@@ -493,18 +493,18 @@
 }
 
 .primaryDot {
-  background-color: #312e81;
-  box-shadow: 0 0 8px rgba(49, 46, 129, 0.6);
+  background-color: #2d2f36;
+  box-shadow: 0 0 8px rgba(45, 47, 54, 0.8);
 }
 
 .secondaryDot {
-  background-color: #f59e0b;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  background-color: #ffd54f;
+  box-shadow: 0 0 8px rgba(255, 213, 79, 0.8);
 }
 
 .tertiaryDot {
-  background-color: #818cf8;
-  box-shadow: 0 0 8px rgba(129, 140, 248, 0.6);
+  background-color: #b39ddb;
+  box-shadow: 0 0 8px rgba(179, 157, 219, 0.8);
 }
 
 .concentricLabel {

@@ -38,11 +38,11 @@ function createAvatarMarkerIcon(user: Profile, isCommunityActive: boolean): L.Di
   // Overwrite ring color with concentric zone color if college community is searched
   if (isCommunityActive && user.distance_km != null) {
     if (user.distance_km <= 1.2) {
-      ringColor = '#312e81'; // Primary: Dark Slate
+      ringColor = '#2d2f36'; // Primary: Dark Slate Grey/Black
     } else if (user.distance_km <= 3.0) {
-      ringColor = '#f59e0b'; // Secondary: Amber/Yellow
+      ringColor = '#ffd54f'; // Secondary: Yellow
     } else {
-      ringColor = '#818cf8'; // Tertiary: Purple/Indigo
+      ringColor = '#b39ddb'; // Tertiary: Light Purple/Lavender
     }
   }
 
@@ -340,38 +340,38 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     const group = L.layerGroup().addTo(mapRef.current);
     communityCircleLayerRef.current = group;
 
-    // 1. Tertiary Circle (Outer): 5.0 km radius, Styled in Purple/Indigo
+    // 1. Tertiary Circle (Outer): 5.0 km radius, Styled in Light Lavender
     const tertiaryCircle = L.circle(communityCircle.center, {
       radius: 5000,
-      color: '#818cf8',
-      fillColor: '#818cf8',
-      fillOpacity: 0.03,
+      color: '#b39ddb',
+      fillColor: '#b39ddb',
+      fillOpacity: 0.04,
       weight: 1.5,
-      opacity: 0.5,
+      opacity: 0.6,
       dashArray: '6, 6',
       className: 'community-circle-tertiary',
     });
     group.addLayer(tertiaryCircle);
 
-    // 2. Secondary Circle (Middle): 3.0 km radius, Styled in Amber/Yellow
+    // 2. Secondary Circle (Middle): 3.0 km radius, Styled in Bright Yellow
     const secondaryCircle = L.circle(communityCircle.center, {
       radius: 3000,
-      color: '#f59e0b',
-      fillColor: '#f59e0b',
-      fillOpacity: 0.04,
+      color: '#ffd54f',
+      fillColor: '#ffd54f',
+      fillOpacity: 0.05,
       weight: 1.5,
-      opacity: 0.6,
+      opacity: 0.7,
       dashArray: '4, 4',
       className: 'community-circle-secondary',
     });
     group.addLayer(secondaryCircle);
 
-    // 3. Primary Circle (Inner): 1.2 km radius, Styled in Dark Slate/Indigo
+    // 3. Primary Circle (Inner): 1.2 km radius, Styled in Dark Slate Grey/Black
     const primaryCircle = L.circle(communityCircle.center, {
       radius: 1200,
-      color: '#312e81',
-      fillColor: '#1e1b4b',
-      fillOpacity: 0.15,
+      color: '#2d2f36',
+      fillColor: '#121214',
+      fillOpacity: 0.25,
       weight: 2,
       opacity: 0.8,
       className: 'community-circle-primary',
@@ -537,10 +537,11 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
           background: rgba(17, 17, 30, 0.85);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          border: 1px solid rgba(129, 140, 248, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.15);
           border-radius: 12px;
           padding: 8px 16px;
-          box-shadow: 0 4px 20px rgba(129, 140, 248, 0.15), 0 0 40px rgba(129, 140, 248, 0.05);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          transform: translateY(38px); /* Shift below the center user pin */
         }
 
         .community-circle-label-name {
@@ -554,7 +555,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
         .community-circle-label-count {
           font-family: Inter, sans-serif;
           font-size: 11px;
-          color: #818cf8;
+          color: #b39ddb;
           font-weight: 600;
         }
       `}</style>
