@@ -134,6 +134,34 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     // Zoom control on the right
     L.control.zoom({ position: 'topright' }).addTo(map);
 
+    // Inject SVG gradients dynamically into Leaflet overlay pane
+    const injectDefs = () => {
+      const svg = containerRef.current?.querySelector('.leaflet-overlay-pane svg');
+      if (svg && !svg.querySelector('defs')) {
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        defs.innerHTML = `
+          <radialGradient id="primaryGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#121214" stop-opacity="0.8" />
+            <stop offset="60%" stop-color="#2d2f36" stop-opacity="0.35" />
+            <stop offset="100%" stop-color="#2d2f36" stop-opacity="0.0" />
+          </radialGradient>
+          <radialGradient id="secondaryGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffd54f" stop-opacity="0.45" />
+            <stop offset="70%" stop-color="#ffd54f" stop-opacity="0.12" />
+            <stop offset="100%" stop-color="#ffd54f" stop-opacity="0.0" />
+          </radialGradient>
+          <radialGradient id="tertiaryGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#b39ddb" stop-opacity="0.35" />
+            <stop offset="85%" stop-color="#b39ddb" stop-opacity="0.06" />
+            <stop offset="100%" stop-color="#b39ddb" stop-opacity="0.0" />
+          </radialGradient>
+        `;
+        svg.insertBefore(defs, svg.firstChild);
+      }
+    };
+    map.on('overlayadd', injectDefs);
+    map.on('layeradd', injectDefs);
+
     // User location marker
     const userIcon = L.divIcon({
       html: `<div style="width: 16px; height: 16px; background: #818cf8; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 12px rgba(129,140,248,0.6);"></div>`,
@@ -340,12 +368,12 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     const group = L.layerGroup().addTo(mapRef.current);
     communityCircleLayerRef.current = group;
 
-    // 1. Tertiary Circle (Outer): 5.0 km radius, Styled in Light Lavender
+    // 1. Tertiary Circle (Outer): 5.0 km radius, Styled in Light Lavender with Radial Gradient
     const tertiaryCircle = L.circle(communityCircle.center, {
       radius: 5000,
       color: '#b39ddb',
-      fillColor: '#b39ddb',
-      fillOpacity: 0.04,
+      fillColor: 'url(#tertiaryGrad)',
+      fillOpacity: 0.9,
       weight: 1.5,
       opacity: 0.6,
       dashArray: '6, 6',
@@ -353,12 +381,12 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     });
     group.addLayer(tertiaryCircle);
 
-    // 2. Secondary Circle (Middle): 3.0 km radius, Styled in Bright Yellow
+    // 2. Secondary Circle (Middle): 3.0 km radius, Styled in Bright Yellow with Radial Gradient
     const secondaryCircle = L.circle(communityCircle.center, {
       radius: 3000,
       color: '#ffd54f',
-      fillColor: '#ffd54f',
-      fillOpacity: 0.05,
+      fillColor: 'url(#secondaryGrad)',
+      fillOpacity: 0.9,
       weight: 1.5,
       opacity: 0.7,
       dashArray: '4, 4',
@@ -366,12 +394,12 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     });
     group.addLayer(secondaryCircle);
 
-    // 3. Primary Circle (Inner): 1.2 km radius, Styled in Dark Slate Grey/Black
+    // 3. Primary Circle (Inner): 1.2 km radius, Styled in Dark Slate Grey/Black with Radial Gradient
     const primaryCircle = L.circle(communityCircle.center, {
       radius: 1200,
       color: '#2d2f36',
-      fillColor: '#121214',
-      fillOpacity: 0.25,
+      fillColor: 'url(#primaryGrad)',
+      fillOpacity: 0.9,
       weight: 2,
       opacity: 0.8,
       className: 'community-circle-primary',
@@ -534,14 +562,14 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
           flex-direction: column;
           align-items: center;
           gap: 2px;
-          background: rgba(17, 17, 30, 0.85);
+          background: rgba(10, 10, 16, 0.95);
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
           border: 1px solid rgba(255, 255, 255, 0.15);
           border-radius: 12px;
           padding: 8px 16px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-          transform: translateY(38px); /* Shift below the center user pin */
+          transform: translateY(42px); /* Shift below the center user pin */
         }
 
         .community-circle-label-name {

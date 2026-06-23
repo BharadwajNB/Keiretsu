@@ -152,9 +152,15 @@ export function useCollegeUsers() {
           }
         }
 
-        // Apply dynamic tiered jittering to distribute users nicely across zones if they have no custom location
+        // Calculate distance of actual coordinates from university center
+        let distanceKm = p.location ? getDistanceKm(coord.lat, coord.lng, lat, lng) : 999;
+
+        // If they don't have custom coordinates, or their custom coordinates are outside the community circle (> 5km),
+        // we dynamically project them into the community circle so they are scattered across the zones!
+        const needsProjection = !hasCustomLoc || distanceKm > 5.0;
+
         let jittered;
-        if (!hasCustomLoc) {
+        if (needsProjection) {
           const tier = jitterIndex % 3;
           let minR = 0.002; // ~200m (Primary)
           let maxR = 0.009;  // ~900m
@@ -168,16 +174,15 @@ export function useCollegeUsers() {
           const angle = (jitterIndex * 137.508) * (Math.PI / 180);
           const r = minR + (Math.random() * (maxR - minR));
           jittered = {
-            lat: lat + r * Math.cos(angle),
-            lng: lng + r * Math.sin(angle),
+            lat: coord.lat + r * Math.cos(angle),
+            lng: coord.lng + r * Math.sin(angle),
           };
+          distanceKm = getDistanceKm(coord.lat, coord.lng, jittered.lat, jittered.lng);
         } else {
           jittered = jitterCoord(lat, lng, jitterIndex);
+          distanceKm = getDistanceKm(coord.lat, coord.lng, jittered.lat, jittered.lng);
         }
         jitterIndex++;
-
-        // Calculate distance from university center
-        const distanceKm = getDistanceKm(coord.lat, coord.lng, jittered.lat, jittered.lng);
 
         const skills = p.profile_skills
           ?.map(ps => ps.skills?.name)
