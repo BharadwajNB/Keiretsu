@@ -11,7 +11,7 @@ import { useLocationSync } from '@/hooks/useLocationSync';
 import { useNearbyUsers } from '@/hooks/useNearbyUsers';
 import { useSkills } from '@/hooks/useSkills';
 import { useCollegeUsers } from '@/hooks/useCollegeUsers';
-import { searchUniversities } from '@/lib/universityData';
+import { searchUniversities, searchUniversitiesDynamic, type UniversityCoord } from '@/lib/universityData';
 import { SKILL_CATEGORIES } from '@/lib/types';
 import type { CommunityCircle } from '@/components/map/MapView';
 import styles from './page.module.css';
@@ -37,16 +37,70 @@ function MapPageContent() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const router = useRouter();
 
-  const [communityCircle, setCommunityCircle] = useState<CommunityCircle | null>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const { collegeData, collegeLoading, fetchCollegeUsers, clearCollege } = useCollegeUsers();
 
-  // Autocomplete suggestions
-  const collegeSuggestions = useMemo(() => {
-    if (searchQuery.length < 2) return [];
-    return searchUniversities(searchQuery);
-  }, [searchQuery]);
+  // Derived community circle state
+  const communityCircle = useMemo<CommunityCircle | null>(() => {
+    if (!collegeData) return null;
+    return {
+      center: [collegeData.coord.lat, collegeData.coord.lng],
+      radiusKm: 5,
+      name: collegeData.coord.name,
+      shortName: collegeData.coord.shortName,
+      builderCount: collegeData.users.length,
+    };
+  }, [collegeData]);
+
+  // Dynamic autocomplete suggestions state
+  const [suggestions, setSuggestions] = useState<UniversityCoord[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchSuggestions = async () => {
+      if (debouncedSearchQuery.length < 2) {
+        if (active) {
+          setSuggestions([]);
+        }
+        return;
+      }
+
+      setSuggestionsLoading(true);
+      const staticResults = searchUniversities(debouncedSearchQuery);
+      const merged = [...staticResults];
+
+      if (debouncedSearchQuery.length >= 3) {
+        const dynamicResults = await searchUniversitiesDynamic(debouncedSearchQuery);
+        if (active) {
+          const seenIds = new Set(merged.map(s => s.id));
+          const seenNames = new Set(merged.map(s => s.name.toLowerCase().trim()));
+
+          for (const dyn of dynamicResults) {
+            const nameKey = dyn.name.toLowerCase().trim();
+            if (!seenIds.has(dyn.id) && !seenNames.has(nameKey)) {
+              merged.push(dyn);
+              seenIds.add(dyn.id);
+              seenNames.add(nameKey);
+            }
+          }
+        }
+      }
+
+      if (active) {
+        setSuggestions(merged.slice(0, 8));
+        setSuggestionsLoading(false);
+      }
+    };
+
+    fetchSuggestions();
+
+    return () => {
+      active = false;
+    };
+  }, [debouncedSearchQuery]);
 
   // Close suggestions on click outside
   useEffect(() => {
@@ -58,21 +112,6 @@ function MapPageContent() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // When college data is fetched, build the community circle
-  useEffect(() => {
-    if (collegeData) {
-      setCommunityCircle({
-        center: [collegeData.coord.lat, collegeData.coord.lng],
-        radiusKm: 5,
-        name: collegeData.coord.name,
-        shortName: collegeData.coord.shortName,
-        builderCount: collegeData.users.length,
-      });
-    } else {
-      setCommunityCircle(null);
-    }
-  }, [collegeData]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -151,7 +190,7 @@ function MapPageContent() {
     return users.filter((u) => u.name.toLowerCase().includes(q));
   }, [searchQuery, users]);
 
-  const handleCollegeSelect = (coord: typeof collegeSuggestions[0]) => {
+  const handleCollegeSelect = (coord: UniversityCoord) => {
     setSearchQuery(coord.name);
     setShowSuggestions(false);
     setSelectedUserId(null);
@@ -171,7 +210,6 @@ function MapPageContent() {
   const handleClearSearch = () => {
     setSearchQuery('');
     setSelectedUserId(null);
-    setCommunityCircle(null);
     clearCollege();
   };
 
@@ -283,17 +321,22 @@ function MapPageContent() {
 
               {/* Unified Autocomplete dropdown */}
               <AnimatePresence>
-                {showSuggestions && (collegeSuggestions.length > 0 || userSuggestions.length > 0) && (
+                {showSuggestions && (suggestions.length > 0 || userSuggestions.length > 0 || suggestionsLoading) && (
                   <motion.div
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     className={styles.suggestionsDropdown}
                   >
-                    {collegeSuggestions.length > 0 && (
+                    {suggestionsLoading && suggestions.length === 0 && (
+                      <div style={{ padding: 12, textAlign: 'center', color: 'var(--text-muted)' }}>
+                        <div className="spinner" style={{ width: 16, height: 16, margin: '0 auto' }} />
+                      </div>
+                    )}
+                    {suggestions.length > 0 && (
                       <div className={styles.suggestionGroup}>
                         <div className={styles.suggestionHeader}>Colleges</div>
-                        {collegeSuggestions.map((s) => (
+                        {suggestions.map((s) => (
                           <button
                             key={s.id}
                             className={styles.suggestionItem}
@@ -368,31 +411,51 @@ function MapPageContent() {
                   className={styles.collegeInfoCard}
                 >
                   <div className={styles.collegeInfoHeader}>
-                    <div>
-                      <h3 className={styles.collegeInfoName}>{collegeData.coord.name}</h3>
-                      <p className={styles.collegeInfoCity}>{collegeData.coord.city}</p>
-                    </div>
-                    <button className={styles.collegeInfoClose} onClick={handleClearSearch}>
-                      <X size={16} />
-                    </button>
+                     <div>
+                       <h3 className={styles.collegeInfoName}>{collegeData.coord.name}</h3>
+                       <p className={styles.collegeInfoCity}>{collegeData.coord.city}</p>
+                     </div>
+                     <button className={styles.collegeInfoClose} onClick={handleClearSearch}>
+                       <X size={16} />
+                     </button>
                   </div>
+
+                  {/* Concentric Zones Distribution */}
+                  <div className={styles.concentricStats}>
+                     <div className={styles.concentricStatRow} style={{ '--border-theme': '#312e81' } as React.CSSProperties}>
+                       <div className={`${styles.concentricDot} ${styles.primaryDot}`} />
+                       <span className={styles.concentricLabel}>Primary Zone (0 - 1.2km)</span>
+                       <span className={styles.concentricCount}>{collegeData.usersByZone.primary.length}</span>
+                     </div>
+                     <div className={styles.concentricStatRow} style={{ '--border-theme': '#f59e0b' } as React.CSSProperties}>
+                       <div className={`${styles.concentricDot} ${styles.secondaryDot}`} />
+                       <span className={styles.concentricLabel}>Secondary Zone (1.2 - 3km)</span>
+                       <span className={styles.concentricCount}>{collegeData.usersByZone.secondary.length}</span>
+                     </div>
+                     <div className={styles.concentricStatRow} style={{ '--border-theme': '#818cf8' } as React.CSSProperties}>
+                       <div className={`${styles.concentricDot} ${styles.tertiaryDot}`} />
+                       <span className={styles.concentricLabel}>Tertiary Zone (3 - 5km)</span>
+                       <span className={styles.concentricCount}>{collegeData.usersByZone.tertiary.length}</span>
+                     </div>
+                  </div>
+
                   <div className={styles.collegeInfoStats}>
-                    <div className={styles.collegeInfoStat}>
-                      <Users size={14} />
-                      <span>{collegeData.users.length} builder{collegeData.users.length !== 1 ? 's' : ''}</span>
-                    </div>
+                     <div className={styles.collegeInfoStat}>
+                       <Users size={14} />
+                       <span>{collegeData.users.length} total builder{collegeData.users.length !== 1 ? 's' : ''}</span>
+                     </div>
                   </div>
                   {collegeData.topSkills.length > 0 && (
-                    <div className={styles.collegeInfoSkills}>
-                      {collegeData.topSkills.map((skill) => (
-                        <span key={skill} className={styles.collegeInfoSkillTag}>{skill}</span>
-                      ))}
-                    </div>
+                     <div className={styles.collegeInfoSkills}>
+                       {collegeData.topSkills.map((skill) => (
+                         <span key={skill} className={styles.collegeInfoSkillTag}>{skill}</span>
+                       ))}
+                     </div>
                   )}
                   {collegeLoading && (
-                    <div style={{ textAlign: 'center', padding: 8 }}>
-                      <div className="spinner" style={{ margin: '0 auto', width: 16, height: 16 }} />
-                    </div>
+                     <div style={{ textAlign: 'center', padding: 8 }}>
+                       <div className="spinner" style={{ margin: '0 auto', width: 16, height: 16 }} />
+                     </div>
                   )}
                 </motion.div>
               )}

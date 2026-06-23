@@ -56,10 +56,28 @@ function jitterCoord(lat: number, lng: number, index: number): { lat: number; ln
   };
 }
 
+function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c; // Distance in km
+  return Math.round(d * 10) / 10;
+}
+
 export interface CollegeCircleData {
   coord: UniversityCoord;
   users: Profile[];
   topSkills: string[];
+  usersByZone: {
+    primary: Profile[];
+    secondary: Profile[];
+    tertiary: Profile[];
+  };
 }
 
 /**
@@ -77,7 +95,6 @@ export function useCollegeUsers() {
 
     try {
       // Fetch all profiles and filter by college match client-side
-      // (since college is free-text and we need fuzzy matching)
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
@@ -106,8 +123,10 @@ export function useCollegeUsers() {
 
       const typedProfiles = (profiles || []) as unknown as PostgrestProfile[];
 
-      // Filter profiles whose college resolves to the same university coord
       const matchedUsers: Profile[] = [];
+      const primaryUsers: Profile[] = [];
+      const secondaryUsers: Profile[] = [];
+      const tertiaryUsers: Profile[] = [];
       const skillCounts = new Map<string, number>();
       let jitterIndex = 0;
 
@@ -122,6 +141,7 @@ export function useCollegeUsers() {
         if (!isMatch) continue;
 
         // Parse location
+        const hasCustomLoc = !!p.location;
         let lat = coord.lat;
         let lng = coord.lng;
         if (p.location) {
@@ -132,8 +152,32 @@ export function useCollegeUsers() {
           }
         }
 
-        // Apply jitter so markers don't stack
-        const jittered = jitterCoord(lat, lng, jitterIndex++);
+        // Apply dynamic tiered jittering to distribute users nicely across zones if they have no custom location
+        let jittered;
+        if (!hasCustomLoc) {
+          const tier = jitterIndex % 3;
+          let minR = 0.002; // ~200m (Primary)
+          let maxR = 0.009;  // ~900m
+          if (tier === 1) {
+            minR = 0.014; // ~1.5km (Secondary)
+            maxR = 0.024; // ~2.5km
+          } else if (tier === 2) {
+            minR = 0.030; // ~3.2km (Tertiary)
+            maxR = 0.042; // ~4.5km
+          }
+          const angle = (jitterIndex * 137.508) * (Math.PI / 180);
+          const r = minR + (Math.random() * (maxR - minR));
+          jittered = {
+            lat: lat + r * Math.cos(angle),
+            lng: lng + r * Math.sin(angle),
+          };
+        } else {
+          jittered = jitterCoord(lat, lng, jitterIndex);
+        }
+        jitterIndex++;
+
+        // Calculate distance from university center
+        const distanceKm = getDistanceKm(coord.lat, coord.lng, jittered.lat, jittered.lng);
 
         const skills = p.profile_skills
           ?.map(ps => ps.skills?.name)
@@ -144,7 +188,7 @@ export function useCollegeUsers() {
           skillCounts.set(s, (skillCounts.get(s) || 0) + 1);
         }
 
-        matchedUsers.push({
+        const profile: Profile = {
           id: p.id,
           user_id: p.user_id,
           name: p.name,
@@ -156,10 +200,22 @@ export function useCollegeUsers() {
           availability_status: p.availability_status as Profile['availability_status'],
           latitude: jittered.lat,
           longitude: jittered.lng,
+          distance_km: distanceKm,
           skills,
           created_at: '',
           updated_at: '',
-        });
+        };
+
+        matchedUsers.push(profile);
+
+        // Group by zone
+        if (distanceKm <= 1.2) {
+          primaryUsers.push(profile);
+        } else if (distanceKm <= 3.0) {
+          secondaryUsers.push(profile);
+        } else {
+          tertiaryUsers.push(profile);
+        }
       }
 
       const topSkills = [...skillCounts.entries()]
@@ -171,6 +227,11 @@ export function useCollegeUsers() {
         coord,
         users: matchedUsers,
         topSkills,
+        usersByZone: {
+          primary: primaryUsers,
+          secondary: secondaryUsers,
+          tertiary: tertiaryUsers,
+        },
       });
     } catch (err) {
       console.warn('useCollegeUsers error:', err);

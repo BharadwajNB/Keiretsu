@@ -30,9 +30,22 @@ function getInitials(name: string): string {
 }
 
 // Creates a circular avatar marker with availability ring + optional pulse halo
-function createAvatarMarkerIcon(user: Profile): L.DivIcon {
-  const ringColor = AVAILABILITY_COLORS[user.availability_status] || '#818cf8';
+function createAvatarMarkerIcon(user: Profile, isCommunityActive: boolean): L.DivIcon {
+  let ringColor = AVAILABILITY_COLORS[user.availability_status] || '#818cf8';
+  const badgeColor = ringColor;
   const isPulsing = user.availability_status === 'open_to_collab';
+
+  // Overwrite ring color with concentric zone color if college community is searched
+  if (isCommunityActive && user.distance_km != null) {
+    if (user.distance_km <= 1.2) {
+      ringColor = '#312e81'; // Primary: Dark Slate
+    } else if (user.distance_km <= 3.0) {
+      ringColor = '#f59e0b'; // Secondary: Amber/Yellow
+    } else {
+      ringColor = '#818cf8'; // Tertiary: Purple/Indigo
+    }
+  }
+
   const initials = getInitials(user.name || '?');
   let avatarSrc = user.avatar_url || '';
   if (!avatarSrc && user.github_url) {
@@ -65,6 +78,9 @@ function createAvatarMarkerIcon(user: Profile): L.DivIcon {
       style="display:${avatarSrc ? 'none' : 'flex'};background:${ringColor}22;"
     >${initials}</div>`;
 
+  // Small indicator badge displaying their live collaboration availability status
+  const availabilityBadge = `<div class="avatar-availability-badge" style="background-color:${badgeColor}; border: 1.5px solid ${ringColor};"></div>`;
+
   const html = `
     <div class="avatar-marker-root${isPulsing ? ' pulsing' : ''}" style="--ring:${ringColor};">
       ${pulseHalo}
@@ -72,6 +88,7 @@ function createAvatarMarkerIcon(user: Profile): L.DivIcon {
         ${imgHtml}
         ${fallbackHtml}
       </div>
+      ${availabilityBadge}
     </div>`;
 
   return L.divIcon({
@@ -174,7 +191,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     users.forEach((user) => {
       if (!user.latitude || !user.longitude) return;
 
-      const icon = createAvatarMarkerIcon(user);
+      const icon = createAvatarMarkerIcon(user, !!communityCircle);
 
       const availColor = AVAILABILITY_COLORS[user.availability_status] || '#818cf8';
       const availLabel = AVAILABILITY_LABELS[user.availability_status] || '';
@@ -226,7 +243,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
       markersRef.current!.addLayer(marker);
       markerMapRef.current[user.id] = marker;
     });
-  }, [users]);
+  }, [users, communityCircle]);
 
   // Handle selected user
   useEffect(() => {
@@ -323,27 +340,43 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     const group = L.layerGroup().addTo(mapRef.current);
     communityCircleLayerRef.current = group;
 
-    // Outer pulsing ring
-    const outerCircle = L.circle(communityCircle.center, {
-      radius: communityCircle.radiusKm * 1000,
+    // 1. Tertiary Circle (Outer): 5.0 km radius, Styled in Purple/Indigo
+    const tertiaryCircle = L.circle(communityCircle.center, {
+      radius: 5000,
       color: '#818cf8',
       fillColor: '#818cf8',
-      fillOpacity: 0.04,
-      weight: 2,
-      opacity: 0.6,
-      className: 'community-circle-outer',
+      fillOpacity: 0.03,
+      weight: 1.5,
+      opacity: 0.5,
+      dashArray: '6, 6',
+      className: 'community-circle-tertiary',
     });
-    group.addLayer(outerCircle);
+    group.addLayer(tertiaryCircle);
 
-    // Inner glow circle
-    const innerCircle = L.circle(communityCircle.center, {
-      radius: communityCircle.radiusKm * 1000 * 0.7,
-      color: 'transparent',
-      fillColor: '#818cf8',
-      fillOpacity: 0.06,
-      weight: 0,
+    // 2. Secondary Circle (Middle): 3.0 km radius, Styled in Amber/Yellow
+    const secondaryCircle = L.circle(communityCircle.center, {
+      radius: 3000,
+      color: '#f59e0b',
+      fillColor: '#f59e0b',
+      fillOpacity: 0.04,
+      weight: 1.5,
+      opacity: 0.6,
+      dashArray: '4, 4',
+      className: 'community-circle-secondary',
     });
-    group.addLayer(innerCircle);
+    group.addLayer(secondaryCircle);
+
+    // 3. Primary Circle (Inner): 1.2 km radius, Styled in Dark Slate/Indigo
+    const primaryCircle = L.circle(communityCircle.center, {
+      radius: 1200,
+      color: '#312e81',
+      fillColor: '#1e1b4b',
+      fillOpacity: 0.15,
+      weight: 2,
+      opacity: 0.8,
+      className: 'community-circle-primary',
+    });
+    group.addLayer(primaryCircle);
 
     // Center label
     const labelIcon = L.divIcon({
@@ -360,11 +393,8 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
     const labelMarker = L.marker(communityCircle.center, { icon: labelIcon, interactive: false });
     group.addLayer(labelMarker);
 
-    // Fly to the college location
-    const zoomForRadius = communityCircle.radiusKm <= 2 ? 15 :
-      communityCircle.radiusKm <= 5 ? 14 :
-      communityCircle.radiusKm <= 10 ? 13 : 12;
-    mapRef.current.flyTo(communityCircle.center, zoomForRadius, { animate: true, duration: 1.2 });
+    // Fly to the college location with a bounds view fitting all zones nicely
+    mapRef.current.flyTo(communityCircle.center, 13, { animate: true, duration: 1.2 });
 
   }, [communityCircle]);
 
@@ -387,7 +417,7 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
         }
         .avatar-marker-root:hover { transform: scale(1.15) translateY(-4px); }
 
-        /* Circular photo frame with colored availability ring */
+        /* Circular photo frame with colored availability or zone ring */
         .avatar-marker-frame {
           width: 44px;
           height: 44px;
@@ -437,6 +467,18 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
           100% { opacity: 0;   transform: scale(1.6); }
         }
 
+        /* Small badge in top right corner of the avatar marker displaying availability */
+        .avatar-availability-badge {
+          position: absolute;
+          top: 2px;
+          right: 2px;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          z-index: 10;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+        }
+
         /* User's own "You are here" dot */
         .user-location-marker { background: none !important; border: none !important; }
 
@@ -457,13 +499,29 @@ export default function MapView({ center, radiusKm, users, selectedUserId, commu
         }
         .leaflet-control-zoom a:hover { background: #252540 !important; }
 
-        /* ---- Community Circle ---- */
-        .community-circle-outer {
-          animation: communityPulse 2.5s ease-in-out infinite;
+        /* ---- Concentric Community Circles ---- */
+        .community-circle-tertiary {
+          animation: pulseTertiary 4s ease-in-out infinite;
         }
-        @keyframes communityPulse {
-          0%, 100% { stroke-opacity: 0.4; stroke-width: 2; }
-          50% { stroke-opacity: 0.9; stroke-width: 3; }
+        @keyframes pulseTertiary {
+          0%, 100% { stroke-opacity: 0.4; stroke-width: 1.5; }
+          50% { stroke-opacity: 0.7; stroke-width: 2; }
+        }
+
+        .community-circle-secondary {
+          animation: pulseSecondary 3.5s ease-in-out infinite;
+        }
+        @keyframes pulseSecondary {
+          0%, 100% { stroke-opacity: 0.5; stroke-width: 1.5; }
+          50% { stroke-opacity: 0.85; stroke-width: 2.2; }
+        }
+
+        .community-circle-primary {
+          animation: pulsePrimary 3s ease-in-out infinite;
+        }
+        @keyframes pulsePrimary {
+          0%, 100% { stroke-opacity: 0.7; stroke-width: 2; }
+          50% { stroke-opacity: 0.95; stroke-width: 2.8; }
         }
 
         .community-circle-label-host {

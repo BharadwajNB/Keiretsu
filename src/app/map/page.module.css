@@ -456,3 +456,69 @@
     backdrop-filter: none;
   }
 }
+
+/* Concentric Circles Stats Card Styles */
+.concentricStats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.concentricStatRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--border-theme, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.01);
+  transition: background 0.2s ease;
+}
+
+.concentricStatRow:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.concentricDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.primaryDot {
+  background-color: #312e81;
+  box-shadow: 0 0 8px rgba(49, 46, 129, 0.6);
+}
+
+.secondaryDot {
+  background-color: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.tertiaryDot {
+  background-color: #818cf8;
+  box-shadow: 0 0 8px rgba(129, 140, 248, 0.6);
+}
+
+.concentricLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  flex-grow: 1;
+}
+
+.concentricCount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+}

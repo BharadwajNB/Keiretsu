@@ -92,6 +92,8 @@ export const UNIVERSITY_COORDS: UniversityCoord[] = [
     aliases: ['iit hyderabad', 'iith', 'iit-h', 'indian institute of technology hyderabad'] },
   { id: 'iitbhu', name: 'IIT BHU Varanasi', shortName: 'IIT-BHU', city: 'Varanasi', lat: 25.2677, lng: 82.9913,
     aliases: ['iit bhu', 'iitbhu', 'iit-bhu', 'iit varanasi', 'bhu', 'banaras hindu university'] },
+  { id: 'aditya', name: 'Aditya University', shortName: 'Aditya', city: 'Surampalem', lat: 17.0931, lng: 82.0662,
+    aliases: ['aditya university', 'aditya engineering college', 'aditya', 'aec', 'acet', 'aditya college of engineering'] },
 ];
 
 /**
@@ -165,6 +167,62 @@ export function searchUniversities(query: string, limit = 8): UniversityCoord[] 
   }
 
   return results;
+}
+
+/**
+ * Resolves a dynamic query against OpenStreetMap's Nominatim API.
+ * Searches for institutions in India matching academic queries.
+ */
+export async function searchUniversitiesDynamic(query: string): Promise<UniversityCoord[]> {
+  const q = query.toLowerCase().trim();
+  if (q.length < 3) return [];
+
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1&countrycodes=in`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Keiretsu-Academic-Community-Search/1.0',
+      },
+    });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const resolved: UniversityCoord[] = [];
+
+    for (const item of data) {
+      const lat = parseFloat(item.lat);
+      const lng = parseFloat(item.lon);
+      if (isNaN(lat) || isNaN(lng)) continue;
+
+      const displayName = item.display_name;
+      const parts = displayName.split(',');
+      const name = parts[0].trim();
+      const city = (parts[1] || parts[2] || 'India').trim();
+
+      // Simple heuristic for short name
+      const shortName = name
+        .replace(/university|college|institute|of|technology|science|engineering/gi, '')
+        .trim()
+        .split(/\s+/)
+        .map((w: string) => w[0])
+        .join('')
+        .toUpperCase() || name.slice(0, 8);
+
+      resolved.push({
+        id: `dynamic-${item.place_id}`,
+        name,
+        shortName: shortName.slice(0, 8),
+        city,
+        lat,
+        lng,
+        aliases: [name.toLowerCase()],
+      });
+    }
+    return resolved;
+  } catch (err) {
+    console.warn('Dynamic geocoding error:', err);
+    return [];
+  }
 }
 
 // Network arcs connecting universities — visual flair showing collaboration
